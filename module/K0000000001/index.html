@@ -2,11 +2,12 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - KScan</title>
+        <title>AR Experience - KScan FIX</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
         <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/ar.js"></script>
+        
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
         
@@ -27,6 +28,7 @@
             // 2. COMPONENTES Y LÓGICA DE INYECCIÓN
             // =====================================================================
 
+            // Manejador de video (para videos locales)
             AFRAME.registerComponent('videohandler', {
                 schema: { targetId: {type: 'string'} },
                 init: function () {
@@ -36,8 +38,21 @@
                     marker.addEventListener('markerLost', function () { if (videoEl) { videoEl.pause(); } }.bind(this));
                 },
             });
+            
+            // Componente para forzar el redibujo (Fix de Pantalla en Blanco)
+            AFRAME.registerComponent('force-redraw', {
+                init: function () {
+                    setTimeout(() => {
+                        const sceneEl = this.el;
+                        // Simula el evento que indica que el video está listo
+                        sceneEl.emit('arjs-video-loaded', null, false);
+                        console.log("Forzando redibujo de A-Frame.");
+                    }, 3000); 
+                }
+            });
 
-            // Lógica para inyectar los marcadores y contenido (adaptada del código anterior)
+
+            // Lógica para inyectar los marcadores y contenido
             function injectMarkers(scene) {
                 const urlParams = new URLSearchParams(window.location.search);
                 const userCode = urlParams.get('code'); 
@@ -61,13 +76,30 @@
                     markerEl.setAttribute('emitevents', 'true');
                     markerEl.setAttribute('cursor', 'fuse: false; rayOrigin: mouse;');
 
-                    // *** LÓGICA DE INYECCIÓN DE CONTENIDO (Completa esta sección con tu lógica de GLTF, YouTube, Video) ***
-                    let contentEl = document.createElement('a-plane'); // Placeholder
-                    contentEl.setAttribute('color', 'green');
-                    contentEl.setAttribute('width', 1.5);
-                    contentEl.setAttribute('height', 1);
-                    contentEl.setAttribute('rotation', '-90 0 0');
-                    contentEl.setAttribute('position', '0 0.5 0');
+                    // INYECCIÓN DE CONTENIDO (Se usará un placeholder si no es GLTF)
+                    let contentEl;
+                    
+                    if (config.resource.endsWith('.glb')) {
+                        contentEl = document.createElement('a-gltf-model');
+                        contentEl.setAttribute('src', config.resource);
+                        contentEl.setAttribute('scale', '0.5 0.5 0.5'); 
+                        contentEl.setAttribute('rotation', '-90 0 0');
+                    } else {
+                        // Placeholder (o lógica de YouTube/Video local)
+                        contentEl = document.createElement('a-plane');
+                        contentEl.setAttribute('color', 'blue');
+                        contentEl.setAttribute('width', 1.5);
+                        contentEl.setAttribute('height', 1);
+                        contentEl.setAttribute('rotation', '-90 0 0');
+                        contentEl.setAttribute('position', '0 0.5 0');
+                        const textEl = document.createElement('a-text');
+                        textEl.setAttribute('value', key);
+                        textEl.setAttribute('width', 3);
+                        textEl.setAttribute('position', '0 0 0.05');
+                        contentEl.appendChild(textEl);
+                    }
+
+                    // Propiedades necesarias para interactividad
                     contentEl.classList.add('clickable', 'gesturable'); 
                     contentEl.setAttribute('gesture-handler', '');
 
@@ -77,22 +109,22 @@
             }
 
 
-            // FUNCIÓN CRÍTICA: Inicialización forzada de la cámara
+            // FUNCIÓN CRÍTICA: Inicialización forzada de la cámara con JS
             function initARScene() {
                 const videoId = 'arjs-video-source';
                 let videoEl = document.getElementById(videoId);
 
                 // 1. Crear el elemento de video
                 if (!videoEl) {
-    videoEl = document.createElement('video');
-    videoEl.setAttribute('id', videoId);
-    videoEl.setAttribute('autoplay', '');
-    videoEl.setAttribute('playsinline', ''); // ⬅️ CRÍTICO para iOS
-    videoEl.setAttribute('muted', ''); 
-    videoEl.setAttribute('crossorigin', 'anonymous'); // ⬅️ CRÍTICO para WebGL
-    videoEl.setAttribute('style', 'position: absolute; top: 0; left: 0; z-index: -2; visibility: hidden;');
-    document.body.appendChild(videoEl);
-}
+                    videoEl = document.createElement('video');
+                    videoEl.setAttribute('id', videoId);
+                    videoEl.setAttribute('autoplay', '');
+                    videoEl.setAttribute('playsinline', ''); // Necesario en iOS
+                    videoEl.setAttribute('muted', ''); 
+                    videoEl.setAttribute('crossorigin', 'anonymous'); // ⬅️ CRÍTICO para WebGL/Pantalla en Blanco
+                    videoEl.setAttribute('style', 'position: absolute; top: 0; left: 0; z-index: -2; visibility: hidden;');
+                    document.body.appendChild(videoEl);
+                }
 
                 // 2. Definir restricciones de alta calidad y cámara trasera
                 const constraints = {
@@ -116,23 +148,23 @@
                             const scene = document.getElementById('scene');
                             if (scene) {
                                 scene.setAttribute('arjs', 
-                                `sourceType: video; 
-                                 sourceUrl: #${videoId}; 
-                                 debugUIEnabled: true; 
-                                 videoTextureParameters: { facingMode: "environment" }; 
-                                 detectionMode: mono; 
-                                 cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;`);
+                                    `sourceType: video; 
+                                     sourceUrl: #${videoId}; 
+                                     debugUIEnabled: true; 
+                                     detectionMode: mono; 
+                                     cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;`);
                                 
                                 injectMarkers(scene); 
                             }
                         };
                     })
                     .catch(function(err) {
-                        console.error("Error crítico al iniciar la cámara. El dispositivo o navegador no permite el acceso:", err);
-                        alert("Error de cámara: Asegúrese de usar HTTPS y que los permisos no estén bloqueados. Causa: " + err.name);
+                        console.error("Error crítico al iniciar la cámara:", err);
+                        alert(`Error de cámara: Asegúrese de usar HTTPS y dar permisos. Causa: ${err.name}`);
                     });
             }
 
+            // Iniciar el proceso cuando el DOM esté listo
             document.addEventListener('DOMContentLoaded', initARScene); 
 
         </script>
@@ -140,7 +172,7 @@
         <style>
             .ar-warning {
                 position: fixed; top: 10px; left: 10px; z-index: 1000;
-                background: rgba(23, 162, 184, 0.8); color: white; padding: 10px; border-radius: 5px;
+                background: rgba(40, 167, 69, 0.8); color: white; padding: 10px; border-radius: 5px;
                 font-family: sans-serif;
             }
         </style>
@@ -148,21 +180,19 @@
 
     <body style="margin: 0; overflow: hidden;">
         <div class="ar-warning">
-            ✅ INTENTO 3: FIX FINAL: Inyección forzada de la cámara con JavaScript. Limpia la caché.
+            ✅ Intento 4: Versión final: Cámara iniciada por JS, FIX de WebGL/crossorigin aplicado.
         </div>
         <a-scene
             vr-mode-ui="enabled: false"
             loading-screen="enabled: false;"
             
-
+   
             arjs='' 
               
             id="scene"
             embedded
             gesture-detector
-
-            renderer="logarithmicDepthBuffer: true; antialias: auto; colorManagement: true; sortObjects: true;"
-            
+            force-redraw 
         >
             <a-assets>
                 </a-assets>
