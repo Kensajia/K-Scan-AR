@@ -89,7 +89,7 @@
             <input type="text" id="user-name" placeholder="Ej: Juan Pérez">
             <p></p>
             <label for="user-code">Código Único:</label>
-            <input type="text" id="user-code" placeholder="Ej: CODE001" maxlength="8">
+            <input type="text" id="user-code" placeholder="Ej: CODE001" >
             
             <button onclick="handleAccessAttempt()" id="access-button">Acceder</button>
             <button onclick="showSelectionView(getStoredCodes())" id="back-button" class="secondary-button" style="display: none;">Nuevo Código</button>
@@ -318,13 +318,10 @@
              // 1. Determinar la vista inicial después de cargar los datos
             const storedCodes = getStoredCodes();
             
-            if (storedCodes.length > 0) {
-                // Hay códigos guardados, mostramos el menú de selección
-                showSelectionView(storedCodes);
-            } else {
-                // No hay códigos guardados, mostramos la entrada de código
-                showInputView(false); // No hay códigos guardados, mostrar solo la entrada.
-            }
+            console.log("Códigos almacenados:", storedCodes); // ⬅️ AÑADE ESTO
+            
+            // 2. FORZAR la vista de ingreso para verificar que el contenedor existe
+            showInputView(false); 
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -338,5 +335,6 @@
     </script>
 </body>
 </html>
+
 
 
