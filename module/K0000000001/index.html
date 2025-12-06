@@ -16,14 +16,14 @@
             const ContenidoModulo = {
                 // ESTA CONFIGURACIÓN ES VÁLIDA SÓLO PARA ESTA CARPETA (CARPETA1)
                 "susam-51162": { 
-                    "MARCADOR_A": "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", // MULTIMEDIA 1
-                    "MARCADOR_B": "disabled", // MULTIMEDIA 2
-                    "MARCADOR_C": "assets/modelo_3d.glb"  // MULTIMEDIA 3
+                    "MARCADOR_A": "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", // TAZA
+                    "MARCADOR_B": "disabled", // POSTAL 1: Desactivado
+                    "MARCADOR_C": "assets/modelo_3d.glb"  // POSTAL 2: Modelo 3D
                 }
             };
 
             // =====================================================================
-            // 2. LÓGICA DE CARGA Y REDIRECCIÓN DEL RECURSO
+            // 2. LÓGICA DE CARGA DE RECURSOS
             // =====================================================================
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -73,7 +73,6 @@
                 const scene = document.getElementById('scene');
                 
                 markerConfigs.forEach(config => {
-                    // Si el recurso está deshabilitado, no creamos el marcador.
                     if (config.resource === "disabled") {
                         return;
                     }
@@ -84,7 +83,6 @@
                     markerEl.setAttribute('url', config.pattern);
                     markerEl.setAttribute('smooth', 'true');
                     markerEl.setAttribute('id', config.id);
-                    // Otras configuraciones del marcador...
 
                     // --- LÓGICA DE CONTENIDO ---
                     
@@ -164,73 +162,28 @@
 
     <body style="margin: 0; overflow: hidden;">
         <div class="ar-warning">
-            ⚠️ ADVERTENCIA: Los videos de YouTube se abrirán en una nueva pestaña al hacer clic en el marcador.
+            ⚠️ Advertencia: Los videos de YouTube se abrirán en una nueva pestaña al hacer clic en el marcador.
         </div>
-
-        <script>
-    // =====================================================================
-    // 1. FORZAR LA RESOLUCIÓN DE LA CÁMARA
-    // =====================================================================
-        window.onload = function() {
-        const video = document.createElement('video');
-        video.setAttribute('id', 'arjs-video');
-        video.setAttribute('autoplay', '');
-        video.setAttribute('playsinline', '');
-        video.setAttribute('style', 'display:none;');
-        document.body.appendChild(video);
-            
-                // Define las restricciones de calidad que queremos solicitar (Ej: 1920x1080)
-                const constraints = {
-                    audio: false,
-                    video: {
-                        facingMode: { ideal: "environment" }, // Prioriza la cámara trasera
-                        width: { ideal: 1920 },               // Ancho deseado
-                        height: { ideal: 1080 }              // Alto deseado
-                        // Si 1920x1080 falla, baja a 1280x720, que es más común.
-                    }
-                };
-                
-                navigator.mediaDevices.getUserMedia(constraints)
-                    .then(function(stream) {
-                        video.srcObject = stream;
-                        // Una vez que el stream inicia, podemos inyectar la fuente en AR.js
-                        
-                        // 💡 PASO CLAVE: Inyectar la fuente en la escena de A-Frame/AR.js
-                        const scene = document.querySelector('a-scene');
-                        if (scene) {
-                            // Quitamos sourceType: webcam y usamos sourceType: video para usar el elemento que creamos
-                            scene.setAttribute('arjs', `sourceType: video; sourceUrl: #arjs-video; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; cameraParametersUrl: ../../aframe/camera_para.dat;`);
-                            // También podrías necesitar quitar sourceWidth/Height de AR.js si lo dejaste antes.
-                        }
-                    })
-                    .catch(function(err) {
-                        console.error("Error al acceder a la cámara:", err);
-                        alert("No se pudo iniciar la cámara con la resolución deseada. Intentando con la configuración por defecto.");
-                        // Si falla, el código de AR.js debe encargarse de iniciar la cámara por defecto.
-                    });
-            };
-        
-            // ... (El resto de tu lógica de A-Frame/AR.js, componentes y la tabla ContenidoModulo) ...
-        </script>
-        
         <a-scene
-    vr-mode-ui="enabled: false"
-    loading-screen="enabled: false;"
-    
-
-    arjs='sourceType: video; 
-          sourceUrl: #arjs-video;
-          debugUIEnabled: false; 
-          detectionMode: mono_and_matrix; 
-          matrixCodeType: 3x3;
-          cameraParametersUrl: ../../aframe/camera_para.dat;' 
-          
-    id="scene"
-    embedded
-    gesture-detector
->
-
+            vr-mode-ui="enabled: false"
+            loading-screen="enabled: false;"
             
+
+            arjs='sourceType: webcam; 
+                  // Forzar la resolución deseada para alta calidad y FOV correcto
+                  sourceWidth: 1280; 
+                  sourceHeight: 960; 
+                  displayWidth: 1280; 
+                  displayHeight: 960;
+                  debugUIEnabled: false; 
+                  detectionMode: mono_and_matrix; 
+                  matrixCodeType: 3x3;
+                  cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;' 
+                  
+            id="scene"
+            embedded
+            gesture-detector
+        >
             <a-assets>
                 </a-assets>
 
