@@ -1,126 +1,186 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html lang="es">
+<head>
     <meta charset="utf-8">
-    <title>K-Scan AR Personalizado</title>
-    
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-    
+    <title>K-Scan AR - Acceso</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-      /* Estilos para ocultar el visor de AR mientras se pide el código */
-      .arjs-loader {
-        height: 100%; width: 100%; position: absolute; top: 0; left: 0;
-        background-color: rgba(0, 0, 0, 0.8); z-index: 9999;
-        display: flex; justify-content: center; align-items: center;
-      }
-      .arjs-loader div { text-align: center; font-size: 1.25em; color: white; }
+        /* Estilos básicos para centrar el formulario */
+        body {
+            font-family: sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+        #selection-list {
+            text-align: left;
+            margin-top: 20px;
+        }
+        #selection-list button {
+            display: block;
+            width: 100%;
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
+            margin-bottom: 8px;
+            text-align: left;
+        }
     </style>
-  </head>
+</head>
+<body>
 
-  <body style="margin : 0px; overflow: hidden;">
-    
-    <div id="login-overlay" style="position: absolute; width: 100%; height: 100%; background: #222; z-index: 1000; display: flex; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 40px; border-radius: 10px; text-align: center;">
+    <div class="container">
+        <div id="input-view">
             <h2>Introduce tu Código de Acceso</h2>
-            <input type="text" id="user-code" placeholder="Escribe tu código aquí" style="padding: 10px; margin: 15px 0; border: 1px solid #ccc; width: 80%;"><br>
-            <button onclick="iniciarExperiencia()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Iniciar Escaneo AR</button>
-            <p id="error-message" style="color: red; margin-top: 10px; display: none;">Código incorrecto. Intenta de nuevo.</p>
+            <input type="text" id="user-code" placeholder="Código Único (Ej: CODE001)" maxlength="8">
+            <button onclick="handleAccessAttempt()">Acceder</button>
+            <p id="error-message"></p>
+        </div>
+
+        <div id="selection-view" style="display: none;">
+            <h2>Selecciona tu Experiencia:</h2>
+            <div id="selection-list">
+                </div>
+            <button onclick="showInputView()" style="background: #6c757d; margin-top: 15px;">Usar otro Código Único</button>
         </div>
     </div>
-    
-    <a-scene
-        id="ar-scene"
-        style="display: none;" /* Inicialmente oculto */
-        vr-mode-ui="enabled: false;"
-        renderer="logarithmicDepthBuffer: true;"
-        arjs="sourceType: webcam; detectionMode: mono; patternRatio: 0.5;"
-        >
-
-        <a-nft
-            type="nft"
-            url="./assets/MiMarcador"  /* IMPORTANTE: Esta es la carpeta en tu GitHub Pages */
-            smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5"
-            >
-            
-            <a-box 
-                id="contenido-personalizado" 
-                visible="false" 
-                scale="0.5 0.5 0.5" 
-                rotation="-90 0 0" /* Gira para que esté en el suelo */
-                material="color: #666" /* Color base antes de cargar el contenido */
-                ></a-box>
-
-        </a-nft>
-
-        <a-entity camera></a-entity>
-    </a-scene>
 
     <script>
-        // Tarea 1: La Tabla de Búsqueda (¡Aquí defines los códigos y contenidos!)
-        const contenidoPersonalizado = {
-            "0001": { 
-                tipo: "video", 
-                url: "https://www.youtube.com/embed/ejemplo-video-persona1", /* REEMPLAZA ESTO CON TU ENLACE REAL */
-                dimensiones: "1.6 0.9 0"
-            },
-            "0002": { 
-                tipo: "3d", 
-                url: "assets/modelo-persona2.glb", /* REEMPLAZA ESTO CON LA RUTA DE TU MODELO 3D */
-                dimensiones: "0.5 0.5 0.5"
-            },
-            "INVITADO": { 
-                tipo: "video", 
-                url: "https://www.youtube.com/embed/video-generico", /* Contenido predeterminado */
-                dimensiones: "1.6 0.9 0"
-            }
+        // =====================================================================
+        // 1. TABLA DE BÚSQUEDA GLOBAL
+        // Define el código único, la carpeta del proyecto y el nombre amigable.
+        // El formato de la URL de redirección será: /module/[RUTA-PROYECTO]/?code=[CODIGO-UNICO]
+        // =====================================================================
+        const ProyectosAR = {
+            "CODE001": { ruta: "tazas", nombre: "Taza de Juan Pérez" },
+            "CODE002": { ruta: "tazas", nombre: "Taza de María López" },
+            "POST001": { ruta: "postales", nombre: "Postal de Navidad" },
+            "POST002": { ruta: "postales", nombre: "Postal de Cumpleaños" },
+            // ¡AGREGA MÁS PROYECTOS AQUÍ!
         };
 
-        const sceneEl = document.getElementById('ar-scene');
-        const loginOverlay = document.getElementById('login-overlay');
-        const userCodeInput = document.getElementById('user-code');
-        const errorMessage = document.getElementById('error-message');
-        const contenidoAR = document.getElementById('contenido-personalizado');
+        const LOCAL_STORAGE_KEY = 'arUserCodes';
 
-        function iniciarExperiencia() {
-            const userCode = userCodeInput.value.toUpperCase().trim();
+        // =====================================================================
+        // 2. FUNCIONES DE VISTA Y LÓGICA
+        // =====================================================================
 
-            if (contenidoPersonalizado[userCode]) {
-                const data = contenidoPersonalizado[userCode];
-                
-                // 1. Ocultar la capa de login
-                loginOverlay.style.display = 'none';
+        function getStoredCodes() {
+            // Devuelve el array de códigos guardados en LocalStorage, o un array vacío si no hay nada.
+            const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
 
-                // 2. Mostrar la escena AR
-                sceneEl.style.display = 'block';
-
-                // 3. Aplicar el contenido personalizado al objeto 3D
-                if (data.tipo === 'video') {
-                    // Si es video, usamos un componente de video en 3D
-                    contenidoAR.setAttribute('geometry', `primitive: plane; width: ${data.dimensiones.split(' ')[0]}; height: ${data.dimensiones.split(' ')[1]};`);
-                    
-                    // Necesitarás una etiqueta de video en el HTML con la URL de YouTube y luego usar un componente de A-Frame para manejarlo
-                    // Para simplificar, la gente suele usar una textura de video.
-                    // ¡Importante! YouTube embed no es directo. Usaremos un color o una textura simple por ahora.
-                    contenidoAR.setAttribute('material', `color: green;`);
-                    console.log(`Video asignado a ${data.url}`);
-
-                } else if (data.tipo === '3d') {
-                    // Si es un modelo 3D (GLTF/GLB)
-                    contenidoAR.setAttribute('gltf-model', `url(${data.url})`);
-                    contenidoAR.setAttribute('geometry', 'primitive: box;'); // Reiniciar a caja, luego el modelo GLTF tomará control
-                }
-                
-                // Mostrar el objeto y definir la escala
-                contenidoAR.setAttribute('visible', 'true');
-                contenidoAR.setAttribute('scale', data.dimensiones);
-
-            } else {
-                errorMessage.style.display = 'block';
-                errorMessage.textContent = 'Código incorrecto. Intenta de nuevo.';
+        function saveCode(code) {
+            // Guarda un nuevo código, asegurándose de que no haya duplicados.
+            let storedCodes = getStoredCodes();
+            if (!storedCodes.some(item => item.code === code)) {
+                const project = ProyectosAR[code];
+                storedCodes.push({ 
+                    code: code, 
+                    name: project.nombre, 
+                    ruta: project.ruta 
+                });
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedCodes));
             }
         }
+
+        function redirectToProject(code, ruta) {
+            // Construye la URL y redirige al módulo AR con el código en el parámetro 'code'.
+            const basePath = window.location.href.split('index.html')[0] || window.location.href;
+            window.location.href = `${basePath}module/${ruta}/?code=${code}`;
+        }
+
+        function handleAccessAttempt() {
+            const userCodeInput = document.getElementById('user-code');
+            const errorMessage = document.getElementById('error-message');
+            const code = userCodeInput.value.toUpperCase().trim();
+
+            errorMessage.style.display = 'none';
+
+            if (ProyectosAR[code]) {
+                const project = ProyectosAR[code];
+                // 1. Guardar el código para el futuro.
+                saveCode(code);
+                // 2. Redirigir al proyecto específico.
+                redirectToProject(code, project.ruta);
+            } else {
+                errorMessage.textContent = 'Código no válido. Por favor, verifica el código único.';
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        function showInputView() {
+            document.getElementById('selection-view').style.display = 'none';
+            document.getElementById('input-view').style.display = 'block';
+            document.getElementById('user-code').value = ''; // Limpiar el campo
+        }
+
+        function showSelectionView(storedCodes) {
+            const selectionList = document.getElementById('selection-list');
+            selectionList.innerHTML = ''; // Limpiar la lista
+
+            storedCodes.forEach(item => {
+                const button = document.createElement('button');
+                button.textContent = item.name;
+                button.onclick = () => redirectToProject(item.code, item.ruta);
+                selectionList.appendChild(button);
+            });
+
+            document.getElementById('input-view').style.display = 'none';
+            document.getElementById('selection-view').style.display = 'block';
+        }
+
+        // =====================================================================
+        // 3. INICIO: Determinar qué mostrar al cargar la página
+        // =====================================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedCodes = getStoredCodes();
+            
+            if (storedCodes.length > 0) {
+                // Si ya hay códigos guardados, mostrar la lista de selección.
+                showSelectionView(storedCodes);
+            } else {
+                // Si no hay códigos, mostrar la vista de ingreso de código.
+                showInputView();
+            }
+        });
+
     </script>
-  </body>
+</body>
 </html>
