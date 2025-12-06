@@ -23,6 +23,25 @@
             };
 
             // =====================================================================
+            // 4. FIX: FORZAR REDIMENSIONAMIENTO PARA ELIMINAR ZOOM INICIAL
+            // =====================================================================
+            function fixInitialZoom() {
+            // Dispara un evento resize después de que la escena haya tenido un momento para inicializarse
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                    console.log("Forzando evento resize para corregir zoom inicial.");
+                }, 1500); // 1.5 segundos de retraso
+            }
+            
+            // Llama a esta función después de que la escena se haya cargado.
+            document.addEventListener('DOMContentLoaded', () => {
+                // ... (Tu código existente de inyección de marcadores) ...
+                
+                // 💡 LLAMADA AL FIX
+                fixInitialZoom();
+            });
+            
+            // =====================================================================
             // 2. LÓGICA DE CARGA DE RECURSOS
             // =====================================================================
 
@@ -169,16 +188,15 @@
             loading-screen="enabled: false;"
             
 
-            arjs='sourceType: webcam; 
-                  // Forzar la resolución deseada para alta calidad y FOV correcto
-                  sourceWidth: 1280; 
-                  sourceHeight: 960; 
-                  displayWidth: 1280; 
-                  displayHeight: 960;
-                  debugUIEnabled: false; 
-                  detectionMode: mono_and_matrix; 
-                  matrixCodeType: 3x3;
-                  cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;' 
+            rjs='sourceType: webcam; 
+          sourceWidth: 1280; 
+          sourceHeight: 720; 
+          displayWidth: 1280; 
+          displayWidth: 720;
+          debugUIEnabled: false; 
+          detectionMode: mono_and_matrix; 
+          matrixCodeType: 3x3;
+          cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;'
                   
             id="scene"
             embedded
