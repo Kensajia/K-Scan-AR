@@ -1,16 +1,29 @@
 {
 	// [CÓDIGO ÚNICO]: { ruta: [NOMBRE CARPETA MODULES], presentacion: [ARRAY DE NOMBRES DE PRESENTACION] }
-    "CODE001": {
-        "ruta": "tazas",
-        "presentacion": ["Video 1 (Bienvenida)", "Animación 3D (Saludo)"]
-    },
-    "CODE002": {
-        "ruta": "tazas",
-        "presentacion": ["Video Principal (Personal)", "Audio (Instrucciones)"]
-    },
-    "POST001": {
-        "ruta": "postales",
-        "presentacion": ["Nieve 3D", "Video Familiar"]
-    }
+    "susam-51162": {
+        "ruta": "K0000000001",
+        "presentacion": ["https://youtu.be/kRCWvqJVWx8","https://youtu.be/kRCWvqJVWx8"]
+    }",
+    "susam-52615": {
+        "ruta": "K0000000002",
+        "presentacion": [","]
+    }",
+	"susam-52660": {
+        "ruta": "K0000000010",
+        "presentacion": [","]
+    }",
+	"docky-52666": {
+        "ruta": "K0000000011",
+        "presentacion": [","]
+    }",
+	"sin-titulo-53297": {
+        "ruta": "K0000000012",
+        "presentacion": [","]
+    }",
+	"LOS3057334": {
+        "ruta": "K0000000020",
+        "presentacion": [","]
+    }"
     // Puedes continuar añadiendo más códigos aquí...
+
 }
