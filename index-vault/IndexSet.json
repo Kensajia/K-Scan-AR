@@ -1,0 +1,16 @@
+{
+	// [CÓDIGO ÚNICO]: { ruta: [NOMBRE CARPETA MODULES], presentacion: [ARRAY DE NOMBRES DE PRESENTACION] }
+    "CODE001": {
+        "ruta": "tazas",
+        "presentacion": ["Video 1 (Bienvenida)", "Animación 3D (Saludo)"]
+    },
+    "CODE002": {
+        "ruta": "tazas",
+        "presentacion": ["Video Principal (Personal)", "Audio (Instrucciones)"]
+    },
+    "POST001": {
+        "ruta": "postales",
+        "presentacion": ["Nieve 3D", "Video Familiar"]
+    }
+    // Puedes continuar añadiendo más códigos aquí...
+}
