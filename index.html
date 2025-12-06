@@ -318,10 +318,13 @@
              // 1. Determinar la vista inicial después de cargar los datos
             const storedCodes = getStoredCodes();
             
-            console.log("Códigos almacenados:", storedCodes); // ⬅️ AÑADE ESTO
-            
-            // 2. FORZAR la vista de ingreso para verificar que el contenedor existe
-            showInputView(false); 
+            if (storedCodes.length > 0) {
+                // Hay códigos guardados, mostramos el menú de selección
+                showSelectionView(storedCodes);
+            } else {
+                // No hay códigos guardados, mostramos la entrada de código
+                showInputView(false); // No hay códigos guardados, mostrar solo la entrada.
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -335,6 +338,7 @@
     </script>
 </body>
 </html>
+
 
 
 
