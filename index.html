@@ -36,8 +36,10 @@
         /* Estilos de Tema OSCURO */
         .dark-theme { background-color: #1a1a1a; color: #f4f4f4; }
         .dark-theme .container { background: #2c2c2c; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); }
-        .dark-theme button { background: #4a4a4a; color: #f4f4f4; border: 1px solid #666; }
+        .dark-theme button { color: #f4f4f4; border: 1px solid #666; }
+        .dark-theme #access-button, .dark-theme .project-selection-item .access-btn { background: #007bff; border-color: #007bff; }
         .dark-theme .secondary-button { background: #3c3c3c; }
+        .dark-theme .delete-btn { background: #dc3545; border-color: #dc3545; }
         .dark-theme input[type="text"] { background: #3c3c3c; color: white; border: 1px solid #4a4a4a; }
         .dark-theme .logo {
 			background: white;      /* Fondo blanco */
@@ -68,9 +70,18 @@
         
         /* Estilos específicos de la vista de selección */
         #selection-list { text-align: left; margin-top: 20px; }
-        .project-selection-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .project-selection-item { 
+            border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; 
+            display: flex; flex-direction: column; 
+        }
         .project-selection-item h3 { margin: 0 0 10px 0; font-size: 1em; }
-        .project-selection-item button { margin-left: 10px; }
+        
+        .selection-actions {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+        }
+        .selection-actions select { width: 60%; }
+        .selection-actions button { margin: 0 0 0 5px; padding: 8px 15px; font-size: 14px; }
+
         .loading-view { text-align: center; font-size: 1.2em; }
     </style>
 </head>
@@ -85,14 +96,14 @@
 
         <div id="input-view" style="display: none;">
             <h2>Ingresar Nuevo Acceso</h2>
-            <label for="user-name">Nombre de identificador para el codigo:</label>
-            <input type="text" id="user-name" placeholder="NOMBRE">
+            <label for="user-name">Tu Nombre (opcional):</label>
+            <input type="text" id="user-name" placeholder="IDENTIFICADOR">
             <p></p>
             <label for="user-code">Código Único:</label>
-            <input type="text" id="user-code" placeholder="CODIGO" >
+            <input type="text" id="user-code" placeholder="CODIGO" maxlength="30">
             
             <button onclick="handleAccessAttempt()" id="access-button">Acceder</button>
-            <button onclick="showSelectionView(getStoredCodes())" id="back-button" class="secondary-button" style="display: none;">Nuevo Código</button>
+            <button onclick="showSelectionView(getStoredCodes())" id="back-button" class="secondary-button" style="display: none;">Códigos Guardados</button>
             <p id="error-message"></p>
         </div>
 
@@ -101,7 +112,7 @@
             <div id="selection-list">
                 </div>
             <div style="margin-top: 20px;">
-                <button onclick="showInputView()" class="secondary-button">Ingresar Nuevo Código</button>
+                <button onclick="showInputView()" class="secondary-button">Nuevo Código</button>
             </div>
         </div>
     </div>
@@ -118,33 +129,28 @@
 
     <script>
         // =====================================================================
-        // 1. CARGA DINÁMICA DE LA TABLA DE BÚSQUEDA GLOBAL (desde JSON)
+        // 1. CONSTANTES Y CARGA DE DATOS
         // =====================================================================
-        let ProyectosAR = {}; // Se inicializa como un objeto vacío
+        let ProyectosAR = {}; 
         const LOCAL_STORAGE_KEY = 'arUserCodes';
         const LOCAL_STORAGE_THEME = 'arThemePreference';
-
+        
         async function loadProjectData() {
             try {
-                // RUTA ACTUALIZADA: /index-vault/IndexSet.json
                 const response = await fetch('./index-vault/IndexSet.json'); 
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
-                // Asigna los datos a la variable global ProyectosAR
                 ProyectosAR = await response.json();
                 
-                // Ocultar la vista de carga
                 document.getElementById('loading-view').style.display = 'none';
-                
-                // Una vez cargado, inicia la lógica de la interfaz de usuario
                 initializeUI(); 
                 
             } catch (error) {
                 console.error("No se pudo cargar la tabla de proyectos:", error);
-                document.getElementById('loading-view').innerHTML = '<h1>Error: No se pudo cargar la tabla de códigos.</h1><p>Asegúrate de que el archivo **IndexSet.json** exista en la carpeta **index-vault**.</p>';
+                document.getElementById('loading-view').innerHTML = '<h1>Error Fatal</h1><p>No se pudo cargar la tabla de códigos. Revisa la consola para más detalles.</p>';
             }
         }
         
@@ -173,7 +179,7 @@
         }
         
         // =====================================================================
-        // 3. GESTIÓN DE ACCESO Y REDIRECCIÓN
+        // 3. GESTIÓN DE CÓDIGOS GUARDADOS (LocalStorage)
         // =====================================================================
 
         function getStoredCodes() {
@@ -188,19 +194,30 @@
             // Si el código ya está almacenado, salimos.
             if (storedCodes.some(item => item.code === code)) return;
 
-            // Almacenamos el código, el nombre que el usuario ingresó y los datos del proyecto.
+            // Almacenamos el nuevo código.
             storedCodes.push({ 
                 code: code, 
-                name: name, // Nombre ingresado por el usuario
+                name: name, 
                 ruta: projectData.ruta,
                 presentaciones: projectData.presentacion 
             });
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedCodes));
         }
+
+        // NUEVA FUNCIÓN: Elimina un código guardado del almacenamiento local
+        function deleteCode(codeToDelete) {
+            let storedCodes = getStoredCodes();
+            // Filtra el código que coincide. La comparación es case-sensitive.
+            storedCodes = storedCodes.filter(item => item.code !== codeToDelete);
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedCodes));
+            
+            // Re-renderiza la vista con la lista actualizada
+            showSelectionView(storedCodes);
+        }
         
         function redirectToProject(code, ruta, presentationIndex = 0) {
             const basePath = window.location.href.split('index.html')[0] || window.location.href;
-            // El parámetro 'p' indica qué presentación debe cargar (0, 1, 2, etc.)
+            // 'p' indica el Modo de Presentación seleccionado (P0, P1, P2...)
             window.location.href = `${basePath}module/${ruta}/?code=${code}&p=${presentationIndex}`;
         }
 
@@ -208,24 +225,31 @@
             const userCodeInput = document.getElementById('user-code');
             const userNameInput = document.getElementById('user-name');
             const errorMessage = document.getElementById('error-message');
-            const code = userCodeInput.value.trim();
-            const name = userNameInput.value.trim();
+            
+            // Eliminado .toUpperCase() para permitir minúsculas/mayúsculas
+            const code = userCodeInput.value.trim(); 
+            let name = userNameInput.value.trim();
 
             errorMessage.style.display = 'none';
 
-            if (!name) {
-                errorMessage.textContent = 'Por favor, ingresa un nombre para identificar este acceso.';
+            if (!code) {
+                errorMessage.textContent = 'Por favor, ingresa el código único.';
                 errorMessage.style.display = 'block';
                 return;
             }
 
-            if (ProyectosAR[code]) {
+            // Si el nombre está vacío, usa el código como identificador (NUEVA LÓGICA)
+            if (!name) {
+                name = code; 
+            }
+
+            // La clave de búsqueda debe ser exactamente igual a la clave en el JSON
+            if (ProyectosAR[code]) { 
                 const project = ProyectosAR[code];
                 
-                // 1. Guardar el código y el nombre ingresado.
                 saveCode(code, name);
                 
-                // 2. Redirigir a la primera presentación por defecto (índice 0).
+                // Redirige al primer modo de presentación (índice 0)
                 redirectToProject(code, project.ruta, 0); 
             } else {
                 errorMessage.textContent = 'Código no válido. Por favor, verifica el código único.';
@@ -238,54 +262,53 @@
             selectionList.innerHTML = ''; 
 
             if (storedCodes.length === 0) {
-                 // Si no hay códigos guardados, mostrar la vista de entrada.
                  showInputView(false); 
                  return;
             }
+            
+            // El botón "Códigos Guardados" debe ser visible si hay elementos para ver
+            document.getElementById('back-button').style.display = 'inline-block';
 
             storedCodes.forEach(item => {
                 const projectDiv = document.createElement('div');
                 projectDiv.className = 'project-selection-item';
 
-                // Título del Proyecto (El nombre que el usuario tecleó)
+                // Título del Proyecto (El nombre que el usuario tecleó o el código)
                 const title = document.createElement('h3');
                 title.textContent = item.name + ` (Código: ${item.code})`;
                 projectDiv.appendChild(title);
 
+                // Contenedor para acciones de selección y eliminación
+                const actionContainer = document.createElement('div');
+                actionContainer.className = 'selection-actions';
+                
                 // Selector de Presentación (Dropdown)
                 const select = document.createElement('select');
+                select.style.flexGrow = '1';
                 select.style.padding = '8px';
                 select.style.borderRadius = '5px';
-                select.style.marginRight = '10px';
-                select.style.width = 'calc(100% - 130px)';
                 
-                // Opción por defecto
                 const defaultOption = document.createElement('option');
                 defaultOption.textContent = "Selecciona una presentación...";
                 defaultOption.value = "";
                 select.appendChild(defaultOption);
 
-                // Llenar el dropdown con las opciones
                 item.presentaciones.forEach((presName, index) => {
                     const option = document.createElement('option');
                     option.value = index;
                     option.textContent = presName;
                     select.appendChild(option);
                 });
-                projectDiv.appendChild(select);
+                actionContainer.appendChild(select);
                 
-                // Botón de Iniciar Escaneo
+                // Botón de Acceder
                 const startButton = document.createElement('button');
                 startButton.textContent = 'Acceder';
+                startButton.className = 'access-btn';
                 startButton.disabled = true; 
                 
-                // Lógica para habilitar el botón y redirigir
                 select.onchange = () => {
-                    if (select.value !== "") {
-                        startButton.disabled = false;
-                    } else {
-                        startButton.disabled = true;
-                    }
+                    startButton.disabled = select.value === "";
                 };
 
                 startButton.onclick = () => {
@@ -293,7 +316,16 @@
                     redirectToProject(item.code, item.ruta, presentationIndex);
                 };
                 
-                projectDiv.appendChild(startButton);
+                actionContainer.appendChild(startButton);
+
+                // Botón de Eliminar (NUEVA FUNCIÓN)
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Eliminar';
+                deleteButton.className = 'delete-btn';
+                deleteButton.onclick = () => deleteCode(item.code); // Llama a la nueva función
+                
+                actionContainer.appendChild(deleteButton);
+                projectDiv.appendChild(actionContainer);
                 selectionList.appendChild(projectDiv);
             });
 
@@ -307,42 +339,29 @@
             document.getElementById('user-code').value = '';
             document.getElementById('user-name').value = '';
             
-            // Mostrar u ocultar el botón "Nuevo Código" (que hace de botón de volver).
+            // Mostrar u ocultar el botón "Códigos Guardados"
             document.getElementById('back-button').style.display = showBackButton ? 'inline-block' : 'none';
         }
         
         // =====================================================================
-        // 4. INICIO: Carga de Datos y UI
+        // 4. INICIO Y LÓGICA DE UI
         // =====================================================================
         function initializeUI() {
-             // 1. Determinar la vista inicial después de cargar los datos
             const storedCodes = getStoredCodes();
             
             if (storedCodes.length > 0) {
-                // Hay códigos guardados, mostramos el menú de selección
                 showSelectionView(storedCodes);
             } else {
-                // No hay códigos guardados, mostramos la entrada de código
-                showInputView(false); // No hay códigos guardados, mostrar solo la entrada.
+                showInputView(false); 
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Cargar el tema al inicio
             const savedTheme = localStorage.getItem(LOCAL_STORAGE_THEME) || 'auto';
             applyTheme(savedTheme);
 
-            // Iniciar la carga de los datos JSON.
             loadProjectData();
         });
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
