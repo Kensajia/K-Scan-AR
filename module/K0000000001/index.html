@@ -12,147 +12,117 @@
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
         
         <script>
-            // =====================================================================
-            // 1. TABLA DE CONTENIDOS DINÁMICA DEL MÓDULO AR
-            // =====================================================================
-            // La estructura mapea: CÓDIGO ÚNICO -> MARCADOR -> CONFIGURACIÓN
-            const ContenidoModulo = {
-                // EJEMPLO DE CONFIGURACIÓN CON AMBOS TIPOS DE MARCADOR
-                "susam-51162": { 
-                    // MARCADOR B: Usa IMAGEN NATURAL (Sin Cuadro Negro - Requiere .fset, .iset, .fset3)
-                    "MARCADOR_A": { 
-                        type: "pattern", 
-                        url: "assets/T000001-SUSAM-01.fset", 
-                        resource: "https://www.youtube.com/embed/kRCWvqJVWx8" // YouTube
-                    }, 
-                    // MARCADOR B: Usa IMAGEN NATURAL (Sin Cuadro Negro - Requiere .fset, .iset, .fset3)
-                    "MARCADOR_B": { 
-                        type: "image", 
-                        url: "assets/postal1.fset", 
-                        resource: "assets/modelo_3d.glb" // Modelo 3D
-                    }, 
-                    // MARCADOR C: Desactivado
-                    "MARCADOR_C": { type: "disabled" } 
-                },
-                // Si tienes otros códigos en esta misma carpeta, van aquí:
-                "otroCodigoEjemplo": { /* ... */ }
-            };
+    // =====================================================================
+    // 1. TABLA DE CONTENIDOS DINÁMICA DEL MÓDULO AR
+    // =====================================================================
+    const ContenidoModulo = {
+        "susam-51162": { 
+            "MARCADOR_A": { type: "pattern", url: "assets/taza.patt", resource: "https://www.youtube.com/embed/kRCWvqJVWx8" }, 
+            "MARCADOR_B": { type: "image", url: "assets/postal1.fset", resource: "assets/modelo_3d.glb" }, 
+            "MARCADOR_C": { type: "disabled" } 
+        },
+        "otroCodigoEjemplo": { /* ... */ }
+    };
 
-            // =====================================================================
-            // 2. COMPONENTES DE A-FRAME
-            // =====================================================================
+    // =====================================================================
+    // 2. COMPONENTES DE A-FRAME Y FIX DE CÁMARA
+    // =====================================================================
 
-            // Componente para manejar la reproducción de VIDEO LOCAL
-            AFRAME.registerComponent('videohandler', {
-                schema: { targetId: {type: 'string'} },
-                init: function () {
-                    var marker = this.el;
-                    const videoEl = document.querySelector(`#${this.data.targetId}`);
-                    
-                    marker.addEventListener('markerFound', function () { if (videoEl) { videoEl.play(); } }.bind(this));
-                    marker.addEventListener('markerLost', function () { if (videoEl) { videoEl.pause(); } }.bind(this));
-                },
-            });
+    // Componente para manejar la reproducción de VIDEO LOCAL
+    AFRAME.registerComponent('videohandler', {
+        schema: { targetId: {type: 'string'} },
+        init: function () {
+            var marker = this.el;
+            const videoEl = document.querySelector(`#${this.data.targetId}`);
+            
+            marker.addEventListener('markerFound', function () { if (videoEl) { videoEl.play(); } }.bind(this));
+            marker.addEventListener('markerLost', function () { if (videoEl) { videoEl.pause(); } }.bind(this));
+        },
+    });
 
-            // =====================================================================
-            // 3. INYECCIÓN DE CONTENIDO Y CONFIGURACIÓN DE ESCENA
-            // =====================================================================
-            document.addEventListener('DOMContentLoaded', () => {
-                const urlParams = new URLSearchParams(window.location.search);
-                const userCode = urlParams.get('code'); 
-                const recursos = ContenidoModulo[userCode] || null;
-
-                if (!recursos) {
-                    if (!ContenidoModulo[userCode]) alert("Error: No se encontró contenido AR para este código.");
-                    return; 
+    // 💡 SOLUCIÓN 2: FIX para forzar la cámara trasera si la inicialización falla
+    AFRAME.registerComponent('ar-fix-facing', {
+        init: function () {
+            setTimeout(() => {
+                const video = document.querySelector('video');
+                if (video && video.srcObject) {
+                    const tracks = video.srcObject.getVideoTracks();
+                    if (tracks.length > 0) {
+                        // Intenta aplicar las restricciones, forzando la cámara trasera
+                        tracks[0].applyConstraints({
+                            advanced: [{ facingMode: "environment" }]
+                        }).catch(e => console.warn("No se pudo aplicar facingMode:", e));
+                    }
                 }
-                
-                const markerKeys = Object.keys(recursos);
-                const scene = document.getElementById('scene');
-                const assetsEl = document.querySelector('a-assets');
-                
-                markerKeys.forEach(key => {
-                    const config = recursos[key];
-                    if (config.type === "disabled") return;
+            }, 1000); // Dar 1 segundo para que la escena intente iniciar
+        }
+    });
 
-                    const markerEl = document.createElement('a-marker');
-                    
-                    // Configuración básica del marcador
-                    markerEl.setAttribute('type', config.type);
-                    markerEl.setAttribute('preset', 'custom');
-                    markerEl.setAttribute('url', config.url);
-                    markerEl.setAttribute('id', key);
-                    
-                    // Necesario para que funcione el zoom manual con gestos
-                    markerEl.setAttribute('raycaster', 'objects: .clickable');
-                    markerEl.setAttribute('emitevents', 'true');
-                    markerEl.setAttribute('cursor', 'fuse: false; rayOrigin: mouse;');
+    // =====================================================================
+    // 3. INYECCIÓN DE CONTENIDO Y CONFIGURACIÓN DE ESCENA
+    // =====================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const userCode = urlParams.get('code'); 
+        const recursos = ContenidoModulo[userCode] || null;
 
-                    let contentEl;
-                    
-                    if (config.resource.endsWith('.glb')) {
-                        // Modelo 3D (.glb)
-                        contentEl = document.createElement('a-gltf-model');
-                        contentEl.setAttribute('src', config.resource);
-                        contentEl.setAttribute('scale', '0.5 0.5 0.5'); 
-                        contentEl.setAttribute('rotation', '-90 0 0');
-                        contentEl.classList.add('clickable', 'gesturable');
+        if (!recursos) {
+            if (!ContenidoModulo[userCode]) alert("Error: No se encontró contenido AR para este código.");
+            return; 
+        }
+        
+        const markerKeys = Object.keys(recursos);
+        const scene = document.getElementById('scene');
+        const assetsEl = document.querySelector('a-assets');
+        
+        markerKeys.forEach(key => {
+            const config = recursos[key];
+            if (config.type === "disabled") return;
 
-                    } else if (config.resource.includes('youtube') || config.resource.includes('youtu.be')) {
-                        // YouTube (Plano clickable)
-                        contentEl = document.createElement('a-plane');
-                        contentEl.setAttribute('color', '#333');
-                        contentEl.setAttribute('width', 1.5);
-                        contentEl.setAttribute('height', 0.8);
-                        contentEl.setAttribute('rotation', '-90 0 0');
-                        contentEl.setAttribute('position', '0 0.5 0');
-                        contentEl.setAttribute('onclick', `window.open('${config.resource}', '_blank')`);
-                        
-                        const textEl = document.createElement('a-text');
-                        textEl.setAttribute('value', `Toca para ver ${key}`);
-                        textEl.setAttribute('width', 3);
-                        textEl.setAttribute('position', '0 0 0.05');
-                        textEl.setAttribute('align', 'center');
-                        contentEl.appendChild(textEl);
-                        contentEl.classList.add('clickable');
-                        
-                    } else if (config.resource.endsWith('.mp4') || config.resource.endsWith('.webm')) {
-                        // Video Local
-                        const videoAssetId = `vid-${key}`;
-                        
-                        // 1. Añadir video a a-assets (si no existe)
-                        if (!document.getElementById(videoAssetId)) {
-                            const videoEl = document.createElement('video');
-                            videoEl.setAttribute('id', videoAssetId);
-                            videoEl.setAttribute('src', config.resource);
-                            videoEl.setAttribute('preload', 'auto');
-                            videoEl.setAttribute('loop', '');
-                            videoEl.setAttribute('muted', '');
-                            videoEl.setAttribute('crossorigin', '');
-                            videoEl.setAttribute('playsinline', '');
-                            assetsEl.appendChild(videoEl);
-                        }
+            const markerEl = document.createElement('a-marker');
+            markerEl.setAttribute('type', config.type);
+            markerEl.setAttribute('preset', 'custom');
+            markerEl.setAttribute('url', config.url);
+            markerEl.setAttribute('id', key);
+            markerEl.setAttribute('raycaster', 'objects: .clickable');
+            markerEl.setAttribute('emitevents', 'true');
+            markerEl.setAttribute('cursor', 'fuse: false; rayOrigin: mouse;');
 
-                        // 2. Crear el componente a-video
-                        contentEl = document.createElement('a-video');
-                        contentEl.setAttribute('src', `#${videoAssetId}`);
-                        contentEl.setAttribute('scale', '1 1 1');
-                        contentEl.setAttribute('rotation', '-90 0 0');
-                        contentEl.setAttribute('position', '0 0.1 0');
-                        markerEl.setAttribute('videohandler', `targetId: ${videoAssetId}`);
-                        contentEl.classList.add('clickable', 'gesturable'); // Para gestos
-                    }
-                    
-                    if (contentEl) {
-                        contentEl.setAttribute('gesture-handler', ''); // Aplicar manejador de gestos
-                        markerEl.appendChild(contentEl);
-                    }
-                    
-                    scene.insertBefore(markerEl, document.querySelector('a-entity[camera]'));
-                });
-            });
+            // Lógica de inyección de contenido (Modelo 3D, YouTube, Video Local, etc.)
+            let contentEl;
+            
+            if (config.resource.endsWith('.glb')) {
+                contentEl = document.createElement('a-gltf-model');
+                contentEl.setAttribute('src', config.resource);
+                contentEl.setAttribute('scale', '0.5 0.5 0.5'); 
+                contentEl.setAttribute('rotation', '-90 0 0');
+                contentEl.classList.add('clickable', 'gesturable');
+            } else {
+                // Generamos un plano genérico como marcador de posición
+                contentEl = document.createElement('a-plane');
+                contentEl.setAttribute('color', 'blue');
+                contentEl.setAttribute('width', 1);
+                contentEl.setAttribute('height', 1);
+                contentEl.setAttribute('rotation', '-90 0 0');
+                contentEl.setAttribute('position', '0 0.5 0');
+                const textEl = document.createElement('a-text');
+                textEl.setAttribute('value', key);
+                textEl.setAttribute('width', 2);
+                textEl.setAttribute('position', '0 0 0.05');
+                contentEl.appendChild(textEl);
+                contentEl.classList.add('clickable', 'gesturable');
+            }
+            
+            if (contentEl) {
+                contentEl.setAttribute('gesture-handler', ''); 
+                markerEl.appendChild(contentEl);
+            }
+            
+            scene.insertBefore(markerEl, document.querySelector('a-entity[camera]'));
+        });
+    });
 
-        </script>
+</script>
 
         <style>
             .ar-warning {
@@ -163,30 +133,29 @@
         </style>
     </head>
 
-    <body style="margin: 0; overflow: hidden;">
-        <div class="ar-warning">
-            ✅ Intento 3: Versión 1.5.0: Forzando 1280x720 y calibración de cámara. Limpia la caché.
-        </div>
-        <a-scene
-    vr-mode-ui="enabled: false"
-    loading-screen="enabled: false;"
-    
+<body style="margin: 0; overflow: hidden;">
+    <div class="ar-warning">
+        🚨 FIX CRÍTICO: Intentando forzar la inicialización y la cámara trasera.
+    </div>
+    <a-scene
+        vr-mode-ui="enabled: false"
+        loading-screen="enabled: false;"
+        
 
-    arjs='sourceType: webcam; 
-          debugUIEnabled: false;
+        arjs='sourceType: webcam; 
+              debugUIEnabled: false;
+              detectionMode: mono; 
+              cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;' 
+              
+        id="scene"
+        embedded
+        gesture-detector
+        ar-fix-facing
+    >
+        <a-assets>
+            </a-assets>
 
-          detectionMode: mono; 
-
-          cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;' 
-          
-    id="scene"
-    embedded
->
-    
-            <a-assets>
-                </a-assets>
-
-            <a-entity camera fov="80"></a-entity> 
-        </a-scene>
-    </body>
+        <a-entity camera fov="80"></a-entity> 
+    </a-scene>
+</body>
 </html>
