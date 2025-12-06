@@ -79,7 +79,6 @@
         .selection-actions {
             display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
         }
-        .selection-actions select { width: 60%; }
         .selection-actions button { margin: 0 0 0 5px; padding: 8px 15px; font-size: 14px; }
 
         .loading-view { text-align: center; font-size: 1.2em; }
@@ -98,7 +97,7 @@
             <h2>Ingresar Nuevo Acceso</h2>
             <label for="user-name">Tu Nombre (opcional):</label>
             <input type="text" id="user-name" placeholder="IDENTIFICADOR">
-            <p></p>
+            
             <label for="user-code">Código Único:</label>
             <input type="text" id="user-code" placeholder="CODIGO" maxlength="30">
             
@@ -137,6 +136,7 @@
         
         async function loadProjectData() {
             try {
+                // RUTA: index-vault/IndexSet.json
                 const response = await fetch('./index-vault/IndexSet.json'); 
                 
                 if (!response.ok) {
@@ -194,31 +194,27 @@
             // Si el código ya está almacenado, salimos.
             if (storedCodes.some(item => item.code === code)) return;
 
-            // Almacenamos el nuevo código.
+            // Almacenamos solo código, nombre y ruta.
             storedCodes.push({ 
                 code: code, 
                 name: name, 
-                ruta: projectData.ruta,
-                presentaciones: projectData.presentacion 
+                ruta: projectData.ruta
             });
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedCodes));
         }
 
-        // NUEVA FUNCIÓN: Elimina un código guardado del almacenamiento local
         function deleteCode(codeToDelete) {
             let storedCodes = getStoredCodes();
-            // Filtra el código que coincide. La comparación es case-sensitive.
             storedCodes = storedCodes.filter(item => item.code !== codeToDelete);
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedCodes));
             
-            // Re-renderiza la vista con la lista actualizada
             showSelectionView(storedCodes);
         }
         
-        function redirectToProject(code, ruta, presentationIndex = 0) {
+        // FUNCIÓN DE REDIRECCIÓN SIMPLE (sin parámetro 'p')
+        function redirectToProject(code, ruta) {
             const basePath = window.location.href.split('index.html')[0] || window.location.href;
-            // 'p' indica el Modo de Presentación seleccionado (P0, P1, P2...)
-            window.location.href = `${basePath}module/${ruta}/?code=${code}&p=${presentationIndex}`;
+            window.location.href = `${basePath}module/${ruta}/?code=${code}`;
         }
 
         function handleAccessAttempt() {
@@ -226,7 +222,7 @@
             const userNameInput = document.getElementById('user-name');
             const errorMessage = document.getElementById('error-message');
             
-            // Eliminado .toUpperCase() para permitir minúsculas/mayúsculas
+            // Se permite mayúsculas/minúsculas. La clave JSON debe coincidir con el input.
             const code = userCodeInput.value.trim(); 
             let name = userNameInput.value.trim();
 
@@ -238,19 +234,17 @@
                 return;
             }
 
-            // Si el nombre está vacío, usa el código como identificador (NUEVA LÓGICA)
+            // Si el nombre está vacío, usa el código como identificador
             if (!name) {
                 name = code; 
             }
 
-            // La clave de búsqueda debe ser exactamente igual a la clave en el JSON
             if (ProyectosAR[code]) { 
                 const project = ProyectosAR[code];
                 
                 saveCode(code, name);
                 
-                // Redirige al primer modo de presentación (índice 0)
-                redirectToProject(code, project.ruta, 0); 
+                redirectToProject(code, project.ruta); 
             } else {
                 errorMessage.textContent = 'Código no válido. Por favor, verifica el código único.';
                 errorMessage.style.display = 'block';
@@ -266,63 +260,34 @@
                  return;
             }
             
-            // El botón "Códigos Guardados" debe ser visible si hay elementos para ver
             document.getElementById('back-button').style.display = 'inline-block';
 
             storedCodes.forEach(item => {
                 const projectDiv = document.createElement('div');
                 projectDiv.className = 'project-selection-item';
 
-                // Título del Proyecto (El nombre que el usuario tecleó o el código)
                 const title = document.createElement('h3');
                 title.textContent = item.name + ` (Código: ${item.code})`;
                 projectDiv.appendChild(title);
 
-                // Contenedor para acciones de selección y eliminación
                 const actionContainer = document.createElement('div');
                 actionContainer.className = 'selection-actions';
-                
-                // Selector de Presentación (Dropdown)
-                const select = document.createElement('select');
-                select.style.flexGrow = '1';
-                select.style.padding = '8px';
-                select.style.borderRadius = '5px';
-                
-                const defaultOption = document.createElement('option');
-                defaultOption.textContent = "Selecciona una presentación...";
-                defaultOption.value = "";
-                select.appendChild(defaultOption);
-
-                item.presentaciones.forEach((presName, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = presName;
-                    select.appendChild(option);
-                });
-                actionContainer.appendChild(select);
                 
                 // Botón de Acceder
                 const startButton = document.createElement('button');
                 startButton.textContent = 'Acceder';
                 startButton.className = 'access-btn';
-                startButton.disabled = true; 
-                
-                select.onchange = () => {
-                    startButton.disabled = select.value === "";
-                };
-
                 startButton.onclick = () => {
-                    const presentationIndex = select.value;
-                    redirectToProject(item.code, item.ruta, presentationIndex);
+                    redirectToProject(item.code, item.ruta); // Llamada simple
                 };
                 
                 actionContainer.appendChild(startButton);
 
-                // Botón de Eliminar (NUEVA FUNCIÓN)
+                // Botón de Eliminar
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = 'Eliminar';
                 deleteButton.className = 'delete-btn';
-                deleteButton.onclick = () => deleteCode(item.code); // Llama a la nueva función
+                deleteButton.onclick = () => deleteCode(item.code); 
                 
                 actionContainer.appendChild(deleteButton);
                 projectDiv.appendChild(actionContainer);
@@ -339,7 +304,6 @@
             document.getElementById('user-code').value = '';
             document.getElementById('user-name').value = '';
             
-            // Mostrar u ocultar el botón "Códigos Guardados"
             document.getElementById('back-button').style.display = showBackButton ? 'inline-block' : 'none';
         }
         
