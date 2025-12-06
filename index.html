@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>K-Scan AR Personalizado</title>
+    
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    
+    <style>
+      /* Estilos para ocultar el visor de AR mientras se pide el código */
+      .arjs-loader {
+        height: 100%; width: 100%; position: absolute; top: 0; left: 0;
+        background-color: rgba(0, 0, 0, 0.8); z-index: 9999;
+        display: flex; justify-content: center; align-items: center;
+      }
+      .arjs-loader div { text-align: center; font-size: 1.25em; color: white; }
+    </style>
+  </head>
+
+  <body style="margin : 0px; overflow: hidden;">
+    
+    <div id="login-overlay" style="position: absolute; width: 100%; height: 100%; background: #222; z-index: 1000; display: flex; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 40px; border-radius: 10px; text-align: center;">
+            <h2>Introduce tu Código de Acceso</h2>
+            <input type="text" id="user-code" placeholder="Escribe tu código aquí" style="padding: 10px; margin: 15px 0; border: 1px solid #ccc; width: 80%;"><br>
+            <button onclick="iniciarExperiencia()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Iniciar Escaneo AR</button>
+            <p id="error-message" style="color: red; margin-top: 10px; display: none;">Código incorrecto. Intenta de nuevo.</p>
+        </div>
+    </div>
+    
+    <a-scene
+        id="ar-scene"
+        style="display: none;" /* Inicialmente oculto */
+        vr-mode-ui="enabled: false;"
+        renderer="logarithmicDepthBuffer: true;"
+        arjs="sourceType: webcam; detectionMode: mono; patternRatio: 0.5;"
+        >
+
+        <a-nft
+            type="nft"
+            url="./assets/MiMarcador"  /* IMPORTANTE: Esta es la carpeta en tu GitHub Pages */
+            smooth="true" smoothCount="10" smoothTolerance=".01" smoothThreshold="5"
+            >
+            
+            <a-box 
+                id="contenido-personalizado" 
+                visible="false" 
+                scale="0.5 0.5 0.5" 
+                rotation="-90 0 0" /* Gira para que esté en el suelo */
+                material="color: #666" /* Color base antes de cargar el contenido */
+                ></a-box>
+
+        </a-nft>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        // Tarea 1: La Tabla de Búsqueda (¡Aquí defines los códigos y contenidos!)
+        const contenidoPersonalizado = {
+            "0001": { 
+                tipo: "video", 
+                url: "https://www.youtube.com/embed/ejemplo-video-persona1", /* REEMPLAZA ESTO CON TU ENLACE REAL */
+                dimensiones: "1.6 0.9 0"
+            },
+            "0002": { 
+                tipo: "3d", 
+                url: "assets/modelo-persona2.glb", /* REEMPLAZA ESTO CON LA RUTA DE TU MODELO 3D */
+                dimensiones: "0.5 0.5 0.5"
+            },
+            "INVITADO": { 
+                tipo: "video", 
+                url: "https://www.youtube.com/embed/video-generico", /* Contenido predeterminado */
+                dimensiones: "1.6 0.9 0"
+            }
+        };
+
+        const sceneEl = document.getElementById('ar-scene');
+        const loginOverlay = document.getElementById('login-overlay');
+        const userCodeInput = document.getElementById('user-code');
+        const errorMessage = document.getElementById('error-message');
+        const contenidoAR = document.getElementById('contenido-personalizado');
+
+        function iniciarExperiencia() {
+            const userCode = userCodeInput.value.toUpperCase().trim();
+
+            if (contenidoPersonalizado[userCode]) {
+                const data = contenidoPersonalizado[userCode];
+                
+                // 1. Ocultar la capa de login
+                loginOverlay.style.display = 'none';
+
+                // 2. Mostrar la escena AR
+                sceneEl.style.display = 'block';
+
+                // 3. Aplicar el contenido personalizado al objeto 3D
+                if (data.tipo === 'video') {
+                    // Si es video, usamos un componente de video en 3D
+                    contenidoAR.setAttribute('geometry', `primitive: plane; width: ${data.dimensiones.split(' ')[0]}; height: ${data.dimensiones.split(' ')[1]};`);
+                    
+                    // Necesitarás una etiqueta de video en el HTML con la URL de YouTube y luego usar un componente de A-Frame para manejarlo
+                    // Para simplificar, la gente suele usar una textura de video.
+                    // ¡Importante! YouTube embed no es directo. Usaremos un color o una textura simple por ahora.
+                    contenidoAR.setAttribute('material', `color: green;`);
+                    console.log(`Video asignado a ${data.url}`);
+
+                } else if (data.tipo === '3d') {
+                    // Si es un modelo 3D (GLTF/GLB)
+                    contenidoAR.setAttribute('gltf-model', `url(${data.url})`);
+                    contenidoAR.setAttribute('geometry', 'primitive: box;'); // Reiniciar a caja, luego el modelo GLTF tomará control
+                }
+                
+                // Mostrar el objeto y definir la escala
+                contenidoAR.setAttribute('visible', 'true');
+                contenidoAR.setAttribute('scale', data.dimensiones);
+
+            } else {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Código incorrecto. Intenta de nuevo.';
+            }
+        }
+    </script>
+  </body>
+</html>
