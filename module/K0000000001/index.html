@@ -12,67 +12,35 @@
             // =====================================================================
             // 1. TABLA DE CONTENIDOS DINÁMICA DEL MÓDULO AR
             // =====================================================================
-            // La estructura mapea: CÓDIGO ÚNICO -> MARCADOR -> RECURSO FINAL (YouTube, .glb, .mp4, etc.)
             const ContenidoModulo = {
-                // ESTA CONFIGURACIÓN ES VÁLIDA SÓLO PARA ESTA CARPETA (CARPETA1)
                 "susam-51162": { 
                     "MARCADOR_A": "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", // TAZA
-                    "MARCADOR_B": "disabled", // POSTAL 1: Desactivado
-                    "MARCADOR_C": "assets/modelo_3d.glb"  // POSTAL 2: Modelo 3D
+                    "MARCADOR_B": "disabled", // POSTAL 1
+                    "MARCADOR_C": "assets/modelo_3d.glb"  // POSTAL 2
+                },
+                "otroCodigoEjemplo": {
+                    "MARCADOR_A": "assets/video_local.mp4",
+                    "MARCADOR_B": "https://www.youtube.com/embed/otrolink?autoplay=1&controls=0",
+                    "MARCADOR_C": "disabled"
                 }
             };
 
             // =====================================================================
-            // 4. FIX: FORZAR REDIMENSIONAMIENTO PARA ELIMINAR ZOOM INICIAL
-            // =====================================================================
-            function fixInitialZoom() {
-            // Dispara un evento resize después de que la escena haya tenido un momento para inicializarse
-                setTimeout(() => {
-                    window.dispatchEvent(new Event('resize'));
-                    console.log("Forzando evento resize para corregir zoom inicial.");
-                }, 1500); // 1.5 segundos de retraso
-            }
-            
-            // Llama a esta función después de que la escena se haya cargado.
-            document.addEventListener('DOMContentLoaded', () => {
-                // ... (Tu código existente de inyección de marcadores) ...
-                
-                // 💡 LLAMADA AL FIX
-                fixInitialZoom();
-            });
-            
-            // =====================================================================
-            // 2. LÓGICA DE CARGA DE RECURSOS
+            // 2. LÓGICA DE CARGA DE RECURSOS Y COMPONENTES
             // =====================================================================
 
             const urlParams = new URLSearchParams(window.location.search);
             const userCode = urlParams.get('code'); 
-            
-            let recursos = null;
+            let recursos = ContenidoModulo[userCode] || null;
 
-            if (ContenidoModulo[userCode]) {
-                recursos = ContenidoModulo[userCode];
-            } else {
-                console.error("No se encontró configuración para el código:", userCode);
-                alert("Error: No se encontró contenido AR para este código.");
-            }
-
-            // Componente para manejar la reproducción de VIDEO LOCAL
             AFRAME.registerComponent('videohandler', {
-                schema: {
-                    targetId: {type: 'string'}
-                },
+                schema: { targetId: {type: 'string'} },
                 init: function () {
                     var marker = this.el;
                     const videoEl = document.querySelector(`#${this.data.targetId}`);
                     
-                    marker.addEventListener('markerFound', function () {
-                        if (videoEl) { videoEl.play(); }
-                    }.bind(this));
-
-                    marker.addEventListener('markerLost', function () {
-                        if (videoEl) { videoEl.pause(); }
-                    }.bind(this));
+                    marker.addEventListener('markerFound', function () { if (videoEl) { videoEl.play(); } }.bind(this));
+                    marker.addEventListener('markerLost', function () { if (videoEl) { videoEl.pause(); } }.bind(this));
                 },
             });
 
@@ -80,9 +48,11 @@
             // 3. INYECCIÓN DE CONTENIDO Y CONFIGURACIÓN DE ESCENA
             // =====================================================================
             document.addEventListener('DOMContentLoaded', () => {
-                if (!recursos) return; 
+                if (!recursos) {
+                    if (!ContenidoModulo[userCode]) alert("Error: No se encontró contenido AR para este código.");
+                    return; 
+                }
                 
-                // Configuración base de los 3 marcadores y sus patrones
                 const markerConfigs = [
                     { id: 'markerA', name: 'MARCADOR_A', pattern: 'assets/marker.patt', resource: recursos["MARCADOR_A"] },
                     { id: 'markerB', name: 'MARCADOR_B', pattern: 'assets/postal1.patt', resource: recursos["MARCADOR_B"] },
@@ -90,11 +60,10 @@
                 ];
                 
                 const scene = document.getElementById('scene');
+                const assetsEl = document.querySelector('a-assets');
                 
                 markerConfigs.forEach(config => {
-                    if (config.resource === "disabled") {
-                        return;
-                    }
+                    if (config.resource === "disabled") return;
                     
                     const markerEl = document.createElement('a-marker');
                     markerEl.setAttribute('type', 'pattern');
@@ -103,10 +72,7 @@
                     markerEl.setAttribute('smooth', 'true');
                     markerEl.setAttribute('id', config.id);
 
-                    // --- LÓGICA DE CONTENIDO ---
-                    
                     if (config.resource.endsWith('.glb')) {
-                        // A-Frame Modelo 3D
                         const modelEl = document.createElement('a-gltf-model');
                         modelEl.setAttribute('src', config.resource);
                         modelEl.setAttribute('scale', '0.5 0.5 0.5'); 
@@ -114,8 +80,6 @@
                         markerEl.appendChild(modelEl);
 
                     } else if (config.resource.includes('youtube') || config.resource.includes('youtu.be')) {
-                        // YouTube Video: Crea un plano clickable que abre el enlace
-                        
                         const plainVideo = document.createElement('a-plane');
                         plainVideo.setAttribute('color', '#333');
                         plainVideo.setAttribute('width', 1.5);
@@ -132,15 +96,11 @@
                         
                         plainVideo.setAttribute('onclick', `window.open('${config.resource}', '_blank')`);
                         plainVideo.classList.add('clickable');
-                        
                         markerEl.appendChild(plainVideo);
                         
                     } else if (config.resource.endsWith('.mp4') || config.resource.endsWith('.webm')) {
-                        // Video Local
                         const videoAssetId = `vid-${config.id}`;
                         
-                        // 1. Añadir el video a a-assets
-                        const assetsEl = document.querySelector('a-assets');
                         if (!document.getElementById(videoAssetId)) {
                             const videoEl = document.createElement('video');
                             videoEl.setAttribute('id', videoAssetId);
@@ -153,7 +113,6 @@
                             assetsEl.appendChild(videoEl);
                         }
 
-                        // 2. Crear el componente a-video y enlazar el manejador
                         const aVideoEl = document.createElement('a-video');
                         aVideoEl.setAttribute('src', `#${videoAssetId}`);
                         aVideoEl.setAttribute('scale', '1 1 1');
@@ -181,22 +140,20 @@
 
     <body style="margin: 0; overflow: hidden;">
         <div class="ar-warning">
-            ⚠️ ADVERTENCIA: Los videos de YouTube se abrirán en una nueva pestaña al hacer clic en el marcador.
+            ⚠️ Advertencia: Los videos de YouTube se abrirán en una nueva pestaña al hacer clic en el marcador.
         </div>
         <a-scene
             vr-mode-ui="enabled: false"
             loading-screen="enabled: false;"
             
 
-            rjs='sourceType: webcam; 
-          sourceWidth: 1280; 
-          sourceHeight: 720; 
-          displayWidth: 1280; 
-          displayWidth: 720;
-          debugUIEnabled: false; 
-          detectionMode: mono_and_matrix; 
-          matrixCodeType: 3x3;
-          cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;'
+            arjs='sourceType: webcam; 
+                  sourceWidth: 1280; 
+                  sourceHeight: 720; 
+                  displayWidth: 1280; 
+                  displayHeight: 720;
+                  debugUIEnabled: false; 
+                  cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;' 
                   
             id="scene"
             embedded
@@ -205,7 +162,7 @@
             <a-assets>
                 </a-assets>
 
-            <a-entity camera></a-entity>
+            <a-entity camera fov="80"></a-entity>
         </a-scene>
     </body>
 </html>
