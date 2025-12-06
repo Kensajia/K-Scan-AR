@@ -1,33 +1,48 @@
 <!doctype html>
 <html>
     <head>
-        <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
-        <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+        <meta charset="utf-8">
+        <title>AR Experience - KScan</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        
+        <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+        <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/ar.js"></script>
+        
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
-        
-        <title>AR Experience</title>
         
         <script>
             // =====================================================================
             // 1. TABLA DE CONTENIDOS DINÁMICA DEL MÓDULO AR
             // =====================================================================
+            // La estructura mapea: CÓDIGO ÚNICO -> MARCADOR -> CONFIGURACIÓN
             const ContenidoModulo = {
+                // EJEMPLO DE CONFIGURACIÓN CON AMBOS TIPOS DE MARCADOR
                 "susam-51162": { 
-                    "MARCADOR_A": "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", // TAZA
-                    "MARCADOR_B": "disabled", // POSTAL 1
-                    "MARCADOR_C": "assets/modelo_3d.glb"  // POSTAL 2
-                }
+                    // MARCADOR B: Usa IMAGEN NATURAL (Sin Cuadro Negro - Requiere .fset, .iset, .fset3)
+                    "MARCADOR_A": { 
+                        type: "pattern", 
+                        url: "assets/T000001-SUSAM-01.fset", 
+                        resource: "https://www.youtube.com/embed/kRCWvqJVWx8" // YouTube
+                    }, 
+                    // MARCADOR B: Usa IMAGEN NATURAL (Sin Cuadro Negro - Requiere .fset, .iset, .fset3)
+                    "MARCADOR_B": { 
+                        type: "image", 
+                        url: "assets/postal1.fset", 
+                        resource: "assets/modelo_3d.glb" // Modelo 3D
+                    }, 
+                    // MARCADOR C: Desactivado
+                    "MARCADOR_C": { type: "disabled" } 
+                },
+                // Si tienes otros códigos en esta misma carpeta, van aquí:
+                "otroCodigoEjemplo": { /* ... */ }
             };
 
             // =====================================================================
-            // 2. LÓGICA DE CARGA DE RECURSOS Y COMPONENTES
+            // 2. COMPONENTES DE A-FRAME
             // =====================================================================
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const userCode = urlParams.get('code'); 
-            let recursos = ContenidoModulo[userCode] || null;
-
+            // Componente para manejar la reproducción de VIDEO LOCAL
             AFRAME.registerComponent('videohandler', {
                 schema: { targetId: {type: 'string'} },
                 init: function () {
@@ -43,59 +58,69 @@
             // 3. INYECCIÓN DE CONTENIDO Y CONFIGURACIÓN DE ESCENA
             // =====================================================================
             document.addEventListener('DOMContentLoaded', () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const userCode = urlParams.get('code'); 
+                const recursos = ContenidoModulo[userCode] || null;
+
                 if (!recursos) {
                     if (!ContenidoModulo[userCode]) alert("Error: No se encontró contenido AR para este código.");
                     return; 
                 }
                 
-                const markerConfigs = [
-                    { id: 'markerA', name: 'MARCADOR_A', pattern: 'assets/marker01.patt', resource: recursos["MARCADOR_A"] },
-                    { id: 'markerB', name: 'MARCADOR_B', pattern: 'assets/marker02.patt', resource: recursos["MARCADOR_B"] },
-                    { id: 'markerC', name: 'MARCADOR_C', pattern: 'assets/marker03.patt', resource: recursos["MARCADOR_C"] }
-                ];
-                
+                const markerKeys = Object.keys(recursos);
                 const scene = document.getElementById('scene');
                 const assetsEl = document.querySelector('a-assets');
                 
-                markerConfigs.forEach(config => {
-                    if (config.resource === "disabled") return;
-                    
-                    const markerEl = document.createElement('a-marker');
-                    markerEl.setAttribute('type', 'pattern');
-                    markerEl.setAttribute('preset', 'custom');
-                    markerEl.setAttribute('url', config.pattern);
-                    markerEl.setAttribute('smooth', 'true');
-                    markerEl.setAttribute('id', config.id);
+                markerKeys.forEach(key => {
+                    const config = recursos[key];
+                    if (config.type === "disabled") return;
 
+                    const markerEl = document.createElement('a-marker');
+                    
+                    // Configuración básica del marcador
+                    markerEl.setAttribute('type', config.type);
+                    markerEl.setAttribute('preset', 'custom');
+                    markerEl.setAttribute('url', config.url);
+                    markerEl.setAttribute('id', key);
+                    
+                    // Necesario para que funcione el zoom manual con gestos
+                    markerEl.setAttribute('raycaster', 'objects: .clickable');
+                    markerEl.setAttribute('emitevents', 'true');
+                    markerEl.setAttribute('cursor', 'fuse: false; rayOrigin: mouse;');
+
+                    let contentEl;
+                    
                     if (config.resource.endsWith('.glb')) {
-                        const modelEl = document.createElement('a-gltf-model');
-                        modelEl.setAttribute('src', config.resource);
-                        modelEl.setAttribute('scale', '0.5 0.5 0.5'); 
-                        modelEl.setAttribute('rotation', '-90 0 0');
-                        markerEl.appendChild(modelEl);
+                        // Modelo 3D (.glb)
+                        contentEl = document.createElement('a-gltf-model');
+                        contentEl.setAttribute('src', config.resource);
+                        contentEl.setAttribute('scale', '0.5 0.5 0.5'); 
+                        contentEl.setAttribute('rotation', '-90 0 0');
+                        contentEl.classList.add('clickable', 'gesturable');
 
                     } else if (config.resource.includes('youtube') || config.resource.includes('youtu.be')) {
-                        const plainVideo = document.createElement('a-plane');
-                        plainVideo.setAttribute('color', '#333');
-                        plainVideo.setAttribute('width', 1.5);
-                        plainVideo.setAttribute('height', 0.8);
-                        plainVideo.setAttribute('rotation', '-90 0 0');
-                        plainVideo.setAttribute('position', '0 0.5 0');
+                        // YouTube (Plano clickable)
+                        contentEl = document.createElement('a-plane');
+                        contentEl.setAttribute('color', '#333');
+                        contentEl.setAttribute('width', 1.5);
+                        contentEl.setAttribute('height', 0.8);
+                        contentEl.setAttribute('rotation', '-90 0 0');
+                        contentEl.setAttribute('position', '0 0.5 0');
+                        contentEl.setAttribute('onclick', `window.open('${config.resource}', '_blank')`);
                         
                         const textEl = document.createElement('a-text');
-                        textEl.setAttribute('value', `Toca para ver ${config.name}`);
+                        textEl.setAttribute('value', `Toca para ver ${key}`);
                         textEl.setAttribute('width', 3);
                         textEl.setAttribute('position', '0 0 0.05');
                         textEl.setAttribute('align', 'center');
-                        plainVideo.appendChild(textEl);
-                        
-                        plainVideo.setAttribute('onclick', `window.open('${config.resource}', '_blank')`);
-                        plainVideo.classList.add('clickable');
-                        markerEl.appendChild(plainVideo);
+                        contentEl.appendChild(textEl);
+                        contentEl.classList.add('clickable');
                         
                     } else if (config.resource.endsWith('.mp4') || config.resource.endsWith('.webm')) {
-                        const videoAssetId = `vid-${config.id}`;
+                        // Video Local
+                        const videoAssetId = `vid-${key}`;
                         
+                        // 1. Añadir video a a-assets (si no existe)
                         if (!document.getElementById(videoAssetId)) {
                             const videoEl = document.createElement('video');
                             videoEl.setAttribute('id', videoAssetId);
@@ -108,16 +133,21 @@
                             assetsEl.appendChild(videoEl);
                         }
 
-                        const aVideoEl = document.createElement('a-video');
-                        aVideoEl.setAttribute('src', `#${videoAssetId}`);
-                        aVideoEl.setAttribute('scale', '1 1 1');
-                        aVideoEl.setAttribute('rotation', '-90 0 0');
-                        aVideoEl.setAttribute('position', '0 0.1 0');
-                        
+                        // 2. Crear el componente a-video
+                        contentEl = document.createElement('a-video');
+                        contentEl.setAttribute('src', `#${videoAssetId}`);
+                        contentEl.setAttribute('scale', '1 1 1');
+                        contentEl.setAttribute('rotation', '-90 0 0');
+                        contentEl.setAttribute('position', '0 0.1 0');
                         markerEl.setAttribute('videohandler', `targetId: ${videoAssetId}`);
-                        markerEl.appendChild(aVideoEl);
+                        contentEl.classList.add('clickable', 'gesturable'); // Para gestos
                     }
-
+                    
+                    if (contentEl) {
+                        contentEl.setAttribute('gesture-handler', ''); // Aplicar manejador de gestos
+                        markerEl.appendChild(contentEl);
+                    }
+                    
                     scene.insertBefore(markerEl, document.querySelector('a-entity[camera]'));
                 });
             });
@@ -127,7 +157,7 @@
         <style>
             .ar-warning {
                 position: fixed; top: 10px; left: 10px; z-index: 1000;
-                background: rgba(220, 53, 69, 0.8); color: white; padding: 10px; border-radius: 5px;
+                background: rgba(23, 162, 184, 0.8); color: white; padding: 10px; border-radius: 5px;
                 font-family: sans-serif;
             }
         </style>
@@ -135,7 +165,7 @@
 
     <body style="margin: 0; overflow: hidden;">
         <div class="ar-warning">
-            ⚠️ Advertencia: Los videos de YouTube se abrirán en una nueva pestaña al hacer clic en el marcador.
+            ✅ Versión 1.5.0: Forzando 1280x720 y calibración de cámara. Limpia la caché.
         </div>
         <a-scene
             vr-mode-ui="enabled: false"
@@ -143,21 +173,26 @@
             
 
             arjs='sourceType: webcam; 
+                  // Alta resolución 16:9
                   sourceWidth: 1280; 
                   sourceHeight: 720; 
                   displayWidth: 1280; 
                   displayHeight: 720;
                   debugUIEnabled: false; 
+                  
+
+                  detectionMode: image; 
+                  
+
                   cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;' 
                   
             id="scene"
             embedded
-            gesture-detector
         >
             <a-assets>
                 </a-assets>
 
-            <a-entity camera fov="80"></a-entity>
+            <a-entity camera fov="80"></a-entity> 
         </a-scene>
     </body>
 </html>
