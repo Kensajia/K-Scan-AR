@@ -5,73 +5,177 @@
         <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
+        
+        <title>AR Experience</title>
+        
         <script>
+            // =====================================================================
+            // 1. TABLA DE CONTENIDOS DINÁMICA DEL MÓDULO AR
+            // =====================================================================
+            // La estructura mapea: CÓDIGO ÚNICO -> MARCADOR -> RECURSO FINAL (YouTube, .glb, .mp4, etc.)
+            const ContenidoModulo = {
+                // ESTA CONFIGURACIÓN ES VÁLIDA SÓLO PARA ESTA CARPETA (CARPETA1)
+                "susam-51162": { 
+                    "MARCADOR_A": "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", // MULTIMEDIA 1
+                    "MARCADOR_B": "disabled", // MULTIMEDIA 2
+                    "MARCADOR_C": "assets/modelo_3d.glb"  // MULTIMEDIA 3
+                }
+            };
+
+            // =====================================================================
+            // 2. LÓGICA DE CARGA Y REDIRECCIÓN DEL RECURSO
+            // =====================================================================
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const userCode = urlParams.get('code'); 
+            
+            let recursos = null;
+
+            if (ContenidoModulo[userCode]) {
+                recursos = ContenidoModulo[userCode];
+            } else {
+                console.error("No se encontró configuración para el código:", userCode);
+                alert("Error: No se encontró contenido AR para este código.");
+            }
+
+            // Componente para manejar la reproducción de VIDEO LOCAL
             AFRAME.registerComponent('videohandler', {
+                schema: {
+                    targetId: {type: 'string'}
+                },
                 init: function () {
                     var marker = this.el;
-                    this.vid = document.querySelector("#vid");
-
+                    const videoEl = document.querySelector(`#${this.data.targetId}`);
+                    
                     marker.addEventListener('markerFound', function () {
-                        this.toggle = true;
-                        this.vid.play();
+                        if (videoEl) { videoEl.play(); }
                     }.bind(this));
 
                     marker.addEventListener('markerLost', function () {
-                        this.toggle = false;
-                        this.vid.pause();
+                        if (videoEl) { videoEl.pause(); }
                     }.bind(this));
                 },
             });
+
+            // =====================================================================
+            // 3. INYECCIÓN DE CONTENIDO Y CONFIGURACIÓN DE ESCENA
+            // =====================================================================
+            document.addEventListener('DOMContentLoaded', () => {
+                if (!recursos) return; 
+                
+                // Configuración base de los 3 marcadores y sus patrones
+                const markerConfigs = [
+                    { id: 'markerA', name: 'MARCADOR_A', pattern: 'assets/marker.patt', resource: recursos["MARCADOR_A"] },
+                    { id: 'markerB', name: 'MARCADOR_B', pattern: 'assets/postal1.patt', resource: recursos["MARCADOR_B"] },
+                    { id: 'markerC', name: 'MARCADOR_C', pattern: 'assets/postal2.patt', resource: recursos["MARCADOR_C"] }
+                ];
+                
+                const scene = document.getElementById('scene');
+                
+                markerConfigs.forEach(config => {
+                    // Si el recurso está deshabilitado, no creamos el marcador.
+                    if (config.resource === "disabled") {
+                        return;
+                    }
+                    
+                    const markerEl = document.createElement('a-marker');
+                    markerEl.setAttribute('type', 'pattern');
+                    markerEl.setAttribute('preset', 'custom');
+                    markerEl.setAttribute('url', config.pattern);
+                    markerEl.setAttribute('smooth', 'true');
+                    markerEl.setAttribute('id', config.id);
+                    // Otras configuraciones del marcador...
+
+                    // --- LÓGICA DE CONTENIDO ---
+                    
+                    if (config.resource.endsWith('.glb')) {
+                        // A-Frame Modelo 3D
+                        const modelEl = document.createElement('a-gltf-model');
+                        modelEl.setAttribute('src', config.resource);
+                        modelEl.setAttribute('scale', '0.5 0.5 0.5'); 
+                        modelEl.setAttribute('rotation', '-90 0 0');
+                        markerEl.appendChild(modelEl);
+
+                    } else if (config.resource.includes('youtube') || config.resource.includes('youtu.be')) {
+                        // YouTube Video: Crea un plano clickable que abre el enlace
+                        
+                        const plainVideo = document.createElement('a-plane');
+                        plainVideo.setAttribute('color', '#333');
+                        plainVideo.setAttribute('width', 1.5);
+                        plainVideo.setAttribute('height', 0.8);
+                        plainVideo.setAttribute('rotation', '-90 0 0');
+                        plainVideo.setAttribute('position', '0 0.5 0');
+                        
+                        const textEl = document.createElement('a-text');
+                        textEl.setAttribute('value', `Toca para ver ${config.name}`);
+                        textEl.setAttribute('width', 3);
+                        textEl.setAttribute('position', '0 0 0.05');
+                        textEl.setAttribute('align', 'center');
+                        plainVideo.appendChild(textEl);
+                        
+                        plainVideo.setAttribute('onclick', `window.open('${config.resource}', '_blank')`);
+                        plainVideo.classList.add('clickable');
+                        
+                        markerEl.appendChild(plainVideo);
+                        
+                    } else if (config.resource.endsWith('.mp4') || config.resource.endsWith('.webm')) {
+                        // Video Local
+                        const videoAssetId = `vid-${config.id}`;
+                        
+                        // 1. Añadir el video a a-assets
+                        const assetsEl = document.querySelector('a-assets');
+                        if (!document.getElementById(videoAssetId)) {
+                            const videoEl = document.createElement('video');
+                            videoEl.setAttribute('id', videoAssetId);
+                            videoEl.setAttribute('src', config.resource);
+                            videoEl.setAttribute('preload', 'auto');
+                            videoEl.setAttribute('loop', '');
+                            videoEl.setAttribute('muted', '');
+                            videoEl.setAttribute('crossorigin', '');
+                            videoEl.setAttribute('playsinline', '');
+                            assetsEl.appendChild(videoEl);
+                        }
+
+                        // 2. Crear el componente a-video y enlazar el manejador
+                        const aVideoEl = document.createElement('a-video');
+                        aVideoEl.setAttribute('src', `#${videoAssetId}`);
+                        aVideoEl.setAttribute('scale', '1 1 1');
+                        aVideoEl.setAttribute('rotation', '-90 0 0');
+                        aVideoEl.setAttribute('position', '0 0.1 0');
+                        
+                        markerEl.setAttribute('videohandler', `targetId: ${videoAssetId}`);
+                        markerEl.appendChild(aVideoEl);
+                    }
+
+                    scene.insertBefore(markerEl, document.querySelector('a-entity[camera]'));
+                });
+            });
+
         </script>
+
+        <style>
+            .ar-warning {
+                position: fixed; top: 10px; left: 10px; z-index: 1000;
+                background: rgba(220, 53, 69, 0.8); color: white; padding: 10px; border-radius: 5px;
+                font-family: sans-serif;
+            }
+        </style>
     </head>
 
     <body style="margin: 0; overflow: hidden;">
+        <div class="ar-warning">
+            ⚠️ Advertencia: Los videos de YouTube se abrirán en una nueva pestaña al hacer clic en el marcador.
+        </div>
         <a-scene
             vr-mode-ui="enabled: false"
             loading-screen="enabled: false;"
-            arjs='sourceType: webcam; debugUIEnabled: false;'
+            arjs='sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'
             id="scene"
             embedded
             gesture-detector
         >
             <a-assets>
-                <video
-                    id="vid"
-                    src="assets/asset.mp4"
-                    preload="auto"
-                    response-type="arraybuffer"
-                    loop
-                    crossorigin
-                    webkit-playsinline
-                    autoplay
-                    muted
-                    playsinline
-                ></video>
-            </a-assets>
-
-            <a-marker
-                type="pattern"
-                preset="custom"
-                url="assets/marker.patt"
-                videohandler
-                smooth="true"
-                smoothCount="10"
-                smoothTolerance="0.01"
-                smoothThreshold="5"
-                raycaster="objects: .clickable"
-                emitevents="true"
-                cursor="fuse: false; rayOrigin: mouse;"
-                id="markerA"
-            >
-                <a-video
-                    src="#vid"
-                    scale="1 1 1"
-                    position="0 0.1 0"
-                    rotation="-90 0 0"
-                    class="clickable"
-                    gesture-handler
-                ></a-video>
-            </a-marker>
+                </a-assets>
 
             <a-entity camera></a-entity>
         </a-scene>
