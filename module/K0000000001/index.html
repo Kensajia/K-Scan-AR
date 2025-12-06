@@ -84,14 +84,15 @@
 
                 // 1. Crear el elemento de video
                 if (!videoEl) {
-                    videoEl = document.createElement('video');
-                    videoEl.setAttribute('id', videoId);
-                    videoEl.setAttribute('autoplay', '');
-                    videoEl.setAttribute('playsinline', '');
-                    videoEl.setAttribute('muted', ''); 
-                    videoEl.setAttribute('style', 'position: absolute; top: 0; left: 0; z-index: -2; visibility: hidden;');
-                    document.body.appendChild(videoEl);
-                }
+    videoEl = document.createElement('video');
+    videoEl.setAttribute('id', videoId);
+    videoEl.setAttribute('autoplay', '');
+    videoEl.setAttribute('playsinline', ''); // ⬅️ CRÍTICO para iOS
+    videoEl.setAttribute('muted', ''); 
+    videoEl.setAttribute('crossorigin', 'anonymous'); // ⬅️ CRÍTICO para WebGL
+    videoEl.setAttribute('style', 'position: absolute; top: 0; left: 0; z-index: -2; visibility: hidden;');
+    document.body.appendChild(videoEl);
+}
 
                 // 2. Definir restricciones de alta calidad y cámara trasera
                 const constraints = {
@@ -147,7 +148,7 @@
 
     <body style="margin: 0; overflow: hidden;">
         <div class="ar-warning">
-            ✅ INTENTO 2: FIX FINAL: Inyección forzada de la cámara con JavaScript. Limpia la caché.
+            ✅ INTENTO 3: FIX FINAL: Inyección forzada de la cámara con JavaScript. Limpia la caché.
         </div>
         <a-scene
             vr-mode-ui="enabled: false"
