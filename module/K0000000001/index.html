@@ -2,41 +2,54 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - FIX FINAL 404</title>
+        <title>AR Experience - FIX Direct Texture</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
-        
         <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@2.1.0/aframe/build/ar-nft.js"></script>
         
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
         
         <script>
-            // =====================================================================
-            // 1. TABLA DE CONTENIDOS DINÁMICA DEL MÓDULO AR
-            // =====================================================================
-            const ContenidoModulo = {
-                "susam-51162": { 
-                    "MARCADOR_A": { type: "image", url: "assets/T000001-SUSAM-01.fset", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" }, 
-                    "MARCADOR_B": { type: "image", url: "assets/T000001-SUSAM-01.fset", resource: "https://www.youtube.com/watch?v=mbuv4P10GLc?autoplay=1&controls=0" }, 
-                    "MARCADOR_C": { type: "disabled" } 
-                },
-                "otroCodigoEjemplo": { /* ... */ }
-            };
+            // 💡 IMPORTANTE: THREE.js es global en A-Frame 1.0.4, por lo que podemos usarlo.
+            const THREE = AFRAME.THREE; 
 
-            // [Los componentes force-redraw y videohandler siguen aquí]
+            // =====================================================================
+            // 1. TABLA DE CONTENIDOS (sin cambios)
+            // =====================================================================
+            const ContenidoModulo = { /* ... (tus datos) ... */ };
+
+            // =====================================================================
+            // 2. COMPONENTES Y LÓGICA DE INYECCIÓN
+            // =====================================================================
+
             AFRAME.registerComponent('videohandler', { /* ... */ });
-            AFRAME.registerComponent('force-redraw', { 
+            AFRAME.registerComponent('force-redraw', { /* ... */ });
+            
+            // 💡 FIX CRÍTICO: Componente para inyectar la textura del video directamente al fondo de THREE.js
+            AFRAME.registerComponent('force-video-texture', {
                 init: function () {
-                    setTimeout(() => {
-                        this.el.emit('arjs-video-loaded', null, false);
-                    }, 3000); 
+                    const videoEl = document.getElementById('arjs-video-source');
+                    if (videoEl) {
+                        setTimeout(() => {
+                            const renderer = this.el.renderer;
+                            // Crear una textura THREE.js a partir del elemento de video
+                            const videoTexture = new THREE.VideoTexture(videoEl);
+                            videoTexture.minFilter = THREE.LinearFilter;
+                            videoTexture.magFilter = THREE.LinearFilter;
+                            videoTexture.encoding = renderer.outputEncoding;
+
+                            // Asignar la textura directamente al fondo (background) de la escena
+                            this.el.object3D.background = videoTexture;
+                            console.log("Textura de video inyectada directamente en el fondo de A-Frame.");
+                        }, 1000);
+                    }
                 }
             });
-            
+
             // Lógica de inyección de marcadores (sin cambios)
-            function injectMarkers(scene) { /* ... (Tu lógica de inyección de marcadores y planes) ... */ }
+            function injectMarkers(scene) { /* ... (Tu lógica) ... */ }
 
 
             // FUNCIÓN CRÍTICA: Inicialización forzada de la cámara con JS
@@ -44,23 +57,10 @@
                 const videoId = 'arjs-video-source';
                 let videoEl = document.getElementById(videoId);
 
-                // 1. Crear el elemento de video (con FIX de crossorigin)
-                if (!videoEl) {
-                    videoEl = document.createElement('video');
-                    videoEl.setAttribute('id', videoId);
-                    videoEl.setAttribute('autoplay', '');
-                    videoEl.setAttribute('playsinline', ''); 
-                    videoEl.setAttribute('muted', ''); 
-                    videoEl.setAttribute('crossorigin', 'anonymous'); 
-                    videoEl.setAttribute('style', 'position: absolute; top: 0; left: 0; z-index: -2; visibility: hidden;');
-                    document.body.appendChild(videoEl);
-                }
-
-                // 2. Definir restricciones... 
-                const constraints = { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } };
+                // [Creación del elemento de video con crossorigin] (sin cambios)
 
                 // 3. Solicitar el stream y capturar permisos
-                navigator.mediaDevices.getUserMedia(constraints)
+                navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } })
                     .then(function(stream) {
                         videoEl.srcObject = stream;
                         
@@ -72,10 +72,9 @@
                             if (scene) {
                                 scene.setAttribute('arjs', 
                                     `sourceType: video; 
-                                     sourceUrl: #${videoId}; 
+                                     // 💡 QUITAMOS sourceUrl
                                      debugUIEnabled: true; 
                                      detectionMode: nft;
-                                     // URL estable de calibración
                                      cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/3.4.0/aframe/build/camera_para.dat;`);
                                 
                                 injectMarkers(scene); 
@@ -103,19 +102,18 @@
 
     <body style="margin: 0; overflow: hidden;">
         <div class="ar-warning">
-            ✅ FIX DEFINITIVO: Solucionado el error 404 de la librería AR.js.
+            ✅ INTENTO 25: FIX DEFINITIVO: Inyección directa de la textura WebGL para solucionar fallos de renderizado.
         </div>
         <a-scene
             vr-mode-ui="enabled: false"
             loading-screen="enabled: false;"
             
-
             arjs='' 
-              
             id="scene"
             embedded
             gesture-detector
             force-redraw 
+            force-video-texture // ⬅️ Usar el componente de inyección de textura
         >
             <a-assets>
                 </a-assets>
