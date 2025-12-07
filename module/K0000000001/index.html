@@ -8,6 +8,8 @@
         <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
         <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
         
+        <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
+        <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
         
         <script>
             // =====================================================================
@@ -15,37 +17,26 @@
             // =====================================================================
             const ContenidoModulo = {
                 "susam-51162": { 
-                    "MARCADOR_A": { type: "nft", url: "assets/T000001-SUSAM-01", resource: "https://www.youtube.com/embed/video_ejemplo_2?autoplay=1&controls=0" }, 
-                    "MARCADOR_B": { type: "pattern", url: "assets/taza.patt", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" }, 
+                    "MARCADOR_A": { type: "pattern", url: "assets/taza.patt", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" }, 
+                    "MARCADOR_B": { type: "nft", url: "assets/T000001-SUSAM-01", resource: "https://www.youtube.com/embed/video_ejemplo_2?autoplay=1&controls=0" }, 
                     "MARCADOR_C": { type: "disabled" } 
                 },
             };
 
-
             
-
-
-            document.addEventListener('DOMContentLoaded', initWebcamStream); 
-
-        </script>
-
-        <style>
-            /* Marquesina Estática */
-            .arjs-loader { /* ... (CSS de la marquesina) ... */ }
-            .arjs-loader div { /* ... (CSS de la marquesina) ... */ }
-        </style>
     </head>
 
     <body style="margin : 0px; overflow: hidden;">
         
         <div class="arjs-loader">
-            <div>INTENTO 128: Cargando archivos de realidad aumentada... (WebRTC fix activo)</div>
+            <div>Cargando archivos de realidad aumentada... (WebRTC fix activo)</div>
         </div>
         
         <a-scene
             vr-mode-ui="enabled: false;"
             renderer="logarithmicDepthBuffer: true; precision: medium;"
             embedded
+            // 💡 AR.JS YA NO GESTIONA LA CÁMARA, SOLO EL TRACKING.
             arjs="" 
             id="scene"
         >
