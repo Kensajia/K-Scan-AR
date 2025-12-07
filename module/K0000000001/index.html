@@ -1,120 +1,79 @@
 <!doctype html>
 <html>
     <head>
-        <meta charset="utf-8">
-        <title>AR Experience - FIX Final Stable</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-        
         <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
-        <script src="https://raw.githack.com/AR-js-org/AR.js/dev/aframe/build/ar-nft.js"></script>
-        
+        <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
-        
         <script>
-            // =====================================================================
-            // 1. TABLA DE CONTENIDOS DINÁMICA DEL MÓDULO AR
-            // =====================================================================
-            const ContenidoModulo = {
-                "susam-51162": { 
-                    "MARCADOR_A": { type: "image", url: "assets/T000001-SUSAM-01.fset", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" }, 
-                    "MARCADOR_B": { type: "image", url: "assets/T000001-SUSAM-01.fset", resource: "https://www.youtube.com/watch?v=mbuv4P10GLc?autoplay=1&controls=0" }, 
-                    "MARCADOR_C": { type: "disabled" } 
+            AFRAME.registerComponent('videohandler', {
+                init: function () {
+                    var marker = this.el;
+                    this.vid = document.querySelector("#vid");
+
+                    marker.addEventListener('markerFound', function () {
+                        this.toggle = true;
+                        this.vid.play();
+                    }.bind(this));
+
+                    marker.addEventListener('markerLost', function () {
+                        this.toggle = false;
+                        this.vid.pause();
+                    }.bind(this));
                 },
-                "otroCodigoEjemplo": { /* ... */ }
-            };
-
-            // ... (Componentes videohandler y force-redraw, sin cambios) ...
-            AFRAME.registerComponent('videohandler', { /* ... */ });
-            AFRAME.registerComponent('force-redraw', { /* ... */ });
-            
-            // Lógica de inyección de marcadores (sin cambios)
-            function injectMarkers(scene) { /* ... (Tu lógica de inyección de marcadores y planes) ... */ }
-
-
-            // FUNCIÓN CRÍTICA: Inicialización forzada de la cámara con JS
-            function initARScene() {
-                const videoId = 'arjs-video-source';
-                let videoEl = document.getElementById(videoId);
-
-                // 1. Crear el elemento de video (con FIX de crossorigin)
-                if (!videoEl) {
-                    videoEl = document.createElement('video');
-                    videoEl.setAttribute('id', videoId);
-                    videoEl.setAttribute('autoplay', '');
-                    videoEl.setAttribute('playsinline', ''); 
-                    videoEl.setAttribute('muted', ''); 
-                    videoEl.setAttribute('crossorigin', 'anonymous'); 
-                    videoEl.setAttribute('style', 'position: absolute; top: 0; left: 0; z-index: -2; visibility: hidden;');
-                    document.body.appendChild(videoEl);
-                }
-
-                // 2. Definir restricciones... 
-                const constraints = { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } };
-
-                // 3. Solicitar el stream y capturar permisos
-                navigator.mediaDevices.getUserMedia(constraints)
-                    .then(function(stream) {
-                        videoEl.srcObject = stream;
-                        
-                        videoEl.onloadedmetadata = function() {
-                            videoEl.play();
-                            
-                            // 4. Inyectar la configuración AR.js y la fuente de video
-                            const scene = document.getElementById('scene');
-                            if (scene) {
-                                scene.setAttribute('arjs', 
-                                    `sourceType: video; 
-                                     sourceUrl: #${videoId}; 
-                                     debugUIEnabled: true; 
-                                     // 💡 FIX CRÍTICO: Modo de detección 'nft' para AR.js estable
-                                     detectionMode: nft; 
-                                     // URL estable de calibración
-                                     cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/3.4.0/aframe/build/camera_para.dat;`);
-                                
-                                injectMarkers(scene); 
-                            }
-                        };
-                    })
-                    .catch(function(err) {
-                        console.error("Error crítico al iniciar la cámara:", err);
-                        alert(`Error de cámara: Causa: ${err.name}`);
-                    });
-            }
-
-            document.addEventListener('DOMContentLoaded', initARScene); 
-
+            });
         </script>
-
-        <style>
-            .ar-warning {
-                position: fixed; top: 10px; left: 10px; z-index: 1000;
-                background: rgba(40, 167, 69, 0.8); color: white; padding: 10px; border-radius: 5px;
-                font-family: sans-serif;
-            }
-        </style>
     </head>
 
     <body style="margin: 0; overflow: hidden;">
-        <div class="ar-warning">
-            ✅ **ÚLTIMO FIX:** Revirtiendo a versión estable (AR.js 2.1.0/A-Frame 1.0.4) para solucionar el problema de textura en blanco.
-        </div>
         <a-scene
             vr-mode-ui="enabled: false"
             loading-screen="enabled: false;"
-            
-
-            arjs='' 
-              
+            arjs='sourceType: webcam; debugUIEnabled: false;'
             id="scene"
             embedded
             gesture-detector
-            force-redraw 
         >
             <a-assets>
-                </a-assets>
+                <video
+                    id="vid"
+                    src="assets/asset.mp4"
+                    preload="auto"
+                    response-type="arraybuffer"
+                    loop
+                    crossorigin
+                    webkit-playsinline
+                    autoplay
+                    muted
+                    playsinline
+                ></video>
+            </a-assets>
 
-            <a-entity camera fov="80"></a-entity> 
+            <a-marker
+                type="pattern"
+                preset="custom"
+                url="assets/marker.patt"
+                videohandler
+                smooth="true"
+                smoothCount="10"
+                smoothTolerance="0.01"
+                smoothThreshold="5"
+                raycaster="objects: .clickable"
+                emitevents="true"
+                cursor="fuse: false; rayOrigin: mouse;"
+                id="markerA"
+            >
+                <a-video
+                    src="#vid"
+                    scale="1 1 1"
+                    position="0 0.1 0"
+                    rotation="-90 0 0"
+                    class="clickable"
+                    gesture-handler
+                ></a-video>
+            </a-marker>
+
+            <a-entity camera></a-entity>
         </a-scene>
     </body>
 </html>
