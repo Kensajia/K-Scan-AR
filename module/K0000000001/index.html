@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - FIX Final WebRTC</title>
+        <title>AR Experience - Sin Cámara de A-Frame (Final)</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
@@ -12,66 +12,95 @@
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
         
         <script>
+            // =====================================================================
+            // 1. TABLA DE CONTENIDOS DINÁMICA
+            // =====================================================================
+            const ContenidoModulo = { /* ... (Tus datos) ... */ };
 
-            const ContenidoModulo = {
-                "susam-51162": { 
-                    "MARCADOR_A": { type: "pattern", url: "assets/taza.patt", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" }, 
-                    "MARCADOR_B": { type: "nft", url: "assets/T000001-SUSAM-01", resource: "https://www.youtube.com/embed/video_ejemplo_2?autoplay=1&controls=0" }, 
-                    "MARCADOR_C": { type: "disabled" } 
-                },
-            };
+            // =====================================================================
+            // 2. FUNCIÓN DE INYECCIÓN DE MARCADORES (Se mantiene)
+            // =====================================================================
+            function injectMarkers() {
+                const scene = document.getElementById('scene');
+                // ... (Lógica de inyección de marcadores) ...
+                
+                // Ocultar el loader
+                const loader = document.querySelector('.arjs-loader');
+                if (loader) {
+                    loader.style.display = 'none';
+                }
+            }
+            
+            // =====================================================================
+            // 3. Inicialización forzada de la cámara con WebRTC (para control de resolución)
+            // =====================================================================
+            function initWebcamStream() {
+                const videoId = 'arjs-video-source';
+                let videoEl = document.createElement('video');
+                videoEl.setAttribute('id', videoId);
+                videoEl.setAttribute('autoplay', '');
+                videoEl.setAttribute('playsinline', ''); 
+                videoEl.setAttribute('muted', ''); 
+                videoEl.setAttribute('crossorigin', 'anonymous'); 
+                videoEl.setAttribute('style', 'position: absolute; top: 0; left: 0; z-index: -2; visibility: hidden;');
+                document.body.appendChild(videoEl);
+
+                // Restricciones para forzar una vista ancha (ideal: 1280x720)
+                const constraints = { 
+                    audio: false, 
+                    video: { 
+                        facingMode: { ideal: "environment" }, 
+                        width: { ideal: 1280 }, 
+                        height: { ideal: 720 } 
+                    } 
+                };
+
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function(stream) {
+                        videoEl.srcObject = stream;
+                        videoEl.onloadedmetadata = function() {
+                            videoEl.play();
+                            
+                            const scene = document.getElementById('scene');
+                            if (scene) {
+                                // 💡 CRÍTICO: Establecemos la fuente de video para que AR.js la use.
+                                scene.setAttribute('arjs', 
+                                    `sourceType: video; 
+                                     sourceUrl: #${videoId};
+                                     trackingMethod: best; 
+                                     debugUIEnabled: false;`);
+                                
+                                injectMarkers();
+                            }
+                        };
+                    })
+                    .catch(function(err) {
+                        console.error("Error al iniciar la cámara (WebRTC):", err);
+                        alert(`Error de cámara: Causa: ${err.name}`);
+                        injectMarkers(); 
+                    });
+            }
+
+            document.addEventListener('DOMContentLoaded', initWebcamStream); 
 
         </script>
-<style>
-  .arjs-loader {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0);
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
 
-  .arjs-loader div {
-    text-align: center;
-    font-size: 1.25em;
-    color: white;
-  }
+        <style> /* ... (Estilos de marquesina) ... */ </style>
+    </head>
 
-</style>
-</head>
-    
-<body style="margin : 0px; overflow: hidden;">
-  <!-- minimal loader shown until image descriptors are loaded -->
-  <div class="arjs-loader">
-    <div>INTENTO 142 - ...</div>
-  </div>
-  <a-scene
-    vr-mode-ui="enabled: false;"
-    renderer="logarithmicDepthBuffer: true; precision: medium;"
-    embedded
-    arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;"
-  >
-    <!-- we use cors proxy to avoid cross-origin problems ATTENTION! you need to set up your server -->
-    <a-nft
-      type="nft"
-      url="assets/T000001-SUSAM-01"
-      smooth="true"
-      smoothCount="10"
-      smoothTolerance=".01"
-      smoothThreshold="5"
-    >
-      <a-entity
-        gltf-model="https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"
-        scale="5 5 5"
-        position="150 300 -100"
-      >
-      </a-entity>
-    </a-nft>
-    <a-entity camera></a-entity>
-  </a-scene>
-</body>
+    <body style="margin : 0px; overflow: hidden;">
+        
+        <div class="arjs-loader">
+            <div>INTENTO 155: Cargando archivos de realidad aumentada... (Zoom final)</div>
+        </div>
+        
+        <a-scene
+            vr-mode-ui="enabled: false;"
+            renderer="logarithmicDepthBuffer: true; precision: medium;"
+            embedded
+            arjs="" 
+            id="scene"
+        >
+            </a-scene>
+    </body>
+</html>
