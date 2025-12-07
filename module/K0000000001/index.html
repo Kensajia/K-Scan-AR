@@ -23,25 +23,7 @@
                 },
             };
 
-            // =====================================================================
-            // 2. FUNCIÓN DE INYECCIÓN DE MARCADORES
-            // =====================================================================
-            function injectMarkers() {
-                const scene = document.getElementById('scene');
-                const urlParams = new URLSearchParams(window.location.search);
-                const userCode = urlParams.get('code'); 
-                const recursos = ContenidoModulo[userCode] || null;
 
-                if (!recursos || !scene) return;
-                
-                // Ocultar el loader
-                const loader = document.querySelector('.arjs-loader');
-                if (loader) {
-                    loader.style.display = 'none';
-                }
-                
-                // ... (Lógica para inyectar a-nft y a-marker) ...
-            }
             
 
 
@@ -59,7 +41,7 @@
     <body style="margin : 0px; overflow: hidden;">
         
         <div class="arjs-loader">
-            <div>INTENTO 126: Cargando archivos de realidad aumentada... (WebRTC fix activo)</div>
+            <div>INTENTO 127: Cargando archivos de realidad aumentada... (WebRTC fix activo)</div>
         </div>
         
         <a-scene
