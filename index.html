@@ -98,20 +98,20 @@
             <label for="user-name">Tu Nombre (opcional):</label>
             <input type="text" id="user-name" placeholder="IDENTIFICADOR">
             
-            <label for="user-code">Código Único:</label>
-            <input type="text" id="user-code" placeholder="CODIGO" maxlength="30">
+            <label for="user-code">Código de Usuario:</label>
+            <input type="text" id="user-code" placeholder="CODIGO UNICO" maxlength="30">
             
             <button onclick="handleAccessAttempt()" id="access-button">Acceder</button>
-            <button onclick="showSelectionView(getStoredCodes())" id="back-button" class="secondary-button" style="display: none;">Códigos Guardados</button>
+            <button onclick="showSelectionView(getStoredCodes())" id="back-button" class="secondary-button" style="display: none;">Usuario Guardados</button>
             <p id="error-message"></p>
         </div>
 
         <div id="selection-view" style="display: none;">
-            <h2>Códigos Guardados</h2>
+            <h2>Usuarios Guardados</h2>
             <div id="selection-list">
                 </div>
             <div style="margin-top: 20px;">
-                <button onclick="showInputView()" class="secondary-button">Nuevo Código</button>
+                <button onclick="showInputView()" class="secondary-button">Nuevo Usuario</button>
             </div>
         </div>
     </div>
@@ -229,7 +229,7 @@
             errorMessage.style.display = 'none';
 
             if (!code) {
-                errorMessage.textContent = 'Por favor, ingresa el código único.';
+                errorMessage.textContent = 'Por favor, ingresa el código único de usuario.';
                 errorMessage.style.display = 'block';
                 return;
             }
@@ -246,7 +246,7 @@
                 
                 redirectToProject(code, project.ruta); 
             } else {
-                errorMessage.textContent = 'Código no válido. Por favor, verifica el código único.';
+                errorMessage.textContent = 'Código no válido. Por favor, verifique su código de usuario.';
                 errorMessage.style.display = 'block';
             }
         }
@@ -329,3 +329,4 @@
     </script>
 </body>
 </html>
+
