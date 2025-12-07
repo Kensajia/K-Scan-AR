@@ -102,7 +102,7 @@
             <input type="text" id="user-code" placeholder="CODIGO UNICO" maxlength="30">
             
             <button onclick="handleAccessAttempt()" id="access-button">Acceder</button>
-            <button onclick="showSelectionView(getStoredCodes())" id="back-button" class="secondary-button" style="display: none;">Usuario Guardados</button>
+            <button onclick="showSelectionView(getStoredCodes())" id="back-button" class="secondary-button" style="display: none;">Usuarios Guardados</button>
             <p id="error-message"></p>
         </div>
 
@@ -150,7 +150,7 @@
                 
             } catch (error) {
                 console.error("No se pudo cargar la tabla de proyectos:", error);
-                document.getElementById('loading-view').innerHTML = '<h1>Error Fatal</h1><p>No se pudo cargar la tabla de códigos. Revisa la consola para más detalles.</p>';
+                document.getElementById('loading-view').innerHTML = '<h1>Ups</h1><h2>, ocurrió un inconveniente.</h2><p>La información no se pudo cargar correctamente.</p>';
             }
         }
         
@@ -329,4 +329,5 @@
     </script>
 </body>
 </html>
+
 
