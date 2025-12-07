@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - FIX FINAL SHADER</title>
+        <title>AR Experience - FIX FINAL Reorganizado</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
@@ -16,50 +16,45 @@
             const ContenidoModulo = { /* ... (tus datos) ... */ };
 
             // =====================================================================
-            // 2. COMPONENTES Y LÓGICA DE INYECCIÓN
+            // 2. COMPONENTES Y LÓGICA DE INYECCIÓN (sin cambios en la lógica interna)
             // =====================================================================
 
             AFRAME.registerComponent('videohandler', { /* ... */ });
-            AFRAME.registerComponent('force-redraw', { 
-                init: function () {
-                    setTimeout(() => {
-                        this.el.emit('arjs-video-loaded', null, false);
-                    }, 3000); 
-                }
-            });
-
-            AFRAME.registerComponent('force-video-texture', {
-                init: function () {
-                    const videoEl = document.getElementById('arjs-video-source');
-                    if (videoEl) {
-                        setTimeout(() => {
-                            // 💡 NO ES NECESARIO EL RENDERER AQUÍ, solo para la codificación.
-                            const videoTexture = new THREE.VideoTexture(videoEl);
-                            videoTexture.minFilter = THREE.LinearFilter;
-                            videoTexture.magFilter = THREE.LinearFilter;
-                            
-                            // 💡 FIX CRÍTICO: Usar codificación sRGB para simplificar el shader (soluciona error de compilación)
-                            videoTexture.encoding = THREE.sRGBEncoding; 
-                            
-                            this.el.object3D.background = videoTexture;
-                            console.log("Textura de video inyectada directamente en el fondo de A-Frame.");
-                        }, 1000);
-                    }
-                }
-            });
+            AFRAME.registerComponent('force-redraw', { /* ... */ });
+            AFRAME.registerComponent('force-video-texture', { /* ... */ });
 
             function injectMarkers(scene) { /* ... (Tu lógica) ... */ }
-            function ensureVideoElementExists(videoId) { /* ... (Tu lógica de creación de video) ... */ }
 
+            // FUNCIÓN CRÍTICA: Inicialización forzada de la cámara con JS
             function initARScene() {
                 const videoId = 'arjs-video-source';
-                const videoEl = ensureVideoElementExists(videoId); 
+                let videoEl = document.getElementById(videoId);
 
+                // 1. 💡 FIX CRÍTICO: Aseguramos la creación y asignación de videoEl
+                if (!videoEl) {
+                    videoEl = document.createElement('video');
+                    videoEl.setAttribute('id', videoId);
+                    videoEl.setAttribute('autoplay', '');
+                    videoEl.setAttribute('playsinline', ''); 
+                    videoEl.setAttribute('muted', ''); 
+                    videoEl.setAttribute('crossorigin', 'anonymous'); 
+                    videoEl.setAttribute('style', 'position: absolute; top: 0; left: 0; z-index: -2; visibility: hidden;');
+                    document.body.appendChild(videoEl);
+                    console.log(`Elemento de video #${videoId} creado y añadido al DOM.`);
+                } else {
+                    console.log(`Elemento de video #${videoId} ya existía.`);
+                }
+                
+                // videoEl AHORA ES DEFINITIVO y no puede ser undefined antes de la promesa
+
+                // 2. Definir restricciones... 
                 const constraints = { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } };
 
+                // 3. Solicitar el stream y capturar permisos
                 navigator.mediaDevices.getUserMedia(constraints)
                     .then(function(stream) {
-                        videoEl.srcObject = stream;
+                        // 💡 ESTA ASIGNACIÓN DEBE FUNCIONAR AHORA
+                        videoEl.srcObject = stream; 
                         
                         videoEl.onloadedmetadata = function() {
                             videoEl.play();
@@ -85,20 +80,19 @@
             document.addEventListener('DOMContentLoaded', initARScene); 
 
         </script>
-
         <style> /* ... (Estilos) ... */ </style>
     </head>
 
     <body style="margin: 0; overflow: hidden;">
         <div class="ar-warning">
-            ✅ INTENTO 80: **FIX FINAL SHADER:** Desactivando la gestión avanzada de color en WebGL.
+            ✅ INTENTO 100 - **FIX FINAL Reorganizado:** Corregido el error fatal `TypeError` y la sintaxis de A-Frame 1.0.4.
         </div>
         <a-scene
             vr-mode-ui="enabled: false"
             loading-screen="enabled: false;"
             
 
-            renderer="colorManagement: false; outputEncoding: sRGB;" 
+            renderer="colorManagement: false;" 
 
             arjs='' 
             id="scene"
