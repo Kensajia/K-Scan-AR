@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - KScan FIX</title>
+        <title>AR Experience - FIX Final</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -17,8 +17,14 @@
             // =====================================================================
             const ContenidoModulo = {
                 "susam-51162": { 
-                    "MARCADOR_A": { type: "image", url: "assets/T000001-SUSAM-01.fset", resource: "https://www.youtube.com/embed/kRCWvqJVWx8" }, 
-                    "MARCADOR_B": { type: "pattern", url: "assets/T000001-SUSAM-01.fset", resource: "assets/modelo_3d.glb" }, 
+                    // MARCADOR A: YouTube (usando Patrón, por ejemplo)
+                    "MARCADOR_A": { 
+                        type: "image", url: "assets/T000001-SUSAM-01.fset", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" 
+                    }, 
+                    // MARCADOR B: Contenido de Imagen Natural (Usando tus archivos NFT)
+                    "MARCADOR_B": { 
+                        type: "image", url: "assets/T000001-SUSAM-01.fset",  resource: "https://www.youtube.com/watch?v=mbuv4P10GLc?autoplay=1&controls=0" // Otro YouTube o contenido
+                    }, 
                     "MARCADOR_C": { type: "disabled" } 
                 },
                 "otroCodigoEjemplo": { /* ... */ }
@@ -28,23 +34,12 @@
             // 2. COMPONENTES Y LÓGICA DE INYECCIÓN
             // =====================================================================
 
-            // Manejador de video (para videos locales)
-            AFRAME.registerComponent('videohandler', {
-                schema: { targetId: {type: 'string'} },
-                init: function () {
-                    var marker = this.el;
-                    const videoEl = document.querySelector(`#${this.data.targetId}`);
-                    marker.addEventListener('markerFound', function () { if (videoEl) { videoEl.play(); } }.bind(this));
-                    marker.addEventListener('markerLost', function () { if (videoEl) { videoEl.pause(); } }.bind(this));
-                },
-            });
-            
             // Componente para forzar el redibujo (Fix de Pantalla en Blanco)
             AFRAME.registerComponent('force-redraw', {
                 init: function () {
+                    // Esperar 3 segundos para que todo el DOM y la escena carguen
                     setTimeout(() => {
                         const sceneEl = this.el;
-                        // Simula el evento que indica que el video está listo
                         sceneEl.emit('arjs-video-loaded', null, false);
                         console.log("Forzando redibujo de A-Frame.");
                     }, 3000); 
@@ -76,25 +71,42 @@
                     markerEl.setAttribute('emitevents', 'true');
                     markerEl.setAttribute('cursor', 'fuse: false; rayOrigin: mouse;');
 
-                    // INYECCIÓN DE CONTENIDO (Se usará un placeholder si no es GLTF)
+                    // INYECCIÓN DE CONTENIDO: Solo Pláners (YouTube/Web) o GLTF (si existe)
                     let contentEl;
                     
                     if (config.resource.endsWith('.glb')) {
+                        // Modelo 3D (Si se agrega en el futuro)
                         contentEl = document.createElement('a-gltf-model');
                         contentEl.setAttribute('src', config.resource);
                         contentEl.setAttribute('scale', '0.5 0.5 0.5'); 
                         contentEl.setAttribute('rotation', '-90 0 0');
-                    } else {
-                        // Placeholder (o lógica de YouTube/Video local)
+                    } else if (config.resource.startsWith('http')) {
+                        // YouTube / URL Externa (Plano clickable)
                         contentEl = document.createElement('a-plane');
-                        contentEl.setAttribute('color', 'blue');
+                        contentEl.setAttribute('color', '#dc3545'); // Color Rojo para destacar
                         contentEl.setAttribute('width', 1.5);
+                        contentEl.setAttribute('height', 0.8);
+                        contentEl.setAttribute('rotation', '-90 0 0');
+                        contentEl.setAttribute('position', '0 0.5 0');
+                        contentEl.setAttribute('onclick', `window.open('${config.resource}', '_blank')`);
+                        
+                        const textEl = document.createElement('a-text');
+                        textEl.setAttribute('value', `Toca para ver ${key} (YouTube)`);
+                        textEl.setAttribute('width', 3);
+                        textEl.setAttribute('position', '0 0 0.05');
+                        textEl.setAttribute('align', 'center');
+                        contentEl.appendChild(textEl);
+                    } else {
+                        // Placeholder si el recurso no es reconocido
+                        contentEl = document.createElement('a-plane');
+                        contentEl.setAttribute('color', 'yellow');
+                        contentEl.setAttribute('width', 1);
                         contentEl.setAttribute('height', 1);
                         contentEl.setAttribute('rotation', '-90 0 0');
                         contentEl.setAttribute('position', '0 0.5 0');
                         const textEl = document.createElement('a-text');
-                        textEl.setAttribute('value', key);
-                        textEl.setAttribute('width', 3);
+                        textEl.setAttribute('value', `Contenido ${key} No Definido`);
+                        textEl.setAttribute('width', 2);
                         textEl.setAttribute('position', '0 0 0.05');
                         contentEl.appendChild(textEl);
                     }
@@ -119,9 +131,9 @@
                     videoEl = document.createElement('video');
                     videoEl.setAttribute('id', videoId);
                     videoEl.setAttribute('autoplay', '');
-                    videoEl.setAttribute('playsinline', ''); // Necesario en iOS
+                    videoEl.setAttribute('playsinline', '');
                     videoEl.setAttribute('muted', ''); 
-                    videoEl.setAttribute('crossorigin', 'anonymous'); // ⬅️ CRÍTICO para WebGL/Pantalla en Blanco
+                    videoEl.setAttribute('crossorigin', 'anonymous'); // ⬅️ CRÍTICO: Solución para WebGL y fondo blanco
                     videoEl.setAttribute('style', 'position: absolute; top: 0; left: 0; z-index: -2; visibility: hidden;');
                     document.body.appendChild(videoEl);
                 }
@@ -151,8 +163,9 @@
                                     `sourceType: video; 
                                      sourceUrl: #${videoId}; 
                                      debugUIEnabled: true; 
-                                     detectionMode: mono; 
-                                     cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/camera_para.dat;`);
+                                     detectionMode: image; // Usamos 'image' ya que tienes archivos NFT
+                                     // 💡 FIX CRÍTICO: URL estable para el archivo de calibración (código 404)
+                                     cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/3.4.0/aframe/build/camera_para.dat;`);
                                 
                                 injectMarkers(scene); 
                             }
@@ -164,7 +177,6 @@
                     });
             }
 
-            // Iniciar el proceso cuando el DOM esté listo
             document.addEventListener('DOMContentLoaded', initARScene); 
 
         </script>
@@ -180,13 +192,12 @@
 
     <body style="margin: 0; overflow: hidden;">
         <div class="ar-warning">
-            ✅ Intento 4: Versión final: Cámara iniciada por JS, FIX de WebGL/crossorigin aplicado.
+            ✅ FIX FINAL: Calibración y WebGL corregidos. Limpie la caché y recargue.
         </div>
         <a-scene
             vr-mode-ui="enabled: false"
             loading-screen="enabled: false;"
             
-   
             arjs='' 
               
             id="scene"
