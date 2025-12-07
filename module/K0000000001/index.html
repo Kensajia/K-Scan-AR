@@ -2,65 +2,199 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - Sin Cámara de A-Frame (Final)</title>
+        <title>AR Experience - Controles de Zoom en Pantalla</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
         <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-        <script src="https://raw.githack.com/AR-js-org/AR.js/master/three.js/build/ar-nft.js"></script>
+        
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
         <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
+        
+        <script>
+            // =====================================================================
+            // 1. TABLA DE CONTENIDOS DINÁMICA
+            // =====================================================================
+            const ContenidoModulo = {
+                "susam-51162": { 
+                    "MARCADOR_A": { type: "nft", url: "assets/T000001-SUSAM-01", resource: "https://www.youtube.com/embed/video_ejemplo_2?autoplay=1&controls=0" }, 
+                    "MARCADOR_B": { type: "pattern", url: "assets/taza.patt", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" }, 
+                    "MARCADOR_C": { type: "disabled" } 
+                },
+            };
+
+            // =====================================================================
+            // 2. LÓGICA DE CONTROL DE ZOOM (ESCALADO DE CONTENIDO)
+            // =====================================================================
+            let currentScale = 1.0;
+            const scaleStep = 0.1;
+
+            /** Aplica la escala a la entidad contenedora del contenido AR. */
+            function applyScale(scale) {
+                const contentContainer = document.getElementById('ar-content');
+                if (contentContainer) {
+                    contentContainer.setAttribute('scale', `${scale} ${scale} ${scale}`);
+                    currentScale = scale;
+                    console.log(`Escala AR ajustada a: ${scale}`);
+                }
+            }
+
+            /** Botón: Acercar (Zoom In) */
+            window.zoomIn = function() {
+                // Limitamos el zoom máximo
+                if (currentScale < 3.0) {
+                    applyScale(currentScale + scaleStep);
+                }
+            };
+
+            /** Botón: Alejar (Zoom Out) */
+            window.zoomOut = function() {
+                // Limitamos el zoom mínimo (para evitar que desaparezca)
+                if (currentScale > 0.1) {
+                    applyScale(currentScale - scaleStep);
+                }
+            };
+
+            /** Botón: Restaurar */
+            window.zoomReset = function() {
+                applyScale(1.0);
+            };
 
 
-<style>
-  .arjs-loader {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0);
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+            // =====================================================================
+            // 3. FUNCIÓN DE INYECCIÓN Y WEBRTC
+            // =====================================================================
+            function injectMarkers() {
+                // ... (Tu lógica de inyección de marcadores aquí, insertando en #ar-content) ...
 
-  .arjs-loader div {
-    text-align: center;
-    font-size: 1.25em;
-    color: white;
-  }
-</style>
-</head>
-    
-<body style="margin : 0px; overflow: hidden;">
-  <!-- minimal loader shown until image descriptors are loaded -->
-  <div class="arjs-loader">
-    <div>INTENTO 151 - Bienbenido quite el zoom si amerita</div>
-  </div>
-  <a-scene
-    vr-mode-ui="enabled: false;"
-    renderer="logarithmicDepthBuffer: true; precision: medium;"
-    embedded
-    arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;"
-  >
-    <!-- we use cors proxy to avoid cross-origin problems ATTENTION! you need to set up your server -->
-    <a-nft
-      type="nft"
-      url="assets/T000001-SUSAM-01"
-      smooth="true"
-      smoothCount="10"
-      smoothTolerance=".01"
-      smoothThreshold="5"
-    >
-      <a-entity
-        gltf-model="https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"
-        scale="5 5 5"
-        position="150 300 -100"
-      >
-      </a-entity>
-    </a-nft>
-    <a-entity camera></a-entity>
-  </a-scene>
-</body>
+                const scene = document.getElementById('scene');
+                const contentContainer = document.getElementById('ar-content');
+                const urlParams = new URLSearchParams(window.location.search);
+                const userCode = urlParams.get('code'); 
+                const recursos = ContenidoModulo[userCode] || null;
+
+                if (!recursos || !scene) return;
+                
+                const loader = document.querySelector('.arjs-loader');
+                if (loader) {
+                    loader.style.display = 'none';
+                }
+
+                // Aquí iría la lógica de creación de NFT/Pattern, asegurando que 
+                // los marcadores (markerEl) se añadan a contentContainer, no directamente a scene.
+                
+                // Ejemplo (simplificado, debes integrar tu lógica completa):
+                const markerEl = document.createElement('a-nft');
+                // ... atributos ...
+                contentContainer.appendChild(markerEl); // <--- AÑADIR AL CONTENEDOR ESCALABLE
+
+                // Inicializar la escala si el contenido ya cargó
+                applyScale(1.0); 
+            }
+            
+            function initWebcamStream() {
+                // ... (Tu lógica de inicialización WebRTC y restricción de resolución) ...
+
+                const videoId = 'arjs-video-source';
+                let videoEl = document.createElement('video');
+                // ... (Creación del elemento video) ...
+
+                const constraints = { /* ... (Tus restricciones 1280x720) ... */ };
+
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function(stream) {
+                        videoEl.srcObject = stream;
+                        videoEl.onloadedmetadata = function() {
+                            videoEl.play();
+                            
+                            const scene = document.getElementById('scene');
+                            if (scene) {
+                                scene.setAttribute('arjs', 
+                                    `sourceType: video; 
+                                     sourceUrl: #${videoId};
+                                     trackingMethod: best; 
+                                     debugUIEnabled: false;`);
+                                
+                                injectMarkers();
+                            }
+                        };
+                    })
+                    .catch(function(err) {
+                        console.error("Error al iniciar la cámara (WebRTC):", err);
+                        alert(`Error de cámara: Causa: ${err.name}. El zoom sigue fijo por el dispositivo.`);
+                        injectMarkers(); 
+                    });
+            }
+
+            document.addEventListener('DOMContentLoaded', initWebcamStream); 
+
+        </script>
+
+        <style>
+            /* Estilos de la Marquesina (Loader) */
+            .arjs-loader {
+                height: 30px; 
+                width: 100%;
+                position: fixed; 
+                top: 0;
+                left: 0;
+                background-color: rgba(0, 0, 0, 0.6); 
+                z-index: 9999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .arjs-loader div {
+                text-align: center;
+                font-size: 0.9em; 
+                color: white;
+            }
+
+            /* Estilos para los Controles de Zoom */
+            #ar-controls {
+                position: fixed;
+                bottom: 20px; /* Abajo de la pantalla */
+                left: 50%;
+                transform: translateX(-50%); /* Centrar */
+                z-index: 999; /* Sobre la escena AR */
+                display: flex;
+                gap: 10px;
+            }
+
+            #ar-controls button {
+                padding: 10px 15px;
+                font-size: 1.2em;
+                background: rgba(0, 0, 0, 0.5);
+                color: white;
+                border: 1px solid white;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+
+    <body style="margin : 0px; overflow: hidden;">
+        
+        <div id="ar-controls">
+            <button onclick="zoomOut()">➖ Alejar</button>
+            <button onclick="zoomReset()">🎯 Restaurar</button>
+            <button onclick="zoomIn()">➕ Acercar</button>
+        </div>
+
+        <div class="arjs-loader">
+            <div>INTENTO 201 - Cargando archivos de realidad aumentada...</div>
+        </div>
+        
+        <a-scene
+            vr-mode-ui="enabled: false;"
+            renderer="logarithmicDepthBuffer: true; precision: medium;"
+            embedded
+            arjs="" 
+            id="scene"
+        >
+            <a-entity id="ar-content"></a-entity> 
+
+            <a-entity camera></a-entity> 
+        </a-scene>
+    </body>
+</html>
