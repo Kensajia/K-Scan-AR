@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - Ajuste Final Zoom</title>
+        <title>AR Experience - FIX FINAL Zoom y Movimiento</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
@@ -35,18 +35,67 @@
 
                 if (!recursos || !scene) return;
                 
-                const markerKeys = Object.keys(recursos);
-                
                 const loader = document.querySelector('.arjs-loader');
                 if (loader) {
                     loader.style.display = 'none';
                 }
                 
+                const markerKeys = Object.keys(recursos);
                 markerKeys.forEach(key => {
                     const config = recursos[key];
                     if (config.type === "disabled") return;
 
-                    // ... (Tu lógica para inyectar a-nft y a-marker) ...
+                    // Lógica para inyectar <a-nft> o <a-marker>
+                    if (config.type === "nft") {
+                         const markerEl = document.createElement('a-nft');
+                         markerEl.setAttribute('type', 'nft');
+                         markerEl.setAttribute('url', config.url); 
+                         markerEl.setAttribute('id', key);
+                         markerEl.setAttribute('smooth', 'true');
+                         markerEl.setAttribute('smoothCount', '10');
+                         markerEl.setAttribute('smoothTolerance', '.01');
+                         markerEl.setAttribute('smoothThreshold', '5');
+                         
+                         let contentEl;
+                         if (config.resource.startsWith('http')) {
+                            contentEl = document.createElement('a-plane');
+                            contentEl.setAttribute('color', '#dc3545'); 
+                            contentEl.setAttribute('width', 100); 
+                            contentEl.setAttribute('height', 50); 
+                            contentEl.setAttribute('rotation', '0 0 0'); 
+                            contentEl.setAttribute('position', '0 0 0');
+                            contentEl.setAttribute('onclick', `window.open('${config.resource}', '_blank')`);
+                            
+                            const textEl = document.createElement('a-text');
+                            textEl.setAttribute('value', `Toca para ver ${key} (YouTube)`);
+                            textEl.setAttribute('width', 200);
+                            textEl.setAttribute('position', '0 0 5');
+                            textEl.setAttribute('align', 'center');
+                            contentEl.appendChild(textEl);
+                         }
+                         
+                         contentEl.classList.add('clickable', 'gesturable'); 
+                         contentEl.setAttribute('gesture-handler', '');
+
+                         markerEl.appendChild(contentEl);
+                         scene.appendChild(markerEl);
+                    } else if (config.type === "pattern") {
+                        const markerEl = document.createElement('a-marker');
+                        markerEl.setAttribute('type', config.type);
+                        markerEl.setAttribute('preset', 'custom');
+                        markerEl.setAttribute('url', config.url);
+                        markerEl.setAttribute('id', key);
+
+                        const contentEl = document.createElement('a-plane');
+                        contentEl.setAttribute('color', 'yellow');
+                        contentEl.setAttribute('width', 1);
+                        contentEl.setAttribute('height', 1);
+                        contentEl.setAttribute('rotation', '-90 0 0');
+                        contentEl.setAttribute('position', '0 0.5 0');
+                        markerEl.appendChild(contentEl);
+
+                        scene.appendChild(markerEl);
+                    }
                 });
             }
 
@@ -81,7 +130,7 @@
     <body style="margin : 0px; overflow: hidden;">
         
         <div class="arjs-loader">
-            <div>28 - Cargando archivos de realidad aumentada...</div>
+            <div>Cargando archivos de realidad aumentada...</div>
         </div>
         
         <a-scene
@@ -91,7 +140,13 @@
             arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
             id="scene"
         >
-            <a-entity camera position="0 0 0" fov="80"></a-entity> 
+            <a-entity 
+                camera 
+                position="0 0 0" 
+                fov="80"
+                look-controls="enabled: false" 
+                wasd-controls="enabled: false">
+            </a-entity> 
         </a-scene>
     </body>
 </html>
