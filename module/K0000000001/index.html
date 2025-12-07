@@ -2,174 +2,85 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - FIX WebRTC y Zoom</title>
+        <title>AR Experience - Reinicio Limpio</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
         <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
         
-        <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
-        <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
-        
-        <script>
-            // =====================================================================
-            // 1. TABLA DE CONTENIDOS DINÁMICA
-            // =====================================================================
-            const ContenidoModulo = { /* ... (Tus datos) ... */ };
-
-            // =====================================================================
-            // 2. LÓGICA DE CONTROL DE ZOOM (ESCALADO DE CONTENIDO)
-            // =====================================================================
-            let currentScale = 1.0;
-            const scaleStep = 0.1;
-
-            function applyScale(scale) {
-                const contentContainer = document.getElementById('ar-content');
-                if (contentContainer) {
-                    contentContainer.setAttribute('scale', `${scale} ${scale} ${scale}`);
-                    currentScale = scale;
-                    console.log(`Escala AR ajustada a: ${scale}`);
-                }
+        <style>
+            /* Estilo para el Loader (opcional, pero limpio) */
+            .arjs-loader {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 30px;
+                background-color: rgba(0, 0, 0, 0.6);
+                color: white;
+                text-align: center;
+                line-height: 30px;
+                z-index: 999;
             }
-            window.zoomIn = function() { if (currentScale < 3.0) { applyScale(currentScale + scaleStep); } };
-            window.zoomOut = function() { if (currentScale > 0.1) { applyScale(currentScale - scaleStep); } };
-            window.zoomReset = function() { applyScale(1.0); };
-
-
-            // =====================================================================
-            // 3. FUNCIÓN DE INYECCIÓN DE MARCADORES
-            // =====================================================================
-            function injectMarkers() {
-                const scene = document.getElementById('scene');
-                const contentContainer = document.getElementById('ar-content');
-                const urlParams = new URLSearchParams(window.location.search);
-                const userCode = urlParams.get('code'); 
-                const recursos = ContenidoModulo[userCode] || null;
-
-                if (!recursos || !scene) return;
-                
-                const loader = document.querySelector('.arjs-loader');
-                if (loader) {
-                    loader.style.display = 'none';
-                }
-                
-                // Aplicar escala inicial.
-                applyScale(1.0); 
-
-                // Aquí iría tu lógica completa para crear y añadir <a-nft> y <a-marker>
-                // a contentContainer. Por ahora, solo usamos un placeholder para la prueba.
-                const markerKeys = Object.keys(recursos);
-                markerKeys.forEach(key => {
-                    const config = recursos[key];
-                    if (config.type === "disabled") return;
-                    
-                    // Solo como ejemplo simplificado:
-                    if (config.type === "nft") {
-                        const markerEl = document.createElement('a-nft');
-                        markerEl.setAttribute('type', 'nft');
-                        markerEl.setAttribute('url', config.url); 
-                        
-                        const contentEl = document.createElement('a-box');
-                        contentEl.setAttribute('position', '0 0 50');
-                        contentEl.setAttribute('color', 'green');
-                        
-                        markerEl.appendChild(contentEl);
-                        contentContainer.appendChild(markerEl); // <--- AÑADIDO AL CONTENEDOR ESCALABLE
-                    }
-                });
-
-            }
-            
-            // =====================================================================
-            // 4. FIX CRÍTICO: Inicialización forzada de la cámara con WebRTC
-            // =====================================================================
-            function initWebcamStream() {
-                const videoId = 'arjs-video-source';
-                let videoEl = document.createElement('video');
-                videoEl.setAttribute('id', videoId);
-                videoEl.setAttribute('autoplay', '');
-                videoEl.setAttribute('playsinline', ''); 
-                videoEl.setAttribute('muted', ''); 
-                videoEl.setAttribute('crossorigin', 'anonymous'); 
-                videoEl.setAttribute('style', 'position: absolute; top: 0; left: 0; z-index: -2; visibility: hidden;');
-                document.body.appendChild(videoEl);
-
-                // 💡 FIX: Usar 'video: true' y anidar las restricciones detalladas
-                const constraints = { 
-                    audio: false, 
-                    video: { 
-                        facingMode: { ideal: "environment" }, 
-                        width: { ideal: 1280 }, // Intentar una resolución alta para evitar el recorte
-                        height: { ideal: 720 } 
-                    } 
-                };
-
-                navigator.mediaDevices.getUserMedia(constraints)
-                    .then(function(stream) {
-                        videoEl.srcObject = stream;
-                        videoEl.onloadedmetadata = function() {
-                            videoEl.play();
-                            
-                            const scene = document.getElementById('scene');
-                            if (scene) {
-                                // 💡 AR.JS usará el video creado por WebRTC
-                                scene.setAttribute('arjs', 
-                                    `sourceType: video; 
-                                     sourceUrl: #${videoId};
-                                     trackingMethod: best; 
-                                     debugUIEnabled: false;`);
-                                
-                                injectMarkers();
-                            }
-                        };
-                    })
-                    .catch(function(err) {
-                        console.error("Error al iniciar la cámara (WebRTC):", err);
-                        // Mostrar el error original en un mensaje más claro
-                        alert(`Error de cámara: Causa: ${err.name}. No se pudo aplicar el FIX de zoom por restricción del navegador.`);
-                        
-                        // Si falla WebRTC, recurrimos al método nativo simple para que al menos se vea la cámara
-                        const scene = document.getElementById('scene');
-                        if (scene) {
-                             scene.setAttribute('arjs', 
-                                `trackingMethod: best; 
-                                 sourceType: webcam;
-                                 debugUIEnabled: false;`);
-                        }
-                        injectMarkers(); 
-                    });
-            }
-
-            document.addEventListener('DOMContentLoaded', initWebcamStream); 
-
-        </script>
-
-        <style> /* ... (Estilos de marquesina y controles) ... */ </style>
+        </style>
     </head>
 
     <body style="margin : 0px; overflow: hidden;">
         
-        <div id="ar-controls">
-            <button onclick="zoomOut()">➖ Alejar</button>
-            <button onclick="zoomReset()">🎯 Restaurar</button>
-            <button onclick="zoomIn()">➕ Acercar</button>
-        </div>
-
         <div class="arjs-loader">
-            <div>Cargando archivos de realidad aumentada... (Intentando FIX de cámara WebRTC)</div>
+            Cargando Realidad Aumentada...
         </div>
         
         <a-scene
             vr-mode-ui="enabled: false;"
-            renderer="logarithmicDepthBuffer: true; precision: medium;"
+            renderer="logarithmicDepthBuffer: true;"
             embedded
-            // Temporalmente vacío, se llenará en JS con la fuente de video
-            arjs="" 
+
+            arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
             id="scene"
+
+            gesture-detector
         >
-            <a-entity id="ar-content"></a-entity> 
+            <a-nft
+                type="nft"
+                url="assets/T000001-SUSAM-01" 
+                smooth="true"
+                smoothCount="10"
+                smoothTolerance=".01"
+                smoothThreshold="5"
+            >
+                <a-box 
+                    color="#4CC3D9" 
+                    scale="100 100 100" 
+                    position="0 50 0" 
+                    rotation="0 0 0">
+                </a-box>
+            </a-nft>
+
+            <a-marker
+                type="pattern"
+                preset="custom"
+                url="assets/taza.patt"
+            >
+                <a-sphere 
+                    color="red" 
+                    radius="0.5" 
+                    position="0 1 0" 
+                    rotation="0 0 0">
+                </a-sphere>
+            </a-marker>
 
             <a-entity camera></a-entity> 
         </a-scene>
+
+        <script>
+            // Función simple para ocultar el loader una vez que la escena esté lista
+            document.querySelector('a-scene').addEventListener('loaded', function () {
+                const loader = document.querySelector('.arjs-loader');
+                if (loader) {
+                    loader.style.display = 'none';
+                }
+            });
+        </script>
     </body>
 </html>
