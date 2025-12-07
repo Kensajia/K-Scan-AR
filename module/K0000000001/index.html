@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - MindAR Image Tracking</title>
+        <title>AR Experience - MindAR FIX de Carga</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://cdn.jsdelivr.net/npm/mindar-image-aframe@1.2.5/dist/mindar-image-aframe.js"></script>
@@ -14,8 +14,6 @@
             // =====================================================================
             const ContenidoModulo = {
                 "susam-51162": { 
-                    // NOTA: MindAR usa el mismo archivo 'targets.mind' para todas las imágenes.
-                    // Aquí asumimos que los índices 0 y 1 corresponden a tus marcadores A y B.
                     "MARCADOR_A": { type: "target", index: 0, resource: "https://www.youtube.com/embed/video_ejemplo_2?autoplay=1&controls=0" }, 
                     "MARCADOR_B": { type: "target", index: 1, resource: "assets/taza.patt" }, 
                     "MARCADOR_C": { type: "disabled" } 
@@ -23,7 +21,7 @@
             };
 
             // =====================================================================
-            // 2. FUNCIÓN DE INYECCIÓN DE MARCADORES (Adaptada a MindAR)
+            // 2. FUNCIÓN DE INYECCIÓN DE MARCADORES (Se mantiene la lógica anterior)
             // =====================================================================
 
             function injectMarkers() {
@@ -46,21 +44,18 @@
                     if (config.type === "disabled") return;
 
                     if (config.type === "target") {
-                        // MindAR requiere una entidad <a-mindar-image> por índice
                         const markerEl = document.createElement('a-mindar-image');
                         markerEl.setAttribute('mindar-image-target', `targetIndex: ${config.index}`);
                         markerEl.setAttribute('id', key);
 
                         let contentEl;
-                        
                         if (config.resource.startsWith('http')) {
-                            // Contenido para el video/enlace (similar al anterior)
                             contentEl = document.createElement('a-plane');
                             contentEl.setAttribute('color', '#dc3545'); 
                             contentEl.setAttribute('width', 1);
                             contentEl.setAttribute('height', 0.5); 
                             contentEl.setAttribute('rotation', '0 0 0'); 
-                            contentEl.setAttribute('position', '0 0 0.01'); // Ligeramente elevado
+                            contentEl.setAttribute('position', '0 0 0.01'); 
                             contentEl.setAttribute('onclick', `window.open('${config.resource}', '_blank')`);
                             
                             const textEl = document.createElement('a-text');
@@ -70,7 +65,6 @@
                             textEl.setAttribute('align', 'center');
                             contentEl.appendChild(textEl);
                          } else {
-                             // Si es un patrón o modelo 3D (ejemplo de contenido)
                             contentEl = document.createElement('a-box');
                             contentEl.setAttribute('color', 'yellow');
                             contentEl.setAttribute('width', 0.5);
@@ -85,15 +79,17 @@
                 });
             }
 
+            // CRÍTICO: Esperar a que la escena se cargue para dar tiempo a MindAR a inicializarse
             document.addEventListener('DOMContentLoaded', function() {
-                // MindAR necesita que la escena esté lista, así que esperamos un poco.
-                document.querySelector('a-scene').addEventListener('mindar-initialized', injectMarkers);
+                // Esperamos un momento después de que toda la escena A-Frame se haya cargado
+                document.querySelector('a-scene').addEventListener('loaded', function () {
+                    setTimeout(injectMarkers, 500);
+                });
             });
 
         </script>
 
         <style>
-            /* Marquesina Estática */
             .arjs-loader {
                 height: 30px; 
                 width: 100%;
@@ -117,17 +113,18 @@
     <body style="margin : 0px; overflow: hidden;">
         
         <div class="arjs-loader">
-            <div>Cargando MindAR, por favor espere...</div>
+            <div>Cargando MindAR, por favor espere... (Fix de inicialización activo)</div>
         </div>
         
         <a-scene
+            
             mindar-image="imageTargetSrc: assets/targets.mind; filterMinCF:0.0001; filterBeta: 1;"
             vr-mode-ui="enabled: false;"
             renderer="logarithmicDepthBuffer: true; precision: medium;"
             embedded
             id="scene"
         >
-            <a-camera mindar-image-target="targetAssets: assets/targets.mind;"></a-camera> 
+            <a-entity camera></a-entity> 
         </a-scene>
     </body>
 </html>
