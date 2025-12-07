@@ -1,68 +1,167 @@
-
+<!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script type="importmap">
-    {
-      "imports": {
-	"three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-	"three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-	"mindar-image-three":"https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
-      }
-    }
-    </script>
-    <script type="module">
-      import * as THREE from 'three';
-      import { MindARThree } from 'mindar-image-three';
-      const mindarThree = new MindARThree({
-	container: document.querySelector("#container"),
-	imageTargetSrc: "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind"
-      });
-      const {renderer, scene, camera} = mindarThree;
-      const anchor = mindarThree.addAnchor(0);
-      const geometry = new THREE.PlaneGeometry(1, 0.55);
-      const material = new THREE.MeshBasicMaterial( {color: 0x00ffff, transparent: true, opacity: 0.5} );
-      const plane = new THREE.Mesh( geometry, material );
-      anchor.group.add(plane);
-      const start = async() => {
-	await mindarThree.start();
-	renderer.setAnimationLoop(() => {
-	  renderer.render(scene, camera);
-	});
-      }
-      const startButton = document.querySelector("#startButton");
-      startButton.addEventListener("click", () => {
-	start();
-      });
-      stopButton.addEventListener("click", () => {
-	mindarThree.stop();
-	mindarThree.renderer.setAnimationLoop(null);
-      });
-    </script>
-    <style>
-      body {
-	margin: 0;
-      }
-      #container {
-	width: 100vw;
-	height: 100vh;
-	position: relative;
-	overflow: hidden;
-      }
-      #control {
-	position: fixed;
-	top: 0;
-	left: 0;
-	z-index: 2;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="control">
-      <button id="startButton">Empezar</button>
-      <button id="stopButton">Detener</button>
-    </div>
-    <div id="container">
-    </div>
-  </body>
+    <head>
+        <meta charset="utf-8">
+        <title>MindAR Three.js - Solución Final (Sin Zoom Fijo)</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        
+        <script type="importmap">
+        {
+          "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+            // Reemplaza con la ruta local: "./lib/mindar-image-three.prod.js"
+            "mindar-image-three":"https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js" 
+          }
+        }
+        </script>
+
+        <script type="module">
+            import * as THREE from 'three';
+            import { MindARThree } from 'mindar-image-three';
+
+            // =====================================================================
+            // 1. TABLA DE CONTENIDOS DINÁMICA
+            // =====================================================================
+            const ContenidoModulo = {
+                "susam-51162": { 
+                    // El índice corresponde al orden de las imágenes en targets.mind
+                    "MARCADOR_A": { index: 0, resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", isVideo: true }, 
+                    "MARCADOR_B": { index: 1, resource: "Contenido 3D (Caja)", isVideo: false }, 
+                    "MARCADOR_C": { index: 2, resource: "Contenido 3D (Esfera)", isVideo: false } 
+                },
+            };
+
+            // =====================================================================
+            // 2. INICIALIZACIÓN MINDAR
+            // =====================================================================
+            const mindarThree = new MindARThree({
+                container: document.querySelector("#container"),
+                // CRÍTICO: Reemplaza con tu ruta local si el CDN falla: "assets/targets.mind"
+                imageTargetSrc: "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind" 
+            });
+            const {renderer, scene, camera} = mindarThree;
+
+            // =====================================================================
+            // 3. INYECCIÓN DE CONTENIDO 3D (Sustituto de injectMarkers)
+            // =====================================================================
+
+            function createContent(config) {
+                if (config.isVideo) {
+                    // Creamos un plano con color para simular el click/enlace
+                    const geometry = new THREE.PlaneGeometry(1, 0.55);
+                    const material = new THREE.MeshBasicMaterial( {color: 0x00ffff, transparent: true, opacity: 0.5} );
+                    const plane = new THREE.Mesh( geometry, material );
+                    
+                    // Añadir listener de click para abrir el video
+                    plane.userData.url = config.resource;
+                    plane.position.set(0, 0, 0.05); // Ligeramente elevado
+                    
+                    return plane;
+
+                } else if (config.resource.includes("Caja")) {
+                    // Creamos un cubo de prueba
+                    const geometry = new THREE.BoxGeometry(1, 1, 1);
+                    const material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+                    const box = new THREE.Mesh(geometry, material);
+                    box.position.set(0, 0.5, 0); // Lo subimos medio metro para que quede sobre el marcador
+                    return box;
+                }
+                // Añade aquí más lógica de contenido si es necesario.
+                return new THREE.Object3D(); // Objeto vacío por defecto
+            }
+
+            // Agrega los anclas y el contenido a la escena
+            const urlParams = new URLSearchParams(window.location.search);
+            const userCode = urlParams.get('code'); 
+            const recursos = ContenidoModulo[userCode] || ContenidoModulo["susam-51162"]; // Usamos el código de ejemplo si el URL falla
+            
+            Object.values(recursos).forEach(config => {
+                if (config.index !== undefined) {
+                    const anchor = mindarThree.addAnchor(config.index);
+                    const content = createContent(config);
+                    anchor.group.add(content);
+                }
+            });
+
+            // =====================================================================
+            // 4. FUNCIONES DE RENDERIZADO Y CONTROL
+            // =====================================================================
+
+            const start = async() => {
+                await mindarThree.start();
+                renderer.setAnimationLoop(() => {
+                    renderer.render(scene, camera);
+                });
+            }
+
+            const startButton = document.querySelector("#startButton");
+            const stopButton = document.querySelector("#stopButton");
+
+            startButton.addEventListener("click", () => {
+                start();
+            });
+
+            stopButton.addEventListener("click", () => {
+                mindarThree.stop();
+                renderer.setAnimationLoop(null);
+            });
+            
+            // Listener global para manejar los clicks en los planos (URLs)
+            window.addEventListener('click', (event) => {
+                // Raycasting para detectar qué objeto 3D fue tocado
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+
+                // Convertir coordenadas del click a coordenadas normalizadas del Three.js
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                
+                // Iterar sobre todos los anclajes para verificar intersecciones
+                Object.values(recursos).forEach(config => {
+                    if (config.index !== undefined && config.isVideo) {
+                        const anchor = mindarThree.anchors[config.index];
+                        if (anchor && anchor.group.children.length > 0) {
+                            const intersects = raycaster.intersectObjects(anchor.group.children, true);
+                            
+                            if (intersects.length > 0 && intersects[0].object.userData.url) {
+                                window.open(intersects[0].object.userData.url, '_blank');
+                            }
+                        }
+                    }
+                });
+            });
+
+        </script>
+        
+        <style>
+            body {
+                margin: 0;
+            }
+            #container {
+                width: 100vw;
+                height: 100vh;
+                position: relative;
+                overflow: hidden;
+            }
+            #control {
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 2;
+                padding: 10px;
+            }
+        </style>
+    </head>
+    
+    <body>
+        <div id="control">
+            <button id="startButton">START AR</button> 
+            <button id="stopButton">STOP AR</button>
+        </div>
+        <div id="container">
+        </div>
+    </body>
 </html>
