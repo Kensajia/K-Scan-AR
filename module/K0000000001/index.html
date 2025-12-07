@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - FIX FINAL Zoom Nativo</title>
+        <title>AR Experience - CLEAN CODE / LOW RES FIX</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
@@ -13,12 +13,12 @@
         
         <script>
             // =====================================================================
-            // 1. TABLA DE CONTENIDOS DINÁMICA DEL MÓDULO AR
+            // 1. TABLA DE CONTENIDOS DINÁMICA
             // =====================================================================
             const ContenidoModulo = {
                 "susam-51162": { 
-                    "MARCADOR_A": { type: "nft", url: "assets/T000001-SUSAM-01", resource: "https://www.youtube.com/embed/video_ejemplo_2?autoplay=1&controls=0" }, 
-                    "MARCADOR_B": { type: "pattern", url: "assets/taza.patt", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" }, 
+                    "MARCADOR_A": { type: "pattern", url: "assets/taza.patt", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" }, 
+                    "MARCADOR_B": { type: "nft", url: "assets/T000001-SUSAM-01", resource: "https://www.youtube.com/embed/video_ejemplo_2?autoplay=1&controls=0" }, 
                     "MARCADOR_C": { type: "disabled" } 
                 },
             };
@@ -46,9 +46,6 @@
                     const config = recursos[key];
                     if (config.type === "disabled") return;
 
-                    // Lógica de inyección NFT y PATTERN...
-                    // (Asegúrate de tener la lógica de creación de <a-nft> y <a-marker> aquí)
-                    
                     if (config.type === "nft") {
                         const markerEl = document.createElement('a-nft');
                         markerEl.setAttribute('type', 'nft');
@@ -76,7 +73,6 @@
                            textEl.setAttribute('align', 'center');
                            contentEl.appendChild(textEl);
                         } else {
-                            // Placeholder
                             contentEl = document.createElement('a-box');
                             contentEl.setAttribute('position', '0 0 50');
                             contentEl.setAttribute('color', 'green');
@@ -117,12 +113,12 @@
         <style>
             /* Marquesina Estática */
             .arjs-loader {
-                height: 100%; 
+                height: 30px; 
                 width: 100%;
                 position: fixed; 
                 top: 0;
                 left: 0;
-                background-color: rgba(0, 0, 0, 0); 
+                background-color: rgba(0, 0, 0, 0.6); 
                 z-index: 9999;
                 display: flex;
                 justify-content: center;
@@ -140,14 +136,14 @@
     <body style="margin : 0px; overflow: hidden;">
         
         <div class="arjs-loader">
-            <div>INTENTO 60: Cargando archivos de realidad aumentada...</div>
+            <div>Cargando archivos de realidad aumentada... (Zoom fix activo)</div>
         </div>
         
         <a-scene
             vr-mode-ui="enabled: false;"
             renderer="logarithmicDepthBuffer: true; precision: medium;"
             embedded
-            arjs="trackingMethod: best; sourceType: webcam;debugUIEnabled: false;"
+            arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; sourceWidth: 320; sourceHeight: 240;"
             id="scene"
         >
             <a-entity camera></a-entity> 
