@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>AR Experience - FIX FINAL V. NATIVA</title>
+        <title>AR Experience - Ajuste Final</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
         <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.6.0/dist/aframe-master.min.js"></script>
@@ -17,14 +17,14 @@
             // =====================================================================
             const ContenidoModulo = {
                 "susam-51162": { 
-                    "MARCADOR_A": { type: "image", url: "assets/T000001-SUSAM-01.fset", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" }, 
-                    "MARCADOR_B": { type: "image", url: "assets/T000001-SUSAM-01.fset", resource: "https://www.youtube.com/watch?v=mbuv4P10GLc?autoplay=1&controls=0" }, 
+                    "MARCADOR_A": { type: "nft", url: "assets/T000001-SUSAM-01", resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0" }, 
+                    "MARCADOR_B": { type: "nft", url: "assets/T000001-SUSAM-01", resource: "https://www.youtube.com/embed/video_ejemplo_2?autoplay=1&controls=0" }, 
                     "MARCADOR_C": { type: "disabled" } 
                 },
             };
 
             // =====================================================================
-            // 2. FUNCIÓN DE INYECCIÓN DE MARCADORES (ÚNICO JS REQUERIDO)
+            // 2. FUNCIÓN DE INYECCIÓN DE MARCADORES Y LOADER FIX
             // =====================================================================
 
             function injectMarkers() {
@@ -37,32 +37,33 @@
                 
                 const markerKeys = Object.keys(recursos);
                 
+                // 💡 FIX: Ocultar el loader (marquesina) una vez que se procesa el contenido
+                const loader = document.querySelector('.arjs-loader');
+                if (loader) {
+                    loader.style.display = 'none';
+                }
+                
                 markerKeys.forEach(key => {
                     const config = recursos[key];
                     if (config.type === "disabled") return;
 
-                    // NOTA: Usamos <a-nft> para image tracking y <a-marker> para patrones
                     if (config.type === "nft") {
-                         // Crear el componente NFT
                          const markerEl = document.createElement('a-nft');
                          markerEl.setAttribute('type', 'nft');
-                         // 💡 CRÍTICO: El URL para NFT es el nombre base, sin .fset (ej: assets/T000001-SUSAM-01)
                          markerEl.setAttribute('url', config.url); 
                          markerEl.setAttribute('id', key);
-                         markerEl.setAttribute('smooth', 'true'); // Propiedades que dan estabilidad
+                         markerEl.setAttribute('smooth', 'true');
                          markerEl.setAttribute('smoothCount', '10');
                          markerEl.setAttribute('smoothTolerance', '.01');
                          markerEl.setAttribute('smoothThreshold', '5');
                          
-                         
                          let contentEl;
                          if (config.resource.startsWith('http')) {
-                            // YouTube / URL Externa (Plano clickable)
                             contentEl = document.createElement('a-plane');
                             contentEl.setAttribute('color', '#dc3545'); 
-                            contentEl.setAttribute('width', 100); // Escala para NFT
+                            contentEl.setAttribute('width', 100); 
                             contentEl.setAttribute('height', 50); 
-                            contentEl.setAttribute('rotation', '0 0 0'); // Rotación simple
+                            contentEl.setAttribute('rotation', '0 0 0'); 
                             contentEl.setAttribute('position', '0 0 0');
                             contentEl.setAttribute('onclick', `window.open('${config.resource}', '_blank')`);
                             
@@ -79,17 +80,13 @@
 
                          markerEl.appendChild(contentEl);
                          scene.appendChild(markerEl);
-
-
                     } else if (config.type === "pattern") {
-                        // Crear el componente Marker (Patrón)
                         const markerEl = document.createElement('a-marker');
                         markerEl.setAttribute('type', config.type);
                         markerEl.setAttribute('preset', 'custom');
                         markerEl.setAttribute('url', config.url);
                         markerEl.setAttribute('id', key);
 
-                        // ... (Lógica de inyección de contenido simple para Pattern) ...
                         const contentEl = document.createElement('a-plane');
                         contentEl.setAttribute('color', 'yellow');
                         contentEl.setAttribute('width', 1);
@@ -103,22 +100,21 @@
                 });
             }
 
-            // Iniciar la inyección de marcadores una vez que la escena A-Frame esté lista
             document.addEventListener('DOMContentLoaded', function() {
-                // Esperar un momento para que A-Frame se inicialice completamente
                 setTimeout(injectMarkers, 500); 
             });
 
         </script>
 
         <style>
+            /* 💡 FIX: MARQUESINA ESTÁTICA */
             .arjs-loader {
-                height: 100%;
+                height: 30px; /* Altura de la barra */
                 width: 100%;
-                position: absolute;
+                position: fixed; /* Usar fixed para que se mantenga en la parte superior */
                 top: 0;
                 left: 0;
-                background-color: rgba(0, 0, 0, 0.8);
+                background-color: rgba(0, 0, 0, 0.6); /* Fondo semi-transparente */
                 z-index: 9999;
                 display: flex;
                 justify-content: center;
@@ -127,27 +123,28 @@
 
             .arjs-loader div {
                 text-align: center;
-                font-size: 1.25em;
+                font-size: 0.9em; /* Fuente más pequeña */
                 color: white;
             }
         </style>
     </head>
 
     <body style="margin : 0px; overflow: hidden;">
+        
         <div class="arjs-loader">
-            <div>Cargando, please wait...</div>
+            <div>Cargando archivos de realidad aumentada...</div>
         </div>
         
         <a-scene
             vr-mode-ui="enabled: false;"
-            
+            // Configuración del renderizador
             renderer="logarithmicDepthBuffer: true; precision: medium;"
             embedded
-            
+            // Configuración AR.JS
             arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
             id="scene"
         >
-            <a-entity camera></a-entity>
+            <a-entity camera fov="80"></a-entity> 
         </a-scene>
     </body>
 </html>
