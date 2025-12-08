@@ -1,174 +1,136 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>MindAR Three.js - SOLUCIÓN FINAL MÓDULOS</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-        
-        <script type="importmap">
-        {
-          "imports": {
-            // 1. THREE.JS: Usamos la ruta corregida "../../assets/Recur/"
-            "three": "../../assets/Recur/three.module.js",
-            // 2. MINDAR-THREE: Usamos la ruta corregida para el componente principal
-            "mindar-image-three": "../../assets/Recur/mindar-image-three.prod.js"
-            /* NOTA: mindar-image.prod.js (el base) se carga internamente */
-          }
-        }
-        </script>
-        
-        <script type="module">
-            // Importamos las clases directamente del 'importmap'
-            import * as THREE from 'three';
-            import { MindARThree } from 'mindar-image-three';
+<head>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "../../assets/Recur/three.module.js",
+        "mindar-image-three": "../../assets/Recur/mindar-image-three.prod.js"
+      }
+    }
+    </script>
+    
+    <script type="module">
+        // Importamos las clases (el navegador sabe dónde buscar gracias al importmap)
+        import * as THREE from 'three';
+        import { MindARThree } from 'mindar-image-three';
+
+        // =====================================================================
+        // 1. TABLA DE CONTENIDOS DINÁMICA
+        // =====================================================================
+        const ContenidoModulo = {
+            "susam-51162": { 
+                "MARCADOR_A": { index: 0, resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", isClickable: true }, 
+                "MARCADOR_B": { index: 1, resource: "Contenido 3D (Caja)", isClickable: false }, 
+                "MARCADOR_C": { index: 2, resource: "Contenido 3D (Esfera)", isClickable: false } 
+            },
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... (el resto del código sigue siendo el mismo) ...
 
             // =====================================================================
-            // 1. TABLA DE CONTENIDOS DINÁMICA
+            // 2. INICIALIZACIÓN MINDAR
             // =====================================================================
-            const ContenidoModulo = {
-                "susam-51162": { 
-                    "MARCADOR_A": { index: 0, resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", isClickable: true }, 
-                    "MARCADOR_B": { index: 1, resource: "Contenido 3D (Caja)", isClickable: false }, 
-                    "MARCADOR_C": { index: 2, resource: "Contenido 3D (Esfera)", isClickable: false } 
-                },
-            };
+            const mindarThree = new MindARThree({ 
+                container: document.querySelector("#container"),
+                imageTargetSrc: "assets/targets.mind" 
+            });
+            const {renderer, scene, camera} = mindarThree;
+            
+            // =====================================================================
+            // 3. CREACIÓN DE CONTENIDO 3D DINÁMICO
+            // =====================================================================
+            function createContent(config) {
+                if (config.isClickable) {
+                    const geometry = new THREE.PlaneGeometry(1, 0.55);
+                    const material = new THREE.MeshBasicMaterial( {color: 0x00ffff, transparent: true, opacity: 0.5} ); 
+                    const plane = new THREE.Mesh( geometry, material );
+                    
+                    plane.userData.url = config.resource;
+                    plane.position.set(0, 0, 0.05);
+                    
+                    return plane;
 
-            document.addEventListener('DOMContentLoaded', () => {
-
-                // =====================================================================
-                // 2. INICIALIZACIÓN MINDAR
-                // =====================================================================
-                // Ahora usamos la clase MindARThree que importamos, ¡sin el prefijo MINDAR!
-                const mindarThree = new MindARThree({ 
-                    container: document.querySelector("#container"),
-                    // RUTA DE TU ARCHIVO DE TARGETS (relativa al index.html)
-                    imageTargetSrc: "assets/targets.mind" 
-                });
-                const {renderer, scene, camera} = mindarThree;
-                
-                // =====================================================================
-                // 3. CREACIÓN DE CONTENIDO 3D DINÁMICO
-                // =====================================================================
-                function createContent(config) {
-                    if (config.isClickable) {
-                        const geometry = new THREE.PlaneGeometry(1, 0.55);
-                        const material = new THREE.MeshBasicMaterial( {color: 0x00ffff, transparent: true, opacity: 0.5} ); 
-                        const plane = new THREE.Mesh( geometry, material );
-                        
-                        plane.userData.url = config.resource;
-                        plane.position.set(0, 0, 0.05);
-                        
-                        return plane;
-
-                    } else if (config.resource.includes("Caja")) {
-                        const geometry = new THREE.BoxGeometry(1, 1, 1);
-                        const material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
-                        const box = new THREE.Mesh(geometry, material);
-                        box.position.set(0, 0.5, 0); 
-                        return box;
-                    }
-                    return new THREE.Object3D(); 
+                } else if (config.resource.includes("Caja")) {
+                    const geometry = new THREE.BoxGeometry(1, 1, 1);
+                    const material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+                    const box = new THREE.Mesh(geometry, material);
+                    box.position.set(0, 0.5, 0); 
+                    return box;
                 }
+                return new THREE.Object3D(); 
+            }
 
-                // Agrega los anclas y el contenido a la escena
-                const urlParams = new URLSearchParams(window.location.search);
-                const userCode = urlParams.get('code'); 
-                const recursos = ContenidoModulo[userCode] || ContenidoModulo["susam-51162"];
+            // Agrega los anclas y el contenido a la escena
+            const urlParams = new URLSearchParams(window.location.search);
+            const userCode = urlParams.get('code'); 
+            const recursos = ContenidoModulo[userCode] || ContenidoModulo["susam-51162"];
+            
+            Object.values(recursos).forEach(config => {
+                if (config.index !== undefined) {
+                    const anchor = mindarThree.addAnchor(config.index);
+                    const content = createContent(config);
+                    anchor.group.add(content);
+                }
+            });
+
+            // =====================================================================
+            // 4. FUNCIONES DE RENDERIZADO Y CONTROL
+            // =====================================================================
+
+            const start = async() => {
+                await mindarThree.start();
+                document.querySelector("#container").style.display = 'block';
+                document.querySelector("#startButton").style.display = 'none'; 
+                document.querySelector("#stopButton").style.display = 'block'; 
+
+                renderer.setAnimationLoop(() => {
+                    renderer.render(scene, camera);
+                });
+            }
+
+            const stop = () => {
+                mindarThree.stop();
+                renderer.setAnimationLoop(null);
+                document.querySelector("#container").style.display = 'none'; 
+                document.querySelector("#startButton").style.display = 'block'; 
+                document.querySelector("#stopButton").style.display = 'none'; 
+            }
+
+            const startButton = document.querySelector("#startButton");
+            const stopButton = document.querySelector("#stopButton");
+
+            startButton.addEventListener("click", () => {
+                start();
+            });
+
+            stopButton.addEventListener("click", () => {
+                stop();
+            });
+            
+            // Listener de Raycasting (Click en el objeto AR)
+            window.addEventListener('click', (event) => {
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
                 
                 Object.values(recursos).forEach(config => {
-                    if (config.index !== undefined) {
-                        const anchor = mindarThree.addAnchor(config.index);
-                        const content = createContent(config);
-                        anchor.group.add(content);
-                    }
-                });
-
-                // =====================================================================
-                // 4. FUNCIONES DE RENDERIZADO Y CONTROL (START/STOP limpios)
-                // =====================================================================
-
-                const start = async() => {
-                    await mindarThree.start();
-                    document.querySelector("#container").style.display = 'block';
-                    document.querySelector("#startButton").style.display = 'none'; 
-                    document.querySelector("#stopButton").style.display = 'block'; 
-
-                    renderer.setAnimationLoop(() => {
-                        renderer.render(scene, camera);
-                    });
-                }
-
-                const stop = () => {
-                    mindarThree.stop();
-                    renderer.setAnimationLoop(null);
-                    document.querySelector("#container").style.display = 'none'; 
-                    document.querySelector("#startButton").style.display = 'block'; 
-                    document.querySelector("#stopButton").style.display = 'none'; 
-                }
-
-                const startButton = document.querySelector("#startButton");
-                const stopButton = document.querySelector("#stopButton");
-
-                startButton.addEventListener("click", () => {
-                    start();
-                });
-
-                stopButton.addEventListener("click", () => {
-                    stop();
-                });
-                
-                // Listener de Raycasting (Click en el objeto AR)
-                window.addEventListener('click', (event) => {
-                    const raycaster = new THREE.Raycaster();
-                    const mouse = new THREE.Vector2();
-
-                    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-                    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-
-                    raycaster.setFromCamera(mouse, camera);
-                    
-                    Object.values(recursos).forEach(config => {
-                        if (config.index !== undefined && config.isClickable) {
-                            const anchor = mindarThree.anchors[config.index];
-                            if (anchor && anchor.group.children.length > 0) {
-                                const intersects = raycaster.intersectObjects(anchor.group.children, true);
-                                
-                                if (intersects.length > 0 && intersects[0].object.userData.url) {
-                                    window.open(intersects[0].object.userData.url, '_blank');
-                                }
+                    if (config.index !== undefined && config.isClickable) {
+                        const anchor = mindarThree.anchors[config.index];
+                        if (anchor && anchor.group.children.length > 0) {
+                            const intersects = raycaster.intersectObjects(anchor.group.children, true);
+                            
+                            if (intersects.length > 0 && intersects[0].object.userData.url) {
+                                window.open(intersects[0].object.userData.url, '_blank');
                             }
                         }
-                    });
+                    }
                 });
-            }); 
-        </script>
-        
-        <style>
-            body { margin: 0; }
-            #container {
-                width: 100vw;
-                height: 100vh;
-                position: relative;
-                overflow: hidden;
-                display: none; 
-            }
-            #control {
-                position: fixed;
-                top: 0;
-                left: 0;
-                z-index: 2;
-                padding: 10px;
-            }
-            #stopButton { display: none; }
-        </style>
-    </head>
+            });
+        }); 
+    </script>
     
-    <body>
-        <div id="control">
-            <button id="startButton">2 START AR</button> 
-            <button id="stopButton">STOP AR</button>
-        </div>
-        <div id="container">
-        </div>
-    </body>
-</html>
+    </head>
