@@ -6,7 +6,6 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     
     <style>
-      /* Botón de Interfaz */
       #UI-overlay {
         position: fixed;
         top: 20px;
@@ -15,17 +14,16 @@
       }
       .audio-btn {
         padding: 12px 25px;
-        background: #FF5722;
+        background: #4CAF50;
         color: white;
         border: none;
         border-radius: 30px;
         font-weight: bold;
         cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
-      /* Forzar ocultación del botón VR si A-Frame no lo hace */
-      .a-enter-vr {
-        display: none !important;
-      }
+      /* Ocultar botón VR */
+      .a-enter-vr { display: none !important; }
     </style>
 
     <script>
@@ -37,31 +35,35 @@
           const vid = document.querySelector(videoId);
 
           target.addEventListener("targetFound", () => {
-            // Solo intentar reproducir si el video tiene un src válido
-            if (vid.readyState >= 2) {
-                vid.play().catch(e => console.log("Audio bloqueado: presione el botón"));
-            }
+            console.log("Detectado -> Play");
+            // Forzamos play cada vez que se detecta para evitar congelamientos
+            vid.play().catch(e => console.log("Esperando interacción para audio"));
           });
 
           target.addEventListener("targetLost", () => {
+            console.log("Perdido -> Pause");
             vid.pause();
           });
         }
 
         conectarVideo('#target-0', '#vid-0');
-        conectarVideo('#target-1', '#vid-1');
 
         audioBtn.addEventListener("click", () => {
           const allVideos = document.querySelectorAll("video");
           allVideos.forEach(v => {
-            // Verificamos que el video tenga una fuente válida antes de tocarlo
             if (v.currentSrc !== "") {
-                v.muted = false;
-                // Intentamos un play/pause suave. Si falla, no bloqueamos el código.
-                v.play().then(() => v.pause()).catch(err => console.warn("Video no listo:", v.id));
+              v.muted = false;
+              // Reset técnico: pausar y volver a reproducir inmediatamente
+              // Esto fuerza al navegador a refrescar el flujo de audio/video
+              const isPlaying = !v.paused;
+              v.pause();
+              v.currentTime = v.currentTime; // Refrescar frame
+              if (isPlaying) {
+                v.play();
+              }
             }
           });
-          console.log("Sonido habilitado por el usuario.");
+          console.log("Audio refrescado y activo");
           audioBtn.style.display = "none"; 
         });
       });
@@ -74,7 +76,7 @@
     </div>
 
     <a-scene 
-      mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" 
+      mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; maxTrack: 1" 
       color-space="sRGB" 
       renderer="colorManagement: true" 
       vr-mode-ui="enabled: false" 
@@ -107,5 +109,6 @@
       </a-entity>
 
     </a-scene>
+    
   </body>
 </html>
