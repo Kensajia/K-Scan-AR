@@ -85,3 +85,111 @@
     </a-scene>
   </body>
 </html>
+
+
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    
+    <style>
+      /* Botón de Interfaz */
+      #UI-overlay {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+      }
+      .audio-btn {
+        padding: 12px 25px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 30px;
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      }
+      .audio-btn:active { background: #1976D2; }
+    </style>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const audioBtn = document.querySelector("#audioBtn");
+        
+        // Función para conectar un marcador con su video
+        const conectarVideo = (targetId, videoId) => {
+          const target = document.querySelector(targetId);
+          const vid = document.querySelector(videoId);
+
+          // Forzar carga del video
+          vid.load();
+
+          target.addEventListener("targetFound", () => {
+            console.log("Detectado: " + targetId);
+            vid.play().catch(e => console.error("Error al reproducir video:", e));
+          });
+
+          target.addEventListener("targetLost", () => {
+            console.log("Perdido: " + targetId);
+            vid.pause();
+          });
+        }
+
+        // --- Configuración de conexiones ---
+        // Cambia estos IDs según necesites
+        conectarVideo('#target-0', '#vid-0');
+        conectarVideo('#target-1', '#vid-1');
+        conectarVideo('#target-2', '#vid-2');
+
+        // Lógica del botón de audio
+        audioBtn.addEventListener("click", () => {
+          document.querySelectorAll("video").forEach(v => {
+            v.muted = false; // Permite el sonido una vez que el usuario interactuó
+          });
+          audioBtn.style.display = "none"; // Ocultar después de activar
+        });
+      });
+    </script>
+  </head>
+  
+  <body>
+    <div id="UI-overlay">
+      <button id="audioBtn" class="audio-btn">🔊 ACTIVAR SONIDO</button>
+    </div>
+
+    <a-scene 
+      mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 2" 
+      color-space="sRGB" 
+      renderer="colorManagement: true" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false">
+      
+      <a-assets>
+        <video id="vid-0" src="video1.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
+        <video id="vid-1" src="video2.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
+        <video id="vid-2" src="video3.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity id="target-0" mindar-image-target="targetIndex: 0">
+        <a-video src="#vid-0" width="1" height="0.6" position="0 0 0" rotation="0 0 0"></a-video>
+      </a-entity>
+
+      <a-entity id="target-1" mindar-image-target="targetIndex: 1">
+        <a-video src="#vid-1" width="1" height="0.6" position="0 0 0" rotation="0 0 0"></a-video>
+      </a-entity>
+
+      <a-entity id="target-2" mindar-image-target="targetIndex: 2">
+        <a-video src="#vid-2" width="1" height="0.6" position="0 0 0" rotation="0 0 0"></a-video>
+      </a-entity>
+
+    </a-scene>
+  </body>
+</html>
