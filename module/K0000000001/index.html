@@ -1,26 +1,110 @@
-
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@7.6.1/dist/aframe-extras.min.js"></script>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    
+    <style>
+      /* Estilos para el botón en pantalla */
+      #UI-overlay {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1000; /* Asegura que esté por encima de la cámara */
+      }
+      .audio-btn {
+        padding: 12px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-family: sans-serif;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      }
+    </style>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        const audioBtn = document.querySelector("#audioBtn");
+        
+        // Función para conectar marcador con video
+        const conectarVideo = (targetId, videoId) => {
+          const target = document.querySelector(targetId);
+          const vid = document.querySelector(videoId);
+
+          target.addEventListener("targetFound", () => vid.play());
+          target.addEventListener("targetLost", () => vid.pause());
+        }
+
+        conectarVideo('#target-1', '#vid-1');
+        conectarVideo('#target-2', '#vid-2');
+        conectarVideo('#target-3', '#vid-3');
+
+        // BOTÓN: Al hacer clic, quitamos el 'muted' a todos los videos
+        audioBtn.addEventListener("click", () => {
+          document.querySelectorAll("video").forEach(v => {
+            v.muted = false; // Activa el sonido
+          });
+          audioBtn.style.display = "none"; // Oculta el botón tras activar
+        });
+      });
+    </script>
   </head>
+  
   <body>
-    <a-scene mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 2" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <div id="UI-overlay">
+      <button id="audioBtn" class="audio-btn">🔊 Activar Sonido</button>
+    </div>
+
+    <a-scene mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 3" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      
       <a-assets>
-        <a-asset-item id="bearModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/bear/scene.gltf"></a-asset-item>
-        <a-asset-item id="raccoonModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf"></a-asset-item>
+        <video id="vid-1" src="video1.mp4" loop="true" playsinline muted crossorigin="anonymous"></video>
+        <video id="vid-2" src="video2.mp4" loop="true" playsinline muted crossorigin="anonymous"></video>
+        <video id="vid-3" src="video3.mp4" loop="true" playsinline muted crossorigin="anonymous"></video>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity id="target-1" mindar-image-target="targetIndex: 0">
+        <a-video src="#vid-1" width="1" height="0.6"></a-video>
+      </a-entity>
+
+      <a-entity id="target-2" mindar-image-target="targetIndex: 1">
+        <a-video src="#vid-2" width="1" height="0.6"></a-video>
+      </a-entity>
+
+      <a-entity id="target-3" mindar-image-target="targetIndex: 2">
+        <a-video src="#vid-3" width="1" height="0.6"></a-video>
+      </a-entity>
+
+    </a-scene>
+  </body>
+</html>
+
+
+
+    <a-scene mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 2" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      
+      <a-assets>
+        <video id="video1" src="mi_video_descargado.mp4" preload="auto" loop="true" crossorigin="anonymous" playsinline webkit-playsinline></video>
+        <video id="video2" src="mi_video_descargado.mp4" preload="auto" loop="true" crossorigin="anonymous" playsinline webkit-playsinline></video>
+        <video id="video3" src="mi_video_descargado.mp4" preload="auto" loop="true" crossorigin="anonymous" playsinline webkit-playsinline></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity mindar-image-target="targetIndex: 0">
-        <a-gltf-model rotation="0 0 0 " position="0 -0.25 0" scale="0.05 0.05 0.05" src="#raccoonModel" animation-mixer>
+        <a-video src="#video1" width="1" height="0.552" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
       <a-entity mindar-image-target="targetIndex: 1">
-        <a-gltf-model rotation="0 0 0 " position="0 -0.25 0" scale="0.05 0.05 0.05" src="#bearModel" animation-mixer>
+        <a-video src="#video2" width="1" height="0.552" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
+      <a-entity mindar-image-target="targetIndex: 2">
+        <a-video src="#video3" width="1" height="0.552" position="0 0 0" rotation="0 0 0"></a-video>
+      </a-entity>
+
     </a-scene>
   </body>
 </html>
