@@ -5,22 +5,7 @@
         <title>MindAR Three.js - FINAL (Rutas Locales)</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
-        <script type="importmap">
-        {
-          "imports": {
-            // 1. RUTA PRINCIPAL DE THREE.JS (Usamos la versión módulo)
-            "three": "../../assets/Recur/three.module.js", 
-            
-            // 2. RUTA DE ADDONS: Requerida por la estructura de MindAR, aunque no usemos los archivos
-            // Simplemente apuntamos a la carpeta raíz de Recur, aunque es un parche.
-            // Para ser 100% correctos, debemos apuntar a la URL externa si no tenemos los archivos.
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-
-            // 3. COMPONENTE MINDAR
-            "mindar-image-three": "../../assets/Recur/mindar-image-three.prod.js"
-          }
-        }
-        </script>
+        <script src="assets/bundle.js"></script>
         
         <script type="module">
             // Importamos las clases (el navegador las resuelve gracias al importmap)
@@ -161,7 +146,7 @@
     
     <body>
         <div id="control">
-            <button id="startButton">10 START AR</button> 
+            <button id="startButton">11 START AR</button> 
             <button id="stopButton">STOP AR</button>
         </div>
         <div id="container">
