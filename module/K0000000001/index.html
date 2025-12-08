@@ -6,59 +6,60 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     
     <style>
-      :root { --accent: #4CAF50; --danger: #f44336; --warn: #FFC107; --bg-glass: rgba(255, 255, 255, 0.2); }
-      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; overflow: hidden; }
+      :root { --accent: #4CAF50; --danger: #f44336; --warn: #FFC107; }
+      body { font-family: sans-serif; margin: 0; overflow: hidden; }
 
-      /* Panel superior de herramientas */
+      /* Panel superior */
       #ui-controls {
         position: fixed;
         top: 15px;
         left: 15px;
         right: 15px;
-        z-index: 1000;
+        z-index: 2000; /* Prioridad alta */
         display: flex;
         justify-content: center;
         gap: 10px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: all 0.3s ease;
       }
 
       .btn {
         padding: 10px 18px;
-        border: 1px solid rgba(255,255,255,0.3);
         border-radius: 50px;
         color: white;
         font-weight: 600;
         cursor: pointer;
         font-size: 11px;
-        text-transform: uppercase;
-        backdrop-filter: blur(10px);
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.2);
         display: flex;
         align-items: center;
-        gap: 5px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
 
-      /* Botón Flash dinámico */
-      #btn-flash.active { background: var(--warn); color: black; border-color: black; }
+      #btn-flash.active { background: var(--warn); color: black; }
 
-      /* Botón de control de UI */
+      /* Botón de control INFERIOR - CORREGIDO */
       #btn-toggle-ui {
         position: fixed;
-        bottom: 25px;
-        right: 25px;
-        z-index: 1001;
+        bottom: 20px;
+        right: 20px;
+        z-index: 3000 !important; /* Capa suprema para evitar bloqueo de VR */
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        background: var(--bg-glass);
-        color: white;
-        border: 1px solid rgba(255,255,255,0.4);
-        backdrop-filter: blur(8px);
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(5px);
         font-size: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
 
-      .hidden { opacity: 0; transform: translateY(-30px); pointer-events: none; }
+      .hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+
+      /* ELIMINACIÓN TOTAL DEL BOTÓN VR */
+      .a-enter-vr { display: none !important; visibility: hidden !important; pointer-events: none !important; }
     </style>
 
     <script>
@@ -86,46 +87,39 @@
         setup('#target-1', '#vid-1');
         setup('#target-2', '#vid-2');
 
-        // 2. Detección de Capacidades de Cámara (HD y Flash)
+        // 2. Lógica Flash y Hardware
         sceneEl.addEventListener("arReady", () => {
           const video = document.querySelector('video');
           if (video && video.srcObject) {
             const track = video.srcObject.getVideoTracks()[0];
             trackRef.track = track;
-            
-            // Si soporta linterna, mostrar botón
+            // Solo mostrar botón si existe capacidad de linterna
             if (track.getCapabilities().torch) {
               document.querySelector("#btn-flash").style.display = "flex";
             }
           }
         });
 
-        // 3. Control de Flash con cambio visual
         document.querySelector("#btn-flash").addEventListener("click", function() {
           if (trackRef.track) {
             const isOff = !(trackRef.track.getConstraints().torch);
             trackRef.track.applyConstraints({ advanced: [{ torch: isOff }] });
-            
-            // Feedback visual
             this.classList.toggle("active", isOff);
             this.innerHTML = isOff ? "⚡ FLASH ON" : "⚡ FLASH OFF";
           }
         });
 
-        // 4. Control de Audio
         document.querySelector("#btn-audio").addEventListener("click", function() {
           const v0 = document.querySelector("#vid-0");
           v0.muted = !v0.muted;
-          this.style.background = v0.muted ? "rgba(244, 67, 54, 0.6)" : "rgba(76, 175, 80, 0.6)";
+          this.style.background = v0.muted ? "rgba(244, 67, 54, 0.6)" : "var(--accent)";
           this.innerHTML = v0.muted ? "🔇 SILENCIO" : "🔊 SONIDO";
         });
 
-        // 5. Alternar Visibilidad del Panel
         document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
           controls.classList.toggle("hidden");
         });
 
-        // 6. Calidad de Imagen (HD/SD Render)
         document.querySelector("#btn-hd").addEventListener("click", function() {
           const hMode = this.innerHTML.includes("HD");
           this.innerHTML = hMode ? "📺 CALIDAD: SD" : "📺 CALIDAD: HD";
@@ -148,12 +142,13 @@
       keep-alive
       mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" 
       renderer="preserveDrawingBuffer: true; antialias: true; colorManagement: true" 
-      vr-mode-ui="enabled: false" >
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false">
       
-      <a-assets>
+     <a-assets>
         <video id="vid-0" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
         <video id="vid-1" src="https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
-        <video id="vid-2" src="./video2.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-2" src="./video1.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
