@@ -7,8 +7,17 @@
     
     <style>
       #UI-overlay { position: fixed; top: 20px; left: 20px; z-index: 1000; }
-      .audio-btn { padding: 12px 25px; background: #4CAF50; color: white; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; }
-      .a-enter-vr { display: none !important; } /* Elimina botón VR */
+      .audio-btn { 
+        padding: 12px 25px; 
+        background: #4CAF50; 
+        color: white; 
+        border: none; 
+        border-radius: 30px; 
+        font-weight: bold; 
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      }
+      .a-enter-vr { display: none !important; }
     </style>
 
     <script>
@@ -20,8 +29,9 @@
           const vid = document.querySelector(videoId);
 
           target.addEventListener("targetFound", () => {
-            // Aseguramos reproducción fluida al detectar
-            vid.play().catch(e => console.log("Audio en espera..."));
+            console.log("Imagen detectada");
+            // Forzamos el play cada vez que entra en vista
+            vid.play().catch(e => console.log("Audio en pausa hasta click"));
           });
 
           target.addEventListener("targetLost", () => {
@@ -35,11 +45,11 @@
           const v = document.querySelector("#vid-0");
           v.muted = false;
           
-          // Refresco de frame para evitar que se pause al activar sonido
+          // Truco de refresco: Evita que el video se pause al activar audio
           const isPlaying = !v.paused;
           v.pause();
           v.currentTime = v.currentTime; 
-          if (isPlaying) v.play();
+          if (isPlaying) v.play().catch(e => console.error(e));
 
           audioBtn.style.display = "none"; 
         });
@@ -49,7 +59,7 @@
   
   <body>
     <div id="UI-overlay">
-      <button id="audioBtn" class="audio-btn">🔊 ACTIVAR AUDIO Vfinal</button>
+      <button id="audioBtn" class="audio-btn">🔊 ACTIVAR AUDIO</button>
     </div>
 
     <a-scene 
@@ -60,17 +70,21 @@
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-       
-        <video id="vid-0" src="https://drive.google.com/uc?export=download&id=18cvDNH24DK5cgMNoBgOlu7cfcxH49wH_" 
-               loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
-        
+        <video id="vid-0" 
+               src="https://drive.google.com/uc?export=download&id=18cvDNH24DK5cgMNoBgOlu7cfcxH49wH_" 
+               loop="true" 
+               playsinline 
+               webkit-playsinline 
+               muted 
+               crossorigin="anonymous"
+               preload="auto">
+        </video>
         <video id="vid-1" 
                src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" 
                loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
         
         <video id="vid-2" src="./video3.mp4" 
                loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
-        
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
