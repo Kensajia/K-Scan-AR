@@ -2,20 +2,28 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>MindAR Three.js - FINAL (Carga Global CDN)</title>
+        <title>MindAR Three.js - Módulo Local FIX</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
-        <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-        
-        <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-        
-        <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
-
-        <script>
-            // Las librerías cargadas desde CDN crean estas variables globales
-            const MINDAR = window.MINDAR;
-            const THREE = window.THREE;
+        <script type="importmap">
+        {
+          "imports": {
+            // Utilizamos la versión MINIFICADA de Three.js que tienes
+            "three": "../../assets/Recur/three.min.js", 
             
+            // Apuntamos al componente principal de MindAR
+            "mindar-image-three": "../../assets/Recur/mindar-image-three.prod.js"
+            
+            // Nota: MindAR Base (mindar-image.prod.js) se importa internamente
+          }
+        }
+        </script>
+        
+        <script type="module">
+            // Importamos las clases (el navegador sabe dónde buscar gracias al importmap)
+            import * as THREE from 'three';
+            import { MindARThree } from 'mindar-image-three';
+
             // =====================================================================
             // 1. TABLA DE CONTENIDOS DINÁMICA
             // =====================================================================
@@ -32,9 +40,10 @@
                 // =====================================================================
                 // 2. INICIALIZACIÓN MINDAR
                 // =====================================================================
-                const mindarThree = new MINDAR.MindARThree({ 
+                // Usamos la clase MindARThree importada (sin el prefijo MINDAR.)
+                const mindarThree = new MindARThree({ 
                     container: document.querySelector("#container"),
-                    // RUTA LOCAL CORRECTA ASUMIENDO QUE targets.mind está en module/K0000000001/assets/
+                    // RUTA DE TU ARCHIVO TARGETS (relativa al index.html)
                     imageTargetSrc: "assets/targets.mind" 
                 });
                 const {renderer, scene, camera} = mindarThree;
@@ -44,7 +53,6 @@
                 // =====================================================================
                 function createContent(config) {
                     if (config.isClickable) {
-                        // Plano interactivo (simula el video/enlace)
                         const geometry = new THREE.PlaneGeometry(1, 0.55);
                         const material = new THREE.MeshBasicMaterial( {color: 0x00ffff, transparent: true, opacity: 0.5} ); 
                         const plane = new THREE.Mesh( geometry, material );
@@ -55,7 +63,6 @@
                         return plane;
 
                     } else if (config.resource.includes("Caja")) {
-                        // Cubo de prueba
                         const geometry = new THREE.BoxGeometry(1, 1, 1);
                         const material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
                         const box = new THREE.Mesh(geometry, material);
@@ -160,7 +167,7 @@
     
     <body>
         <div id="control">
-            <button id="startButton">6 START AR</button> 
+            <button id="startButton">7 START AR</button> 
             <button id="stopButton">STOP AR</button>
         </div>
         <div id="container">
