@@ -2,164 +2,149 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>MindAR Three.js - Solución Final Estable</title>
+        <title>MindAR Three.js - FIX Compatibilidad Final</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         
-        <script type="importmap">
-        {
-          "imports": {
-            // Reemplaza con tu ruta local si el CDN falla: "./lib/three.module.js"
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js", 
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-            // Reemplaza con tu ruta local: "./lib/mindar-image-three.prod.js"
-            "mindar-image-three":"https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js" 
-          }
-        }
-        </script>
+        <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/mindar@1.2.5/dist/mindar-image.prod.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/mindar@1.2.5/dist/mindar-image-three.prod.js"></script>
 
-        <script type="module">
-            import * as THREE from 'three';
-            import { MindARThree } from 'mindar-image-three';
+        <script>
+            // Las librerías Three y MindARThree estarán disponibles globalmente (window.THREE, window.MINDAR)
+            // No necesitamos 'import * as THREE from 'three';'
 
             // =====================================================================
             // 1. TABLA DE CONTENIDOS DINÁMICA
             // =====================================================================
             const ContenidoModulo = {
                 "susam-51162": { 
-                    // El índice corresponde al orden en que se compilaron las imágenes en targets.mind
                     "MARCADOR_A": { index: 0, resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", isVideo: true }, 
                     "MARCADOR_B": { index: 1, resource: "Contenido 3D (Caja)", isVideo: false }, 
                     "MARCADOR_C": { index: 2, resource: "Contenido 3D (Esfera)", isVideo: false } 
                 },
             };
 
-            // =====================================================================
-            // 2. INICIALIZACIÓN MINDAR
-            // =====================================================================
-            const mindarThree = new MindARThree({
-                container: document.querySelector("#container"),
-                // Usar la ruta relativa que funcionó
-                imageTargetSrc: "assets/targets.mind" 
-            });
-            const {renderer, scene, camera} = mindarThree;
-            
-            // =====================================================================
-            // 3. CREACIÓN DE CONTENIDO 3D (Función auxiliar)
-            // =====================================================================
-            function createContent(config) {
-                if (config.isVideo) {
-                    // Plano interactivo (simula el video)
-                    const geometry = new THREE.PlaneGeometry(1, 0.55);
-                    // El color semi-transparente representa el área clickable
-                    const material = new THREE.MeshBasicMaterial( {color: 0x00ffff, transparent: true, opacity: 0.5} );
-                    const plane = new THREE.Mesh( geometry, material );
-                    
-                    plane.userData.url = config.resource;
-                    plane.position.set(0, 0, 0.05);
-                    
-                    return plane;
+            // =VUELVE A SER UNA FUNCIÓN NORMAL (no envuelta en módulos) =
+            document.addEventListener('DOMContentLoaded', () => {
 
-                } else if (config.resource.includes("Caja")) {
-                    // Cubo de prueba
-                    const geometry = new THREE.BoxGeometry(1, 1, 1);
-                    const material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
-                    const box = new THREE.Mesh(geometry, material);
-                    box.position.set(0, 0.5, 0); 
-                    return box;
-                }
-                
-                return new THREE.Object3D(); 
-            }
-
-            // Agrega los anclas y el contenido a la escena al inicio
-            const urlParams = new URLSearchParams(window.location.search);
-            const userCode = urlParams.get('code'); 
-            const recursos = ContenidoModulo[userCode] || ContenidoModulo["susam-51162"];
-            
-            Object.values(recursos).forEach(config => {
-                if (config.index !== undefined) {
-                    const anchor = mindarThree.addAnchor(config.index);
-                    const content = createContent(config);
-                    anchor.group.add(content);
-                }
-            });
-
-            // =====================================================================
-            // 4. FUNCIONES DE CONTROL (START/STOP) Y RAYCASTING
-            // =====================================================================
-
-            const start = async() => {
-                await mindarThree.start();
-                
-                // Muestra el contenedor de la RA y oculta el botón START
-                document.querySelector("#container").style.display = 'block';
-                document.querySelector("#startButton").style.display = 'none'; 
-                document.querySelector("#stopButton").style.display = 'block'; 
-
-                renderer.setAnimationLoop(() => {
-                    renderer.render(scene, camera);
+                // =====================================================================
+                // 2. INICIALIZACIÓN MINDAR
+                // =====================================================================
+                const mindarThree = new MINDAR.MindARThree({ // Usamos window.MINDAR que se carga globalmente
+                    container: document.querySelector("#container"),
+                    imageTargetSrc: "assets/targets.mind" 
                 });
-            }
-
-            const stop = () => {
-                mindarThree.stop();
-                renderer.setAnimationLoop(null);
+                const {renderer, scene, camera} = mindarThree;
                 
-                // Ocultamos el contenedor para limpiar la escena y el video
-                document.querySelector("#container").style.display = 'none'; 
-                
-                // Mostramos el botón de inicio de nuevo
-                document.querySelector("#startButton").style.display = 'block'; 
-                document.querySelector("#stopButton").style.display = 'none'; 
-            }
+                // =====================================================================
+                // 3. CREACIÓN DE CONTENIDO 3D (Mantenemos la lógica Three.js)
+                // =====================================================================
+                function createContent(config) {
+                    if (config.isVideo) {
+                        const geometry = new THREE.PlaneGeometry(1, 0.55);
+                        const material = new THREE.MeshBasicMaterial( {color: 0x00ffff, transparent: true, opacity: 0.5} );
+                        const plane = new THREE.Mesh( geometry, material );
+                        
+                        plane.userData.url = config.resource;
+                        plane.position.set(0, 0, 0.05);
+                        
+                        return plane;
 
-            const startButton = document.querySelector("#startButton");
-            const stopButton = document.querySelector("#stopButton");
+                    } else if (config.resource.includes("Caja")) {
+                        const geometry = new THREE.BoxGeometry(1, 1, 1);
+                        const material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+                        const box = new THREE.Mesh(geometry, material);
+                        box.position.set(0, 0.5, 0); 
+                        return box;
+                    }
+                    return new THREE.Object3D(); 
+                }
 
-            startButton.addEventListener("click", () => {
-                start();
-            });
-
-            stopButton.addEventListener("click", () => {
-                stop();
-            });
-            
-            // Listener global para manejar los clicks en los planos (URLs)
-            window.addEventListener('click', (event) => {
-                const raycaster = new THREE.Raycaster();
-                const mouse = new THREE.Vector2();
-
-                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-                mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-
-                raycaster.setFromCamera(mouse, camera);
+                // Agrega los anclas y el contenido a la escena al inicio
+                const urlParams = new URLSearchParams(window.location.search);
+                const userCode = urlParams.get('code'); 
+                const recursos = ContenidoModulo[userCode] || ContenidoModulo["susam-51162"];
                 
                 Object.values(recursos).forEach(config => {
-                    if (config.index !== undefined && config.isVideo) {
-                        const anchor = mindarThree.anchors[config.index];
-                        if (anchor && anchor.group.children.length > 0) {
-                            const intersects = raycaster.intersectObjects(anchor.group.children, true);
-                            
-                            if (intersects.length > 0 && intersects[0].object.userData.url) {
-                                window.open(intersects[0].object.userData.url, '_blank');
-                            }
-                        }
+                    if (config.index !== undefined) {
+                        const anchor = mindarThree.addAnchor(config.index);
+                        const content = createContent(config);
+                        anchor.group.add(content);
                     }
                 });
-            });
+
+                // =====================================================================
+                // 4. FUNCIONES DE CONTROL (START/STOP) Y RAYCASTING
+                // =====================================================================
+
+                const start = async() => {
+                    await mindarThree.start();
+                    
+                    document.querySelector("#container").style.display = 'block';
+                    document.querySelector("#startButton").style.display = 'none'; 
+                    document.querySelector("#stopButton").style.display = 'block'; 
+
+                    renderer.setAnimationLoop(() => {
+                        renderer.render(scene, camera);
+                    });
+                }
+
+                const stop = () => {
+                    mindarThree.stop();
+                    renderer.setAnimationLoop(null);
+                    
+                    document.querySelector("#container").style.display = 'none'; 
+                    
+                    document.querySelector("#startButton").style.display = 'block'; 
+                    document.querySelector("#stopButton").style.display = 'none'; 
+                }
+
+                const startButton = document.querySelector("#startButton");
+                const stopButton = document.querySelector("#stopButton");
+
+                startButton.addEventListener("click", () => {
+                    start();
+                });
+
+                stopButton.addEventListener("click", () => {
+                    stop();
+                });
+                
+                // Listener global para manejar los clicks en los planos (URLs)
+                window.addEventListener('click', (event) => {
+                    const raycaster = new THREE.Raycaster();
+                    const mouse = new THREE.Vector2();
+
+                    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+                    raycaster.setFromCamera(mouse, camera);
+                    
+                    Object.values(recursos).forEach(config => {
+                        if (config.index !== undefined && config.isVideo) {
+                            const anchor = mindarThree.anchors[config.index];
+                            if (anchor && anchor.group.children.length > 0) {
+                                const intersects = raycaster.intersectObjects(anchor.group.children, true);
+                                
+                                if (intersects.length > 0 && intersects[0].object.userData.url) {
+                                    window.open(intersects[0].object.userData.url, '_blank');
+                                }
+                            }
+                        }
+                    });
+                });
+            }); // Cierre del DOMContentLoaded
 
         </script>
         
         <style>
-            body {
-                margin: 0;
-            }
+            /* (Tus estilos se mantienen) */
+            body { margin: 0; }
             #container {
                 width: 100vw;
                 height: 100vh;
                 position: relative;
                 overflow: hidden;
-                /* Oculto por defecto hasta que se presione START */
                 display: none; 
             }
             #control {
@@ -169,16 +154,13 @@
                 z-index: 2;
                 padding: 10px;
             }
-            /* Ocultar el botón STOP al inicio */
-            #stopButton {
-                display: none;
-            }
+            #stopButton { display: none; }
         </style>
     </head>
     
     <body>
         <div id="control">
-            <button id="startButton">START AR</button> 
+            <button id="startButton">START AR 2</button> 
             <button id="stopButton">STOP AR</button>
         </div>
         <div id="container">
