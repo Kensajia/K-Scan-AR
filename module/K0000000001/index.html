@@ -6,6 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     
     <style>
+      /* Botón de Interfaz */
       #UI-overlay {
         position: fixed;
         top: 20px;
@@ -18,10 +19,12 @@
         color: white;
         border: none;
         border-radius: 30px;
-        font-family: Arial, sans-serif;
         font-weight: bold;
         cursor: pointer;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      }
+      /* Forzar ocultación del botón VR si A-Frame no lo hace */
+      .a-enter-vr {
+        display: none !important;
       }
     </style>
 
@@ -33,37 +36,30 @@
           const target = document.querySelector(targetId);
           const vid = document.querySelector(videoId);
 
-          // Forzar que el navegador cargue el buffer del video
-          vid.load();
-
           target.addEventListener("targetFound", () => {
-            console.log("Imagen detectada -> Reproduciendo:", videoId);
-            // Intentamos reproducir. Si falla, el error saldrá en consola.
-            const playPromise = vid.play();
-            if (playPromise !== undefined) {
-              playPromise.catch(error => {
-                console.log("Reproducción bloqueada hasta interactuar:", error);
-              });
+            // Solo intentar reproducir si el video tiene un src válido
+            if (vid.readyState >= 2) {
+                vid.play().catch(e => console.log("Audio bloqueado: presione el botón"));
             }
           });
 
           target.addEventListener("targetLost", () => {
-            console.log("Imagen perdida -> Pausando:", videoId);
             vid.pause();
           });
         }
 
-        // Conectar tus entidades con tus videos
         conectarVideo('#target-0', '#vid-0');
         conectarVideo('#target-1', '#vid-1');
 
-        // Lógica del botón: Activar audio y despertar videos
         audioBtn.addEventListener("click", () => {
           const allVideos = document.querySelectorAll("video");
           allVideos.forEach(v => {
-            v.muted = false;
-            // Pequeño truco para "desbloquear" el permiso de reproducción
-            v.play().then(() => { v.pause(); }); 
+            // Verificamos que el video tenga una fuente válida antes de tocarlo
+            if (v.currentSrc !== "") {
+                v.muted = false;
+                // Intentamos un play/pause suave. Si falla, no bloqueamos el código.
+                v.play().then(() => v.pause()).catch(err => console.warn("Video no listo:", v.id));
+            }
           });
           console.log("Sonido habilitado por el usuario.");
           audioBtn.style.display = "none"; 
@@ -78,14 +74,14 @@
     </div>
 
     <a-scene 
-      mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 2" 
+      mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" 
       color-space="sRGB" 
       renderer="colorManagement: true" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <video id="vid-0" src="https://gv-vod-cdn.aliexpress-media.com/9f8e1de30350cb41/00bkVKqwwF1yKmNEnU1/UznBtoGjK0vxx3Uxr31_323712772439_mp4_264_hd.mp4" 
+        <video id="vid-0" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" 
                loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
         
         <video id="vid-1" src="video2.mp4" 
@@ -99,15 +95,15 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity id="target-0" mindar-image-target="targetIndex: 0">
-        <a-video src="#vid-0" width="1" height="0.55" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-video src="#vid-0" width="1" height="0.55" position="0 0 0"></a-video>
       </a-entity>
 
       <a-entity id="target-1" mindar-image-target="targetIndex: 1">
-        <a-video src="#vid-1" width="1" height="0.55" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-video src="#vid-1" width="1" height="0.55" position="0 0 0"></a-video>
       </a-entity>
 
       <a-entity id="target-2" mindar-image-target="targetIndex: 2">
-        <a-video src="#vid-2" width="1" height="0.55" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-video src="#vid-2" width="1" height="0.55" position="0 0 0"></a-video>
       </a-entity>
 
     </a-scene>
