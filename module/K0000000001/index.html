@@ -6,7 +6,6 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     
     <style>
-      /* Botón de Interfaz */
       #UI-overlay {
         position: fixed;
         top: 20px;
@@ -15,7 +14,7 @@
       }
       .audio-btn {
         padding: 12px 25px;
-        background: #2196F3;
+        background: #FF5722;
         color: white;
         border: none;
         border-radius: 30px;
@@ -24,44 +23,50 @@
         cursor: pointer;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
-      .audio-btn:active { background: #1976D2; }
     </style>
 
     <script>
       document.addEventListener("DOMContentLoaded", function() {
         const audioBtn = document.querySelector("#audioBtn");
         
-        // Función para conectar un marcador con su video
         const conectarVideo = (targetId, videoId) => {
           const target = document.querySelector(targetId);
           const vid = document.querySelector(videoId);
 
-          // Forzar carga del video
+          // Forzar que el navegador cargue el buffer del video
           vid.load();
 
           target.addEventListener("targetFound", () => {
-            console.log("Detectado: " + targetId);
-            vid.play().catch(e => console.error("Error al reproducir video:", e));
+            console.log("Imagen detectada -> Reproduciendo:", videoId);
+            // Intentamos reproducir. Si falla, el error saldrá en consola.
+            const playPromise = vid.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(error => {
+                console.log("Reproducción bloqueada hasta interactuar:", error);
+              });
+            }
           });
 
           target.addEventListener("targetLost", () => {
-            console.log("Perdido: " + targetId);
+            console.log("Imagen perdida -> Pausando:", videoId);
             vid.pause();
           });
         }
 
-        // --- Configuración de conexiones ---
-        // Cambia estos IDs según necesites
+        // Conectar tus entidades con tus videos
         conectarVideo('#target-0', '#vid-0');
         conectarVideo('#target-1', '#vid-1');
-        conectarVideo('#target-2', '#vid-2');
 
-        // Lógica del botón de audio
+        // Lógica del botón: Activar audio y despertar videos
         audioBtn.addEventListener("click", () => {
-          document.querySelectorAll("video").forEach(v => {
-            v.muted = false; // Permite el sonido una vez que el usuario interactuó
+          const allVideos = document.querySelectorAll("video");
+          allVideos.forEach(v => {
+            v.muted = false;
+            // Pequeño truco para "desbloquear" el permiso de reproducción
+            v.play().then(() => { v.pause(); }); 
           });
-          audioBtn.style.display = "none"; // Ocultar después de activar
+          console.log("Sonido habilitado por el usuario.");
+          audioBtn.style.display = "none"; 
         });
       });
     </script>
@@ -69,7 +74,7 @@
   
   <body>
     <div id="UI-overlay">
-      <button id="audioBtn" class="audio-btn">🔊 ACTIVAR SONIDO - V2</button>
+      <button id="audioBtn" class="audio-btn">🔊 ACTIVAR AUDIO</button>
     </div>
 
     <a-scene 
@@ -80,23 +85,29 @@
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <video id="vid-0" src="video1.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
-        <video id="vid-1" src="video2.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
-        <video id="vid-2" src="video3.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
+        <video id="vid-0" src="https://gv-vod-cdn.aliexpress-media.com/9f8e1de30350cb41/00bkVKqwwF1yKmNEnU1/UznBtoGjK0vxx3Uxr31_323712772439_mp4_264_hd.mp4" 
+               loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
+        
+        <video id="vid-1" src="video2.mp4" 
+               loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
+
+        <video id="vid-2" src="video3.mp4" 
+               loop="true" playsinline webkit-playsinline muted crossorigin="anonymous"></video>
+        
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity id="target-0" mindar-image-target="targetIndex: 0">
-        <a-video src="#vid-0" width="1" height="0.6" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-video src="#vid-0" width="1" height="0.55" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
 
       <a-entity id="target-1" mindar-image-target="targetIndex: 1">
-        <a-video src="#vid-1" width="1" height="0.6" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-video src="#vid-1" width="1" height="0.55" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
 
       <a-entity id="target-2" mindar-image-target="targetIndex: 2">
-        <a-video src="#vid-2" width="1" height="0.6" position="0 0 0" rotation="0 0 0"></a-video>
+        <a-video src="#vid-2" width="1" height="0.55" position="0 0 0" rotation="0 0 0"></a-video>
       </a-entity>
 
     </a-scene>
