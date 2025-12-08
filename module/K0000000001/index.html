@@ -7,11 +7,20 @@
     
     <style>
       #UI-overlay { position: fixed; top: 20px; left: 20px; z-index: 1000; }
-      .audio-btn { padding: 12px 25px; background: #4CAF50; color: white; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; }
+      .audio-btn { padding: 12px 25px; background: #4CAF50; color: white; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
       .a-enter-vr { display: none !important; } 
     </style>
 
     <script>
+      // Solución para pantalla blanca: obliga al renderizador a no suspenderse
+      AFRAME.registerComponent('keep-alive', {
+        tick: function () {
+          if (this.el.sceneEl.renderStarted && !this.el.sceneEl.paused) {
+            this.el.sceneEl.renderer.render(this.el.sceneEl.object3D, this.el.sceneEl.camera);
+          }
+        }
+      });
+
       document.addEventListener("DOMContentLoaded", function() {
         const audioBtn = document.querySelector("#audioBtn");
         
@@ -20,7 +29,7 @@
           const vid = document.querySelector(videoId);
 
           target.addEventListener("targetFound", () => {
-            vid.play().catch(e => console.log("Pendiente de audio"));
+            vid.play().catch(e => console.log("Video listo, esperando audio"));
           });
 
           target.addEventListener("targetLost", () => {
@@ -29,14 +38,14 @@
         }
 
         conectarVideo('#target-0', '#vid-0');
-        conectarVideo('#target-1', '#vid-1');
 
         audioBtn.addEventListener("click", () => {
-          const videos = document.querySelectorAll("video");
-          videos.forEach(v => {
-            v.muted = false;
-            if (!v.paused) v.play(); // Refresca si ya estaba detectado
-          });
+          const v = document.querySelector("#vid-0");
+          v.muted = false;
+          // Forzar refresco visual
+          v.pause();
+          v.currentTime = v.currentTime; 
+          v.play();
           audioBtn.style.display = "none"; 
         });
       });
@@ -45,13 +54,14 @@
   
   <body>
     <div id="UI-overlay">
-      <button id="audioBtn" class="audio-btn">🔊 ACTIVAR AUDIO</button>
+      <button id="audioBtn" class="audio-btn">🔊 ACTIVAR EXPERIENCIA</button>
     </div>
 
     <a-scene 
+      keep-alive
       mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" 
       color-space="sRGB" 
-      renderer="colorManagement: true" 
+      renderer="colorManagement: true, preserveDrawingBuffer: true" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
       
@@ -69,11 +79,12 @@
 
       <a-entity id="target-1" mindar-image-target="targetIndex: 1">
         <a-video src="#vid-1" width="1" height="0.55" position="0 0 0"></a-video>
+      </a-entity>
 
       <a-entity id="target-2" mindar-image-target="targetIndex: 2">
         <a-video src="#vid-2" width="1" height="0.55" position="0 0 0"></a-video>
-        
       </a-entity>
+      
     </a-scene>
   </body>
 </html>
