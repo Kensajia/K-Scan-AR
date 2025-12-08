@@ -82,29 +82,6 @@
     </a-scene>
   </body>
 </html>
-
-
-
-    <a-scene mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 2" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-      
-      <a-assets>
-        <video id="video1" src="mi_video_descargado.mp4" preload="auto" loop="true" crossorigin="anonymous" playsinline webkit-playsinline></video>
-        <video id="video2" src="mi_video_descargado.mp4" preload="auto" loop="true" crossorigin="anonymous" playsinline webkit-playsinline></video>
-        <video id="video3" src="mi_video_descargado.mp4" preload="auto" loop="true" crossorigin="anonymous" playsinline webkit-playsinline></video>
-      </a-assets>
-
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-video src="#video1" width="1" height="0.552" position="0 0 0" rotation="0 0 0"></a-video>
-      </a-entity>
-      <a-entity mindar-image-target="targetIndex: 1">
-        <a-video src="#video2" width="1" height="0.552" position="0 0 0" rotation="0 0 0"></a-video>
-      </a-entity>
-      <a-entity mindar-image-target="targetIndex: 2">
-        <a-video src="#video3" width="1" height="0.552" position="0 0 0" rotation="0 0 0"></a-video>
-      </a-entity>
-
     </a-scene>
   </body>
 </html>
