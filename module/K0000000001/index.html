@@ -110,10 +110,19 @@
         });
 
         document.querySelector("#btn-audio").addEventListener("click", function() {
-          const v0 = document.querySelector("#vid-0");
-          v0.muted = !v0.muted;
-          this.style.background = v0.muted ? "rgba(244, 67, 54, 0.6)" : "var(--accent)";
-          this.innerHTML = v0.muted ? "🔇 SILENCIO" : "🔊 SONIDO";
+          const videos = document.querySelectorAll("video");
+          // Verificamos el estado actual basándonos en el primer video
+          const nuevoEstadoMuted = !videos[0].muted;
+          
+          videos.forEach(v => {
+            v.muted = nuevoEstadoMuted;
+            // Si estamos activando sonido, forzamos un play por si el navegador lo pausó
+            if (!nuevoEstadoMuted && !v.paused) v.play();
+        });
+          
+          // Actualizar visualmente el botón
+          this.style.background = nuevoEstadoMuted ? "rgba(244, 67, 54, 0.6)" : "var(--accent)";
+          this.innerHTML = nuevoEstadoMuted ? "🔇 SILENCIO" : "🔊 SONIDO";
         });
 
         document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
