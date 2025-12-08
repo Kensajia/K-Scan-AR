@@ -9,12 +9,13 @@
       :root { --accent: #4CAF50; --danger: #f44336; --warn: #FFC107; }
       body { font-family: sans-serif; margin: 0; overflow: hidden; }
 
+      /* Panel superior */
       #ui-controls {
         position: fixed;
         top: 15px;
         left: 15px;
         right: 15px;
-        z-index: 2000;
+        z-index: 2000; /* Prioridad alta */
         display: flex;
         justify-content: center;
         gap: 10px;
@@ -41,11 +42,12 @@
 
       #btn-flash.active { background: var(--warn); color: black; }
 
+      /* Botón de control INFERIOR*/
       #btn-toggle-ui {
         position: fixed;
         bottom: 20px;
         right: 20px;
-        z-index: 3000 !important;
+        z-index: 3000 !important; /* Capa suprema para evitar bloqueo de VR */
         width: 50px;
         height: 50px;
         border-radius: 50%;
@@ -60,6 +62,8 @@
       }
 
       .hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+      
+      /* ELIMINACIÓN TOTAL DEL BOTÓN VR */
       .a-enter-vr { display: none !important; visibility: hidden !important; pointer-events: none !important; }
     </style>
 
