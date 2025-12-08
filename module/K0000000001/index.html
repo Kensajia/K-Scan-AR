@@ -20,73 +20,74 @@
 
             // =====================================================================
             // 1. TABLA DE CONTENIDOS DINÁMICA
+            // Define el contenido que se mostrará para cada código de usuario
             // =====================================================================
             const ContenidoModulo = {
-                // El código único que se busca en la URL
                 "susam-51162": { 
+                    // MARCADOR_A (Índice 0) -> Cuadro Azul Clickeable (abre YouTube)
                     "MARCADOR_A": { index: 0, resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", isClickable: true }, 
+                    // MARCADOR_B (Índice 1) -> Cubo Rojo 3D
                     "MARCADOR_B": { index: 1, resource: "Contenido 3D (Caja)", isClickable: false }, 
+                    // MARCADOR_C (Índice 2) -> Esfera Verde 3D
                     "MARCADOR_C": { index: 2, resource: "Contenido 3D (Esfera)", isClickable: false } 
                 },
-                // Si tienes otros usuarios/contenidos, los añadirías aquí:
-                "otro-codigo": {
-                    "MARCADOR_A": { index: 0, resource: "Otro link de YouTube", isClickable: true }, 
-                    // ...
-                }
+                // Puedes añadir más códigos de usuario aquí si tuvieras más archivos .mind o escenarios
             };
 
             document.addEventListener('DOMContentLoaded', () => {
                 
                 // 🛑 LECTURA DINÁMICA DEL CÓDIGO DE USUARIO EN LA URL
                 const urlParams = new URLSearchParams(window.location.search);
-                const userCode = urlParams.get('code') || "susam-51162"; // Usa el código de la URL
+                const userCode = urlParams.get('code') || "susam-51162";
                 const recursos = ContenidoModulo[userCode] || ContenidoModulo["susam-51162"];
                 
-                // 🛑 RUTA DEL ARCHIVO .MIND CORREGIDA (debe ser la ruta ABSOLUTA de GitHub Pages)
-                // Por ejemplo, si tu página está en https://usuario.github.io/repositorio/module/K0000000001/
-                // y el targets.mind está en la carpeta assets, la ruta es:
-                const targetsPath = new URL('./assets/targets.mind', window.location.href).href;
-                
-                // =====================================================================
-                // 2. INICIALIZACIÓN MINDAR
-                // =====================================================================
-                const mindarThree = new MindARThree({
-                    container: document.querySelector("#container"),
-                    imageTargetSrc: targetsPath // Usamos la ruta absoluta
-                });
-                const {renderer, scene, camera} = mindarThree;
-                
+                // Ruta del archivo .MIND (debe estar en la carpeta assets/)
+                const targetsPath = './assets/targets.mind'; 
+
                 // =====================================================================
                 // 3. CREACIÓN DE CONTENIDO 3D DINÁMICO
+                // Crea el objeto 3D basado en la configuración del recurso
                 // =====================================================================
                 function createContent(config) {
                     if (config.isClickable) {
-                        // Plano interactivo (simula el video/enlace)
+                        // RECURSO INTERACTIVO (Ejemplo: Abrir YouTube)
                         const geometry = new THREE.PlaneGeometry(1, 0.55);
+                        // Cuadro azul semitransparente que se convierte en botón
                         const material = new THREE.MeshBasicMaterial( {color: 0x00ffff, transparent: true, opacity: 0.5} ); 
                         const plane = new THREE.Mesh( geometry, material );
                         
                         plane.userData.url = config.resource;
-                        plane.position.set(0, 0, 0.05); 
+                        plane.position.set(0, 0, 0.05); // Lo levanta un poco
                         return plane;
 
                     } else if (config.resource.includes("Caja")) {
+                        // CUBO ROJO
                         const geometry = new THREE.BoxGeometry(1, 1, 1);
                         const material = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
                         const box = new THREE.Mesh(geometry, material);
-                        box.position.set(0, 0.5, 0); 
+                        box.position.set(0, 0.5, 0); // Centrado sobre el marcador
                         return box;
                     } else if (config.resource.includes("Esfera")) {
-                         const geometry = new THREE.SphereGeometry( 0.5, 32, 16 );
+                         // ESFERA VERDE
+                        const geometry = new THREE.SphereGeometry( 0.5, 32, 16 );
                         const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
                         const sphere = new THREE.Mesh( geometry, material );
                         sphere.position.set(0, 0.5, 0); 
                         return sphere;
                     }
-                    return new THREE.Object3D(); 
+                    return new THREE.Object3D(); // Objeto vacío si no hay coincidencia
                 }
 
-                // Agrega los anclas y el contenido a la escena
+                // =====================================================================
+                // 4. INICIALIZACIÓN Y ASIGNACIÓN DE ANCLAS
+                // =====================================================================
+                const mindarThree = new MindARThree({
+                    container: document.querySelector("#container"),
+                    imageTargetSrc: targetsPath
+                });
+                const {renderer, scene, camera} = mindarThree;
+
+                // ITERAR Y ASIGNAR EL CONTENIDO DINÁMICO A CADA MARCADOR (índice 0, 1, 2...)
                 Object.values(recursos).forEach(config => {
                     if (config.index !== undefined) {
                         const anchor = mindarThree.addAnchor(config.index);
@@ -96,12 +97,13 @@
                 });
 
                 // =====================================================================
-                // 4. FUNCIONES DE RENDERIZADO Y CONTROL (START/STOP)
+                // 5. FUNCIONES DE RENDERIZADO Y CONTROL
                 // =====================================================================
 
                 const start = async() => {
                     await mindarThree.start();
-                    document.querySelector("#container").style.display = 'block';
+                    // Mostrar contenedor de AR
+                    document.querySelector("#container").style.display = 'block'; 
                     document.querySelector("#startButton").style.display = 'none'; 
                     document.querySelector("#stopButton").style.display = 'block'; 
 
@@ -113,6 +115,7 @@
                 const stop = () => {
                     mindarThree.stop();
                     renderer.setAnimationLoop(null);
+                    // Ocultar contenedor de AR
                     document.querySelector("#container").style.display = 'none'; 
                     document.querySelector("#startButton").style.display = 'block'; 
                     document.querySelector("#stopButton").style.display = 'none'; 
@@ -134,11 +137,13 @@
                     const raycaster = new THREE.Raycaster();
                     const mouse = new THREE.Vector2();
 
+                    // Normaliza la posición del clic en coordenadas de -1 a +1
                     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                     mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
                     raycaster.setFromCamera(mouse, camera);
                     
+                    // Revisa si el clic intersecta con un objeto clickeable
                     Object.values(recursos).forEach(config => {
                         if (config.index !== undefined && config.isClickable) {
                             const anchor = mindarThree.anchors[config.index];
@@ -146,6 +151,7 @@
                                 const intersects = raycaster.intersectObjects(anchor.group.children, true);
                                 
                                 if (intersects.length > 0 && intersects[0].object.userData.url) {
+                                    // Abre el enlace (YouTube) en una nueva pestaña
                                     window.open(intersects[0].object.userData.url, '_blank');
                                 }
                             }
@@ -162,7 +168,7 @@
                 height: 100vh;
                 position: relative;
                 overflow: hidden;
-                display: none; 
+                display: none; /* Inicia oculto */
             }
             #control {
                 position: fixed;
@@ -171,13 +177,13 @@
                 z-index: 2;
                 padding: 10px;
             }
-            #stopButton { display: none; }
+            #stopButton { display: none; } /* Inicia oculto */
         </style>
     </head>
     
     <body>
         <div id="control">
-            <button id="startButton">START AR</button> 
+            <button id="startButton">20 START AR</button> 
             <button id="stopButton">STOP AR</button>
         </div>
         <div id="container">
