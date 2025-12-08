@@ -12,6 +12,34 @@
     }
     </script>
     <script type="module">
+const ContenidoModulo = {
+    // Código de usuario (leído de la URL: ?code=susam-51162)
+    "susam-51162": { 
+        // MARCADOR_A (Índice 0: Primera imagen subida al compilador)
+        "MARCADOR_A": { 
+            index: 0, 
+            resource: "https://www.youtube.com/embed/kRCWvqJVWx8?autoplay=1&controls=0", 
+            isClickable: true 
+        }, 
+        // MARCADOR_B (Índice 1: Segunda imagen subida al compilador)
+        "MARCADOR_B": { 
+            index: 1, 
+            resource: "Contenido 3D (Caja)", 
+            isClickable: false 
+        }, 
+        // MARCADOR_C (Índice 2: Tercera imagen subida al compilador)
+        "MARCADOR_C": { 
+            index: 2, 
+            resource: "Contenido 3D (Esfera)", 
+            isClickable: false 
+        } 
+    },
+    // Puedes añadir más códigos aquí:
+    // "otro-codigo-ejemplo": { 
+    //     "MARCADOR_A": { index: 0, resource: "Otro Contenido", isClickable: false }, 
+    // }
+};
+		
       import * as THREE from 'three';
       import { MindARThree } from 'mindar-image-three';
       const mindarThree = new MindARThree({
@@ -59,7 +87,7 @@
   </head>
   <body>
     <div id="control">
-      <button id="startButton">14 Start</button>
+      <button id="startButton">15 Start</button>
       <button id="stopButton">Stop</button>
     </div>
     <div id="container">
