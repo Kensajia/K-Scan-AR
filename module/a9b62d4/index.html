@@ -4,42 +4,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <script src="https://unpkg.com/aframe-chromakey-material/dist/aframe-chromakey-material.min.js"></script>
     
     <style>
       :root { --accent: #4CAF50; --danger: #f44336; --warn: #FFC107; }
       body { font-family: sans-serif; margin: 0; overflow: hidden; }
 
-      /* Panel de Controles Superior */
+      /* Panel superior */
       #ui-controls {
         position: fixed;
-        top: 15px; left: 15px; right: 15px;
-        z-index: 2000;
-        display: flex; justify-content: center; gap: 10px;
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        z-index: 2000; /* Prioridad alta */
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s ease;
       }
 
       .btn {
-        padding: 10px 18px; border-radius: 50px; color: white;
-        font-weight: 600; cursor: pointer; font-size: 11px;
-        background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.2);
-        display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      }
-      
-      /* Estilos dinámicos */
-      #btn-audio { background: var(--danger); }
-      #btn-flash.active { background: var(--warn); color: black; }
-      
-      /* Botón de Configuración Inferior */
-      #btn-toggle-ui {
-        position: fixed; bottom: 20px; right: 20px;
-        z-index: 3000 !important; width: 50px; height: 50px;
-        border-radius: 50%; background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(5px); font-size: 20px;
-        display: flex; justify-content: center; align-items: center; border: none; color: white;
+        padding: 10px 18px;
+        border-radius: 50px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 11px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
 
-      .hidden { opacity: 0; pointer-events: none; }
-      .a-enter-vr { display: none !important; }
+      /* BOTÓN AUDIO - ESTADO INICIAL ROJO */
+      #btn-audio { background: var(--danger); }
+
+      #btn-flash.active { background: var(--warn); color: black; }
+
+      /* Botón de control INFERIOR*/
+      #btn-toggle-ui {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 3000 !important; /* Capa suprema para evitar bloqueo de VR */
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(5px);
+        font-size: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: none;
+        color: white;
+      }
+
+      .hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+      
+      /* ELIMINACIÓN TOTAL DEL BOTÓN VR */
+      .a-enter-vr { display: none !important; visibility: hidden !important; pointer-events: none !important; }
     </style>
 
     <script>
@@ -53,10 +78,9 @@
 
       document.addEventListener("DOMContentLoaded", function() {
         const sceneEl = document.querySelector('a-scene');
+        const controls = document.querySelector("#ui-controls");
         const trackRef = { track: null };
-        const uiControls = document.querySelector("#ui-controls");
 
-        // 1. VINCULACIÓN DE MÚLTIPLES VIDEOS
         const setup = (t, v) => {
           const target = document.querySelector(t);
           const vid = document.querySelector(v);
@@ -67,14 +91,12 @@
         setup('#target-1', '#vid-1');
         setup('#target-2', '#vid-2');
 
-        // 2. CONTROL DE FLASH (Linterna)
         sceneEl.addEventListener("arReady", () => {
           const video = document.querySelector('video');
           if (video && video.srcObject) {
             const track = video.srcObject.getVideoTracks()[0];
             trackRef.track = track;
-            const capabilities = track.getCapabilities();
-            if (capabilities && capabilities.torch) {
+            if (track.getCapabilities().torch) {
               document.querySelector("#btn-flash").style.display = "flex";
             }
           }
@@ -82,41 +104,35 @@
 
         document.querySelector("#btn-flash").addEventListener("click", function() {
           if (trackRef.track) {
-            const settings = trackRef.track.getSettings();
-            const isCurrentlyOn = settings.torch || false;
-            
-            trackRef.track.applyConstraints({
-              advanced: [{ torch: !isCurrentlyOn }]
-            }).then(() => {
-              this.classList.toggle("active", !isCurrentlyOn);
-              this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
-            });
+            const isOff = !(trackRef.track.getConstraints().torch);
+            trackRef.track.applyConstraints({ advanced: [{ torch: isOff }] });
+            this.classList.toggle("active", isOff);
+            this.innerHTML = isOff ? "⚡ FLASH ON" : "⚡ FLASH OFF";
           }
         });
 
-        // 3. CONTROL DE AUDIO GLOBAL
+        // LÓGICA DE AUDIO GLOBAL SIN CONGELAR PANTALLA
         document.querySelector("#btn-audio").addEventListener("click", function() {
-          const vids = document.querySelectorAll("video");
-          const mutedState = !vids[0].muted;
-          vids.forEach(v => {
+          const videos = document.querySelectorAll("video");
+          const mutedState = !videos[0].muted;
+
+          videos.forEach(v => {
             v.muted = mutedState;
-            if(!mutedState && !v.paused) v.play();
+            if (!mutedState && !v.paused) v.play();
           });
+
           this.style.background = mutedState ? "var(--danger)" : "var(--accent)";
           this.innerHTML = mutedState ? "🔇 SILENCIO" : "🔊 SONIDO";
         });
 
-        // 4. CONTROL DE CALIDAD (HD/SD)
-        document.querySelector("#btn-hd").addEventListener("click", function() {
-          const isHD = this.innerHTML.includes("HD");
-          // Si está en HD, pasa a SD (antialias: false) y viceversa.
-          sceneEl.setAttribute('renderer', isHD ? 'antialias: false' : 'antialias: true');
-          this.innerHTML = isHD ? "📺 CALIDAD: SD" : "📺 CALIDAD: HD";
+        document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
+          controls.classList.toggle("hidden");
         });
 
-        // 5. CONTROL DE OCULTAR UI
-        document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
-          uiControls.classList.toggle("hidden");
+        document.querySelector("#btn-hd").addEventListener("click", function() {
+          const isHD = this.innerHTML.includes("HD");
+          this.innerHTML = isHD ? "📺 CALIDAD: SD" : "📺 CALIDAD: HD";
+          sceneEl.setAttribute('renderer', isHD ? 'antialias: true' : 'antialias: false');
         });
       });
     </script>
@@ -139,25 +155,24 @@
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <video id="vid-0" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" loop playsinline muted crossorigin="anonymous" preload="auto"></video>
-        <video id="vid-1" src="https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4" loop playsinline muted crossorigin="anonymous" preload="auto"></video>
-        <video id="vid-2" src="https://files.catbox.moe/ob3b9g.mp4" loop playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-0" src="https://files.catbox.moe/2ysumf.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-1" src="https://files.catbox.moe/0zm4jf.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-2" src="https://files.catbox.moe/bucqj6.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity id="target-0" mindar-image-target="targetIndex: 0">
-        <a-plane material="shader: chromakey; src: #vid-0; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
+        <a-video src="#vid-0" width="1" height="0.6"></a-video>
       </a-entity>
 
       <a-entity id="target-1" mindar-image-target="targetIndex: 1">
-        <a-plane material="shader: chromakey; src: #vid-1; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
+        <a-video src="#vid-1" width="1" height="0.6"></a-video>
       </a-entity>
 
       <a-entity id="target-2" mindar-image-target="targetIndex: 2">
-        <a-plane material="shader: chromakey; src: #vid-2; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
+        <a-video src="#vid-2" width="1" height="0.6"></a-video>
       </a-entity>
-
     </a-scene>
   </body>
 </html>
