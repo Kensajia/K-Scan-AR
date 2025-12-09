@@ -8,29 +8,9 @@
     <style>
       :root { --accent: #4CAF50; --danger: #f44336; }
       body { font-family: sans-serif; margin: 0; overflow: hidden; }
-
-      #ui-controls {
-        position: fixed; top: 15px; left: 15px; right: 15px;
-        z-index: 2000; display: flex; justify-content: center; gap: 10px;
-      }
-
-      .btn {
-        padding: 10px 18px; border-radius: 50px; color: white;
-        font-weight: 600; cursor: pointer; font-size: 11px;
-        background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.2);
-      }
-
-      #btn-audio { background: var(--danger); }
-
-      #btn-toggle-ui {
-        position: fixed; bottom: 20px; right: 20px;
-        z-index: 3000 !important; width: 50px; height: 50px;
-        border-radius: 50%; background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(5px); display: flex;
-        justify-content: center; align-items: center; border: none; color: white;
-      }
-
+      #ui-controls { position: fixed; top: 15px; left: 15px; right: 15px; z-index: 2000; display: flex; justify-content: center; gap: 10px; }
+      .btn { padding: 10px 18px; border-radius: 50px; color: white; font-weight: 600; cursor: pointer; font-size: 11px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.2); }
+      #btn-toggle-ui { position: fixed; bottom: 20px; right: 20px; z-index: 3000 !important; width: 50px; height: 50px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; border: none; color: white; font-size: 20px;}
       .hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
       .a-enter-vr { display: none !important; }
     </style>
@@ -47,7 +27,6 @@
       document.addEventListener("DOMContentLoaded", function() {
         const sceneEl = document.querySelector('a-scene');
 
-        // FUNCIÓN AUTOMATIZADA PARA N VIDEOS
         const setupVideoAR = (index) => {
           const target = document.querySelector(`#target-${index}`);
           const vid = document.querySelector(`#vid-${index}`);
@@ -55,28 +34,23 @@
 
           if(!target || !vid || !entity) return;
 
-          // Detección y Play
           target.addEventListener("targetFound", () => vid.play());
           target.addEventListener("targetLost", () => {
             vid.pause();
-            // Reset de animación al perder el marcador
-            entity.setAttribute("position", "0 0 0");
+            // RESET TOTAL: Volver a posición original pegada al marcador
+            entity.setAttribute("position", "0 0 0.01");
             entity.setAttribute("scale", "1 1 1");
           });
 
-          // Click para expandir
-          entity.addEventListener("click", () => {
-            console.log(`Video ${index} expandiendo`);
+          // EVENTO DE CLIC MEJORADO
+          entity.addEventListener("mousedown", () => {
+            console.log(`Video ${index} tocado`);
             entity.emit("expand-anim");
           });
         };
 
-        // Inicializar videos del 0 al 2 (puedes subir este número si agregas más)
-        for(let i=0; i<=2; i++) {
-          setupVideoAR(i);
-        }
+        for(let i=0; i<=2; i++) { setupVideoAR(i); }
 
-        // Audio Global
         document.querySelector("#btn-audio").addEventListener("click", function() {
           const videos = document.querySelectorAll("video");
           const isMuted = !videos[0].muted;
@@ -97,20 +71,19 @@
   
   <body>
     <div id="ui-controls">
-      <button id="btn-audio" class="btn">🔇 SILENCIO</button>
-      <button id="btn-hd" class="btn">📺 CALIDAD: HD</button>
+      <button id="btn-audio" class="btn" style="background:#f44336">🔇 SILENCIO</button>
+      <button id="btn-hd" class="btn">📺 HD</button>
     </div>
 
-    <button id="btn-toggle-ui" class="btn">⚙️</button>
+    <button id="btn-toggle-ui">⚙️</button>
 
     <a-scene keep-alive mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" 
-             renderer="preserveDrawingBuffer: true; antialias: true; colorManagement: true" 
-             vr-mode-ui="enabled: false">
+             renderer="preserveDrawingBuffer: true; antialias: true" vr-mode-ui="enabled: false">
       
       <a-assets>
-        <video id="vid-0" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
-        <video id="vid-1" src="https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
-        <video id="vid-2" src="https://files.catbox.moe/ob3b9g.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-0" src="./video0.mp4" loop="true" playsinline muted crossorigin="anonymous"></video>
+        <video id="vid-1" src="./video1.mp4" loop="true" playsinline muted crossorigin="anonymous"></video>
+        <video id="vid-2" src="./video2.mp4" loop="true" playsinline muted crossorigin="anonymous"></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false">
@@ -118,21 +91,21 @@
       </a-camera>
 
       <a-entity id="target-0" mindar-image-target="targetIndex: 0">
-        <a-video id="video-ent-0" src="#vid-0" class="clickable" width="1" height="0.6" position="0 0 0" 
-                 animation="property: position; to: 0 0 0.6; dur: 600; startEvents: expand-anim; easing: easeOutElastic"
-                 animation__scale="property: scale; to: 1.8 1.8 1.8; dur: 600; startEvents: expand-anim; easing: easeOutElastic"></a-video>
+        <a-video id="video-ent-0" src="#vid-0" class="clickable" width="1" height="0.6" position="0 0 0.01" 
+                 animation="property: position; to: 0 0 1.2; dur: 500; startEvents: expand-anim; easing: easeOutQuad"
+                 animation__scale="property: scale; to: 2.5 2.5 2.5; dur: 500; startEvents: expand-anim; easing: easeOutQuad"></a-video>
       </a-entity>
 
       <a-entity id="target-1" mindar-image-target="targetIndex: 1">
-        <a-video id="video-ent-1" src="#vid-1" class="clickable" width="1" height="0.6" position="0 0 0" 
-                 animation="property: position; to: 0 0 0.6; dur: 600; startEvents: expand-anim; easing: easeOutElastic"
-                 animation__scale="property: scale; to: 1.8 1.8 1.8; dur: 600; startEvents: expand-anim; easing: easeOutElastic"></a-video>
+        <a-video id="video-ent-1" src="#vid-1" class="clickable" width="1" height="0.6" position="0 0 0.01" 
+                 animation="property: position; to: 0 0 1.2; dur: 500; startEvents: expand-anim; easing: easeOutQuad"
+                 animation__scale="property: scale; to: 2.5 2.5 2.5; dur: 500; startEvents: expand-anim; easing: easeOutQuad"></a-video>
       </a-entity>
 
       <a-entity id="target-2" mindar-image-target="targetIndex: 2">
-        <a-video id="video-ent-2" src="#vid-2" class="clickable" width="1" height="0.6" position="0 0 0" 
-                 animation="property: position; to: 0 0 0.6; dur: 600; startEvents: expand-anim; easing: easeOutElastic"
-                 animation__scale="property: scale; to: 1.8 1.8 1.8; dur: 600; startEvents: expand-anim; easing: easeOutElastic"></a-video>
+        <a-video id="video-ent-2" src="#vid-2" class="clickable" width="1" height="0.6" position="0 0 0.01" 
+                 animation="property: position; to: 0 0 1.2; dur: 500; startEvents: expand-anim; easing: easeOutQuad"
+                 animation__scale="property: scale; to: 2.5 2.5 2.5; dur: 500; startEvents: expand-anim; easing: easeOutQuad"></a-video>
       </a-entity>
 
     </a-scene>
