@@ -7,70 +7,37 @@
     <script src="https://unpkg.com/aframe-chromakey-material/dist/aframe-chromakey-material.min.js"></script>
     
     <style>
-      :root { 
-        --accent: #4CAF50; --danger: #f44336; --warn: #FFC107; 
-      }
+      :root { --accent: #4CAF50; --danger: #f44336; --warn: #FFC107; }
       body { font-family: sans-serif; margin: 0; overflow: hidden; }
 
-      /* --- 1. AJUSTE DE LA INTERFAZ DE CARGA DE MINDAR --- */
-
-      /* Estilo del contenedor principal de MindAR (lo centra verticalmente) */
-      #loading-screen-mindar {
-        /* Define el color del círculo giratorio */
-        --md-loading-color: var(--accent); 
-        display: flex;
-        flex-direction: column; /* Apila el círculo y el texto */
-        align-items: center;
-        justify-content: center;
-        /* Baja el contenido ligeramente */
-        padding-top: 5vh; 
-        background: #1a1a1a; /* Fondo oscuro (Negro) */
-      }
-
-      /* Posiciona y centra el logo dentro del círculo de carga */
-      .mindar-ui-loading-icon-wrapper {
-        position: relative; /* Contenedor del círculo */
-        margin-bottom: 20px; /* Espacio entre el círculo/logo y el texto */
-      }
-
-      /* Estilo del logo que va DENTRO del círculo */
-      .logo-in-loading {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%); /* Centrado perfecto */
-        max-width: 50px; /* Tamaño del logo (ajusta este valor) */
-        max-height: 50px;
-        z-index: 100;
-        border-radius: 5px; /* Opcional */
-      }
-      
-      /* Estilo del texto "Cargando marcadores" */
-      .mindar-ui-loading-content {
-        margin-top: 10px; 
-        font-size: 1.2em;
-        font-weight: bold;
-        color: white;
-      }
-      
-      /* --- 2. Estilos de UI (Controles) --- */
+      /* Panel de Controles Superior */
       #ui-controls {
-        position: fixed; top: 15px; left: 15px; right: 15px;
-        z-index: 2000; display: flex; justify-content: center; gap: 10px;
+        position: fixed;
+        top: 15px; left: 15px; right: 15px;
+        z-index: 2000;
+        display: flex; justify-content: center; gap: 10px;
       }
+
       .btn {
         padding: 10px 18px; border-radius: 50px; color: white;
         font-weight: 600; cursor: pointer; font-size: 11px;
         background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.2);
         display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
+      
+      /* Estilos dinámicos */
       #btn-audio { background: var(--danger); }
       #btn-flash.active { background: var(--warn); color: black; }
+      
+      /* Botón de Configuración Inferior */
       #btn-toggle-ui {
-        position: fixed; bottom: 20px; right: 20px; z-index: 3000; width: 50px; height: 50px;
-        border-radius: 50%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
-        font-size: 20px; display: flex; justify-content: center; align-items: center; border: none; color: white;
+        position: fixed; bottom: 20px; right: 20px;
+        z-index: 3000 !important; width: 50px; height: 50px;
+        border-radius: 50%; background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(5px); font-size: 20px;
+        display: flex; justify-content: center; align-items: center; border: none; color: white;
       }
+
       .hidden { opacity: 0; pointer-events: none; }
       .a-enter-vr { display: none !important; }
     </style>
@@ -88,31 +55,6 @@
         const sceneEl = document.querySelector('a-scene');
         const trackRef = { track: null };
         const uiControls = document.querySelector("#ui-controls");
-        const loadingContent = document.querySelector(".mindar-ui-loading-content");
-
-        // --- MANEJO DE ERRORES DEL ARCHIVO .mind ---
-        const showError = (message) => {
-            // Reemplaza el contenido de la pantalla de carga con el error
-            const loadingScreenMindar = document.querySelector("#loading-screen-mindar");
-            loadingScreenMindar.style.backgroundColor = 'var(--danger)'; // Fondo rojo
-            document.querySelector(".mindar-ui-loading-icon-wrapper").style.display = 'none'; // Oculta círculo y logo
-            loadingContent.innerHTML = `❌ Error Crítico: ${message}`;
-        };
-
-        // Sobreescribir el startAR para interceptar el error RangeError (archivo .mind dañado)
-        const originalStartAR = sceneEl.components['mindar-image']._startAR;
-        sceneEl.components['mindar-image']._startAR = async function () {
-            try {
-                await originalStartAR.call(this);
-            } catch (error) {
-                if (error.name === 'RangeError' || error.message.includes('byte(s) found')) {
-                    showError("Archivo dañado. Contacte con el soporte.");
-                } else {
-                    showError("Error de cámara/inicio.");
-                }
-                console.error("Fallo al iniciar AR:", error);
-            }
-        };
 
         // 1. VINCULACIÓN DE MÚLTIPLES VIDEOS
         const setup = (t, v) => {
@@ -125,9 +67,8 @@
         setup('#target-1', '#vid-1');
         setup('#target-2', '#vid-2');
 
-        // 2. Ocultar la carga cuando AR esté listo
+        // 2. CONTROL DE FLASH (Linterna)
         sceneEl.addEventListener("arReady", () => {
-          // Nota: MindAR oculta la pantalla automáticamente al estar lista
           const video = document.querySelector('video');
           if (video && video.srcObject) {
             const track = video.srcObject.getVideoTracks()[0];
@@ -138,21 +79,22 @@
             }
           }
         });
-        
-        // 3. CONTROL DE FLASH (Linterna)
+
         document.querySelector("#btn-flash").addEventListener("click", function() {
           if (trackRef.track) {
             const settings = trackRef.track.getSettings();
             const isCurrentlyOn = settings.torch || false;
             
-            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
+            trackRef.track.applyConstraints({
+              advanced: [{ torch: !isCurrentlyOn }]
+            }).then(() => {
               this.classList.toggle("active", !isCurrentlyOn);
               this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
             });
           }
         });
 
-        // 4. CONTROL DE AUDIO GLOBAL
+        // 3. CONTROL DE AUDIO GLOBAL
         document.querySelector("#btn-audio").addEventListener("click", function() {
           const vids = document.querySelectorAll("video");
           const mutedState = !vids[0].muted;
@@ -164,14 +106,15 @@
           this.innerHTML = mutedState ? "🔇 SILENCIO" : "🔊 SONIDO";
         });
 
-        // 5. CONTROL DE CALIDAD (HD/SD)
+        // 4. CONTROL DE CALIDAD (HD/SD)
         document.querySelector("#btn-hd").addEventListener("click", function() {
           const isHD = this.innerHTML.includes("HD");
+          // Si está en HD, pasa a SD (antialias: false) y viceversa.
           sceneEl.setAttribute('renderer', isHD ? 'antialias: false' : 'antialias: true');
           this.innerHTML = isHD ? "📺 CALIDAD: SD" : "📺 CALIDAD: HD";
         });
 
-        // 6. CONTROL DE OCULTAR UI
+        // 5. CONTROL DE OCULTAR UI
         document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
           uiControls.classList.toggle("hidden");
         });
@@ -192,21 +135,8 @@
       keep-alive
       mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" 
       renderer="preserveDrawingBuffer: true; antialias: true; colorManagement: true" 
-      
-      /* ESTA LÍNEA INDICA A MINDAR USAR TU ELEMENTO PERSONALIZADO */
-      loading-screen="enabled: true; content: #loading-screen-mindar"
-      
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false">
-      
-      <div id="loading-screen-mindar" class="mindar-ui-overlay">
-        <div class="mindar-ui-loading">
-          <div class="mindar-ui-loading-icon-wrapper">
-            <img src="https://cdn.store.link/uploads/store10333/store-logo.svg" alt="Logo" class="logo-in-loading">
-          </div>
-          <div class="mindar-ui-loading-content">Cargando marcadores...</div>
-        </div>
-      </div>
       
       <a-assets>
         <video id="vid-0" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" loop playsinline muted crossorigin="anonymous" preload="auto"></video>
@@ -219,9 +149,11 @@
       <a-entity id="target-0" mindar-image-target="targetIndex: 0">
         <a-plane material="shader: chromakey; src: #vid-0; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
       </a-entity>
+
       <a-entity id="target-1" mindar-image-target="targetIndex: 1">
         <a-plane material="shader: chromakey; src: #vid-1; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
       </a-entity>
+
       <a-entity id="target-2" mindar-image-target="targetIndex: 2">
         <a-plane material="shader: chromakey; src: #vid-2; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
       </a-entity>
@@ -229,4 +161,3 @@
     </a-scene>
   </body>
 </html>
-
