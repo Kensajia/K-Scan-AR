@@ -66,6 +66,9 @@
         setup('#target-0', '#vid-0');
         setup('#target-1', '#vid-1');
         setup('#target-2', '#vid-2');
+        setup('#target-3', '#vid-3');
+        setup('#target-4', '#vid-4');
+        setup('#target-5', '#vid-5');
 
         // 2. CONTROL DE FLASH (Linterna)
         sceneEl.addEventListener("arReady", () => {
@@ -142,6 +145,9 @@
         <video id="vid-0" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" loop playsinline muted crossorigin="anonymous" preload="auto"></video>
         <video id="vid-1" src="https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4" loop playsinline muted crossorigin="anonymous" preload="auto"></video>
         <video id="vid-2" src="https://files.catbox.moe/ob3b9g.mp4" loop playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-3" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" loop playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-4" src="https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4" loop playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-5" src="https://files.catbox.moe/ob3b9g.mp4" loop playsinline muted crossorigin="anonymous" preload="auto"></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -157,7 +163,20 @@
       <a-entity id="target-2" mindar-image-target="targetIndex: 2">
         <a-plane material="shader: chromakey; src: #vid-2; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
       </a-entity>
+      
+      <a-entity id="target-3" mindar-image-target="targetIndex: 3">
+        <a-plane material="shader: chromakey; src: #vid-3; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
+      </a-entity>
+
+      <a-entity id="target-4" mindar-image-target="targetIndex: 4">
+        <a-plane material="shader: chromakey; src: #vid-4; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
+      </a-entity>
+
+      <a-entity id="target-5" mindar-image-target="targetIndex: 5">
+        <a-plane material="shader: chromakey; src: #vid-5; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
+      </a-entity>
 
     </a-scene>
   </body>
 </html>
+
