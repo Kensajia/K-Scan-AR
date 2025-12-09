@@ -116,7 +116,7 @@
 
         document.querySelector("#btn-hd").addEventListener("click", function() {
           const isHD = this.innerHTML.includes("HD");
-          this.innerHTML = isHD ? "📺 SD" : "📺 HD";
+          this.innerHTML = isHD ? "📺 CALIDAD: SD" : "📺 CALIDAD: HD";
           sceneEl.setAttribute('renderer', isHD ? 'antialias: true' : 'antialias: false');
         });
       });
@@ -127,7 +127,7 @@
     <div id="ui-controls">
       <button id="btn-audio" class="btn">🔇 SILENCIO</button>
       <button id="btn-flash" class="btn" style="display:none">⚡ FLASH OFF</button>
-      <button id="btn-hd" class="btn">📺 HD</button>
+      <button id="btn-hd" class="btn">📺 CALIDAD: HD</button>
     </div>
 
     <button id="btn-toggle-ui" class="btn">⚙️</button>
