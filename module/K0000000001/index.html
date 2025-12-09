@@ -2,40 +2,44 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@7.6.1/dist/aframe-extras.min.js"></script>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     
     <style>
       :root { --accent: #4CAF50; --danger: #f44336; --warn: #FFC107; }
       body { font-family: sans-serif; margin: 0; overflow: hidden; }
 
+      /* Panel superior */
       #ui-controls {
-        position: fixed; top: 15px; left: 15px; right: 15px;
-        z-index: 2000; display: flex; justify-content: center; gap: 10px;
+        position: fixed;
+        top: 15px; left: 15px; right: 15px;
+        z-index: 2000;
+        display: flex; justify-content: center; gap: 10px;
+        transition: all 0.3s ease;
       }
 
       .btn {
-        padding: 10px 18px; border-radius: 50px; color: white;
-        font-weight: 600; cursor: pointer; font-size: 11px;
-        background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.2);
+        padding: 10px 18px; border-radius: 50px;
+        color: white; font-weight: 600; cursor: pointer; font-size: 11px;
+        background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.2);
         display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
 
-      /* Estilos dinámicos para el feedback visual */
-      #btn-audio.muted { background: var(--danger); }
-      #btn-audio.on { background: var(--accent); }
+      #btn-audio { background: var(--danger); }
       #btn-flash.active { background: var(--warn); color: black; }
 
       #btn-toggle-ui {
-        position: fixed; bottom: 20px; right: 20px; z-index: 3000 !important;
-        width: 50px; height: 50px; border-radius: 50%; background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(5px); display: flex; justify-content: center;
-        align-items: center; border: none; color: white; font-size: 20px;
+        position: fixed; bottom: 20px; right: 20px;
+        z-index: 3000 !important;
+        width: 50px; height: 50px; border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+        font-size: 20px; display: flex; justify-content: center;
+        align-items: center; border: none; color: white;
       }
 
       .hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
-      .a-enter-vr { display: none !important; }
+      .a-enter-vr { display: none !important; visibility: hidden !important; pointer-events: none !important; }
     </style>
 
     <script>
@@ -49,50 +53,71 @@
 
       document.addEventListener("DOMContentLoaded", function() {
         const sceneEl = document.querySelector('a-scene');
-        const trackRef = { track: null };
+        const controls = document.querySelector("#ui-controls");
+        const trackRef = { track: null }; // Referencia para el control de flash
 
-        // 1. Lógica del Flash
+        // 1. Vinculación de videos
+        const setup = (t, v) => {
+          const target = document.querySelector(t);
+          const vid = document.querySelector(v);
+          target.addEventListener("targetFound", () => vid.play());
+          target.addEventListener("targetLost", () => vid.pause());
+        }
+        setup('#target-0', '#vid-0');
+        setup('#target-1', '#vid-1');
+        setup('#target-2', '#vid-2');
+
+        // 2. Detección de Flash
         sceneEl.addEventListener("arReady", () => {
           const video = document.querySelector('video');
           if (video && video.srcObject) {
             const track = video.srcObject.getVideoTracks()[0];
             trackRef.track = track;
-            if (track.getCapabilities().torch) {
+            // Solo mostrar botón si existe capacidad de linterna
+            const capabilities = track.getCapabilities();
+            if (capabilities && capabilities.torch) {
               document.querySelector("#btn-flash").style.display = "flex";
             }
           }
         });
 
+        // 3. Lógica Flash CORREGIDA (Toggle ON/OFF real)
         document.querySelector("#btn-flash").addEventListener("click", function() {
           if (trackRef.track) {
+            // Obtenemos el estado actual directamente del sensor
             const settings = trackRef.track.getSettings();
             const isCurrentlyOn = settings.torch || false;
-            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
+            
+            // Aplicamos lo contrario al estado actual
+            trackRef.track.applyConstraints({
+              advanced: [{ torch: !isCurrentlyOn }]
+            }).then(() => {
               this.classList.toggle("active", !isCurrentlyOn);
               this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
-            });
+            }).catch(err => console.error("Error con flash:", err));
           }
         });
 
-        // 2. Lógica del Botón de Audio Restaurada
+        // 4. Lógica de Audio Global
         document.querySelector("#btn-audio").addEventListener("click", function() {
-          const isMuted = this.classList.contains("muted");
-          this.classList.toggle("muted", !isMuted);
-          this.classList.toggle("on", isMuted);
-          this.innerHTML = isMuted ? "🔊 AUDIO ON" : "🔇 SILENCIO";
-          
-          // Aquí podrías añadir lógica para silenciar sonidos 3D nativos
-          // Ex: sceneEl.emit(isMuted ? 'play-sounds' : 'stop-sounds');
+          const videos = document.querySelectorAll("video");
+          const mutedState = !videos[0].muted;
+          videos.forEach(v => {
+            v.muted = mutedState;
+            if (!mutedState && !v.paused) v.play();
+          });
+          this.style.background = mutedState ? "var(--danger)" : "var(--accent)";
+          this.innerHTML = mutedState ? "🔇 SILENCIO" : "🔊 SONIDO";
         });
 
         document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
-          document.querySelector("#ui-controls").classList.toggle("hidden");
+          controls.classList.toggle("hidden");
         });
 
         document.querySelector("#btn-hd").addEventListener("click", function() {
-          const hMode = this.innerHTML.includes("HD");
-          this.innerHTML = hMode ? "📺 SD" : "📺 HD";
-          sceneEl.setAttribute('renderer', hMode ? 'antialias: true' : 'antialias: false');
+          const isHD = this.innerHTML.includes("HD");
+          this.innerHTML = isHD ? "📺 SD" : "📺 HD";
+          sceneEl.setAttribute('renderer', isHD ? 'antialias: true' : 'antialias: false');
         });
       });
     </script>
@@ -100,7 +125,7 @@
   
   <body>
     <div id="ui-controls">
-      <button id="btn-audio" class="btn muted">🔇 SILENCIO</button>
+      <button id="btn-audio" class="btn">🔇 SILENCIO</button>
       <button id="btn-flash" class="btn" style="display:none">⚡ FLASH OFF</button>
       <button id="btn-hd" class="btn">📺 HD</button>
     </div>
@@ -109,24 +134,29 @@
 
     <a-scene 
       keep-alive
-      mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 2" 
-      renderer="colorManagement: true, physicallyCorrectLights: true, preserveDrawingBuffer: true, antialias: true" 
+      mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" 
+      renderer="preserveDrawingBuffer: true; antialias: true; colorManagement: true" 
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <a-asset-item id="bearModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/bear/scene.gltf"></a-asset-item>
-        <a-asset-item id="raccoonModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf"></a-asset-item>
+        <video id="vid-0" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-1" src="https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-2" src="https://files.catbox.moe/ob3b9g.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-gltf-model rotation="0 0 0" position="0 -0.25 0" scale="0.05 0.05 0.05" src="#raccoonModel" animation-mixer></a-gltf-model>
+      <a-entity id="target-0" mindar-image-target="targetIndex: 0">
+        <a-video src="#vid-0" width="1.1" height="0.7"></a-video>
       </a-entity>
 
-      <a-entity mindar-image-target="targetIndex: 1">
-        <a-gltf-model rotation="0 0 0" position="0 -0.25 0" scale="0.05 0.05 0.05" src="#bearModel" animation-mixer></a-gltf-model>
+      <a-entity id="target-1" mindar-image-target="targetIndex: 1">
+        <a-video src="#vid-1" width="1.1" height="0.7"></a-video>
+      </a-entity>
+
+      <a-entity id="target-2" mindar-image-target="targetIndex: 2">
+        <a-video src="#vid-2" width="1.1" height="0.7"></a-video>
       </a-entity>
     </a-scene>
   </body>
