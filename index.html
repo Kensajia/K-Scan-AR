@@ -138,6 +138,32 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
     margin-top: 10px;
 }
 
+
+/* ===============================================================
+   TOOLTIP MODERNO EN LOS CÍRCULOS DE TEMA
+================================================================ */
+
+.circle::after {
+    content: attr(data-title);
+    position: absolute;
+    top: -32px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 9px;
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    transition: opacity 0.25s ease;
+}
+
+.circle.show-tooltip::after {
+    opacity: 1;
+}
+
 </style>
 </head>
 <body>
@@ -190,6 +216,44 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
 </div>
 
 <script>
+
+/* ===============================================================
+   TOOLTIP DE TEMAS (TEXTO TEMPORAL AL SELECCIONAR)
+================================================================ */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.querySelectorAll(".circle").forEach(circle => {
+
+        // Usar title → tooltip sin que el navegador moleste
+        let t = circle.getAttribute("title") || circle.dataset.value;
+        circle.setAttribute("data-title", t);
+        circle.removeAttribute("title");
+
+        // Mostrar tooltip cuando se selecciona el tema
+        circle.addEventListener("click", () => {
+
+            // eliminar tooltip previo
+            document.querySelectorAll(".circle")
+                .forEach(c => c.classList.remove("show-tooltip"));
+
+            // activar tooltip en el seleccionado
+            circle.classList.add("show-tooltip");
+
+            // eliminar después de 1 segundo
+            setTimeout(() => {
+                circle.classList.remove("show-tooltip");
+            }, 1000);
+        });
+    });
+
+});
+
+
+/* ===============================================================
+   =============================================================
+================================================================ */
+    
 let ProyectosAR = {};
 const KEY_STORAGE = "arUserCodes";
 const KEY_THEME = "arThemePreference";
@@ -324,5 +388,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
