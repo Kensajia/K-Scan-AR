@@ -10,6 +10,28 @@
       :root { --accent: #4CAF50; --danger: #f44336; --warn: #FFC107; }
       body { font-family: sans-serif; margin: 0; overflow: hidden; }
 
+      /* --- 1. Pantalla de Carga (Loading Screen) --- */
+      #loading-screen {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: var(--primary-bg); /* O puedes usar #1a1a1a */
+        color: white;
+        z-index: 5000;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        transition: opacity 1s ease-out; /* Transición suave de salida */
+      }
+      .loading-logo {
+        max-width: 120px; margin-bottom: 20px;
+        filter: drop-shadow(0 0 5px white);
+        animation: pulse 1.5s infinite alternate; /* Animación de pulsación */
+      }
+      .loading-text { font-size: 1.2em; font-weight: bold; }
+      .loading-text span { animation: blink 1s infinite steps(1); }
+
+      /* Animaciones de CSS */
+      @keyframes pulse { 0% { opacity: 0.8; transform: scale(1.0); } 100% { opacity: 1; transform: scale(1.05); } }
+      @keyframes blink { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+      
       /* Panel de Controles Superior */
       #ui-controls {
         position: fixed;
@@ -56,6 +78,52 @@
         const trackRef = { track: null };
         const uiControls = document.querySelector("#ui-controls");
 
+
+        // Función para ocultar la pantalla de carga (fade out)
+        const hideLoading = () => {
+          const loadingScreen = document.querySelector("#loading-screen");
+          loadingScreen.style.opacity = 0;
+          // Después de 1 segundo (tiempo de la transición CSS), oculta completamente el div
+          setTimeout(() => { loadingScreen.style.display = 'none'; }, 1000);
+        };
+
+        // Función para mostrar error (pantalla roja y mensaje)
+        const showError = (message) => {
+          const loadingScreen = document.querySelector("#loading-screen");
+          const loadingText = document.querySelector("#loading-text");
+  
+          document.querySelector(".loading-logo").style.display = 'none';
+          loadingScreen.style.backgroundColor = 'var(--danger)'; // Color rojo
+          loadingText.style.animation = 'none';
+          loadingText.innerHTML = `❌ Error Crítico: ${message}`;
+        };
+
+        // --- INTERCEPTAR EL ERROR .MIND ---
+        // Sobreescribir el startAR para interceptar el error del .mind (RangeError)
+        const originalStartAR = sceneEl.components['mindar-image']._startAR;
+        sceneEl.components['mindar-image']._startAR = async function () {
+          try {
+              await originalStartAR.call(this);
+          } catch (error) {
+              // RangeError o error de bytes es el indicador del archivo .mind dañado
+              if (error.name === 'RangeError' || error.message.includes('byte(s) found')) {
+                  showError("Archivo dañado. Contacte con el soporte.");
+              } else {
+                  showError("Error de cámara/inicio.");
+              }
+              console.error("Fallo al iniciar AR:", error);
+          }
+      };
+
+      // --- OCULTAR CUANDO ESTÉ LISTO ---
+      // Llamada a la función de ocultar al dispararse el evento arReady
+      sceneEl.addEventListener("arReady", () => {
+          hideLoading();
+          // Tu lógica de inicialización de cámara y flash debe ir aquí también
+          // ...
+      });
+
+        
         // 1. VINCULACIÓN DE MÚLTIPLES VIDEOS
         const setup = (t, v) => {
           const target = document.querySelector(t);
@@ -123,6 +191,12 @@
   </head>
   
   <body>
+    <div id="loading-screen">
+        <img src="https://cdn.store.link/uploads/store10333/store-logo.svg" alt="Logo" class="loading-logo">
+        <p id="loading-text" class="loading-text">Cargando marcadores<span>...</span></p>
+    </div>
+    
+    
     <div id="ui-controls">
       <button id="btn-audio" class="btn">🔇 SILENCIO</button>
       <button id="btn-flash" class="btn" style="display:none">⚡ FLASH OFF</button>
@@ -161,5 +235,6 @@
     </a-scene>
   </body>
 </html>
+
 
 
