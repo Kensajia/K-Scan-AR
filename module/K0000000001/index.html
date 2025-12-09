@@ -1,5 +1,3 @@
-Video croma verde
-
 <!DOCTYPE html>
 <html>
   <head>
@@ -9,24 +7,25 @@ Video croma verde
     <script src="https://unpkg.com/aframe-chromakey-material/dist/aframe-chromakey-material.min.js"></script>
     
     <style>
-      :root { --accent: #4CAF50; --danger: #f44336; --warn: #FFC107; }
+      :root { --accent: #4CAF50; --danger: #f44336; --warn: #FFC107; --info: #2196F3; }
       body { font-family: sans-serif; margin: 0; overflow: hidden; }
 
       #ui-controls {
-        position: fixed;
-        top: 15px; left: 15px; right: 15px;
-        z-index: 2000;
-        display: flex; justify-content: center; gap: 10px;
+        position: fixed; top: 15px; left: 15px; right: 15px;
+        z-index: 2000; display: flex; justify-content: center; gap: 8px;
       }
 
       .btn {
-        padding: 10px 18px; border-radius: 50px; color: white;
+        padding: 10px 15px; border-radius: 50px; color: white;
         font-weight: 600; cursor: pointer; font-size: 11px;
         background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.2);
         display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
 
       #btn-audio { background: var(--danger); }
+      #btn-hd { background: var(--info); }
+      #btn-flash.active { background: var(--warn); color: black; }
+
       #btn-toggle-ui {
         position: fixed; bottom: 20px; right: 20px;
         z-index: 3000 !important; width: 50px; height: 50px;
@@ -34,7 +33,7 @@ Video croma verde
         backdrop-filter: blur(5px); font-size: 20px;
         display: flex; justify-content: center; align-items: center; border: none; color: white;
       }
-      .hidden { opacity: 0; pointer-events: none; }
+      .hidden { opacity: 0; pointer-events: none; transform: translateY(-20px); }
       .a-enter-vr { display: none !important; }
     </style>
 
@@ -51,7 +50,6 @@ Video croma verde
         const sceneEl = document.querySelector('a-scene');
         const trackRef = { track: null };
 
-        // 1. VINCULACIÓN DE MÚLTIPLES VIDEOS
         const setup = (t, v) => {
           const target = document.querySelector(t);
           const vid = document.querySelector(v);
@@ -61,29 +59,27 @@ Video croma verde
         
         setup('#target-0', '#vid-0');
         setup('#target-1', '#vid-1');
-        setup('#target-2', '#vid-2');
 
         sceneEl.addEventListener("arReady", () => {
           const video = document.querySelector('video');
           if (video && video.srcObject) {
             const track = video.srcObject.getVideoTracks()[0];
             trackRef.track = track;
-            if (track.getCapabilities().torch) {
-              document.querySelector("#btn-flash").style.display = "flex";
-            }
+            if (track.getCapabilities().torch) document.querySelector("#btn-flash").style.display = "flex";
           }
         });
 
-        // CONTROL DE FLASH
+        // LÓGICA FLASH
         document.querySelector("#btn-flash").addEventListener("click", function() {
           if (trackRef.track) {
             const current = !(trackRef.track.getConstraints().torch);
             trackRef.track.applyConstraints({ advanced: [{ torch: current }] });
+            this.classList.toggle("active", current);
             this.innerHTML = current ? "⚡ FLASH ON" : "⚡ FLASH OFF";
           }
         });
 
-        // CONTROL DE AUDIO GLOBAL (TODOS LOS VIDEOS)
+        // LÓGICA AUDIO
         document.querySelector("#btn-audio").addEventListener("click", function() {
           const vids = document.querySelectorAll("video");
           const mutedState = !vids[0].muted;
@@ -93,6 +89,14 @@ Video croma verde
           });
           this.style.background = mutedState ? "var(--danger)" : "var(--accent)";
           this.innerHTML = mutedState ? "🔇 SILENCIO" : "🔊 SONIDO";
+        });
+
+        // LÓGICA HD/SD
+        document.querySelector("#btn-hd").addEventListener("click", function() {
+          const isHD = this.innerHTML.includes("HD");
+          this.innerHTML = isHD ? "📺 CALIDAD: SD" : "📺 CALIDAD: HD";
+          this.style.background = isHD ? "#757575" : "var(--info)";
+          sceneEl.setAttribute('renderer', isHD ? 'antialias: false' : 'antialias: true');
         });
 
         document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
@@ -106,15 +110,14 @@ Video croma verde
     <div id="ui-controls">
       <button id="btn-audio" class="btn">🔇 SILENCIO</button>
       <button id="btn-flash" class="btn" style="display:none">⚡ FLASH OFF</button>
+      <button id="btn-hd" class="btn">📺 CALIDAD: HD</button>
     </div>
 
     <button id="btn-toggle-ui" class="btn">⚙️</button>
 
-    <a-scene 
-      keep-alive
-      mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" 
-      renderer="preserveDrawingBuffer: true; antialias: true; colorManagement: true" 
-      vr-mode-ui="enabled: false">
+    <a-scene keep-alive mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" 
+             renderer="preserveDrawingBuffer: true; antialias: true; colorManagement: true" 
+             vr-mode-ui="enabled: false">
       
       <a-assets>
         <video id="vid-0" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" loop="true" playsinline muted crossorigin="anonymous" preload="auto"></video>
@@ -129,11 +132,11 @@ Video croma verde
       </a-entity>
 
       <a-entity id="target-1" mindar-image-target="targetIndex: 1">
-        <a-plane material="shader: chromakey; src: #vid-1; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
+        <a-plane material="shader: chromakey; src: #vid-1; color: 0.1 0.1 0.9" width="1" height="0.6"></a-plane>
       </a-entity>
 
       <a-entity id="target-2" mindar-image-target="targetIndex: 2">
-        <a-plane material="shader: chromakey; src: #vid-2; color: 0.1 0.9 0.1" width="1" height="0.6"></a-plane>
+        <a-plane material="shader: chromakey; src: #vid-2; color: 0.1 0.1 0.9" width="1" height="0.6"></a-plane>
       </a-entity>
 
     </a-scene>
