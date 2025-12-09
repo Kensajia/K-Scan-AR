@@ -36,7 +36,7 @@ Utilizando la tecnología **MindAR**, la imagen sublimada impresa se convierte e
 Para disfrutar de la Realidad Aumentada de tu producto sublimado, solo necesitas:
 
 1.  Un **smartphone** moderno.
-2.  Acceder al enlace proporcionado: `[[Tu Enlace de Acceso/GitHub Pages URL](https://kensajia.github.io/K-Scan-AR/)]`
+2.  Acceder al enlace proporcionado: **[K-Scan AR Web](https://kensajia.github.io/K-Scan-AR/)**
 3.  **Proceso de Acceso y Gestión de Perfiles:**
     * **Ingreso Inicial:** El cliente debe ingresar obligatoriamente un **código de acceso único**.
     * **Nombre Opcional:** Puede ingresar un nombre junto al código para identificar el producto guardado. (Si está vacío, el código se usa como nombre).
