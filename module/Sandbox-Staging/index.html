@@ -91,6 +91,9 @@
         setup('#target-0', '#vid-0');
         setup('#target-1', '#vid-1');
         setup('#target-2', '#vid-2');
+        setup('#target-3', '#vid-3');
+        setup('#target-4', '#vid-4');
+        setup('#target-5', '#vid-5');
 
         sceneEl.addEventListener("arReady", () => {
           const video = document.querySelector('video');
@@ -151,7 +154,7 @@
 
     <a-scene 
       keep-alive
-      mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" 
+      mindar-image="imageTargetSrc: ./assets/targets-6I.mind; maxTrack: 1" 
       renderer="preserveDrawingBuffer: true; antialias: true; colorManagement: true" 
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false">
@@ -160,6 +163,9 @@
         <video id="vid-0" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
         <video id="vid-1" src="https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
         <video id="vid-2" src="https://files.catbox.moe/ob3b9g.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-3" src="https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-4" src="https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
+        <video id="vid-5" src="https://files.catbox.moe/ob3b9g.mp4" loop="true" playsinline webkit-playsinline muted crossorigin="anonymous" preload="auto"></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -175,6 +181,19 @@
       <a-entity id="target-2" mindar-image-target="targetIndex: 2">
         <a-video src="#vid-2" width="1" height="0.6"></a-video>
       </a-entity>
+
+      <a-entity id="target-3" mindar-image-target="targetIndex: 3">
+        <a-video src="#vid-3" width="1" height="0.6"></a-video>
+      </a-entity>
+
+      <a-entity id="target-4" mindar-image-target="targetIndex: 4">
+        <a-video src="#vid-4" width="1" height="0.6"></a-video>
+      </a-entity>
+
+      <a-entity id="target-5" mindar-image-target="targetIndex: 5">
+        <a-video src="#vid-5" width="1" height="0.6"></a-video>
+      </a-entity>
+      
     </a-scene>
   </body>
 </html>
