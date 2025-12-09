@@ -22,12 +22,18 @@
         display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
 
+      /* Estilos dinámicos para el feedback visual */
+      #btn-audio.muted { background: var(--danger); }
+      #btn-audio.on { background: var(--accent); }
       #btn-flash.active { background: var(--warn); color: black; }
+
       #btn-toggle-ui {
         position: fixed; bottom: 20px; right: 20px; z-index: 3000 !important;
         width: 50px; height: 50px; border-radius: 50%; background: rgba(255, 255, 255, 0.2);
-        font-size: 20px; border: none; color: white; cursor: pointer;
+        backdrop-filter: blur(5px); display: flex; justify-content: center;
+        align-items: center; border: none; color: white; font-size: 20px;
       }
+
       .hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
       .a-enter-vr { display: none !important; }
     </style>
@@ -45,36 +51,48 @@
         const sceneEl = document.querySelector('a-scene');
         const trackRef = { track: null };
 
+        // 1. Lógica del Flash
         sceneEl.addEventListener("arReady", () => {
           const video = document.querySelector('video');
           if (video && video.srcObject) {
             const track = video.srcObject.getVideoTracks()[0];
             trackRef.track = track;
-            // Verificamos si existe la capacidad de linterna
-            const capabilities = track.getCapabilities();
-            if (capabilities && capabilities.torch) {
+            if (track.getCapabilities().torch) {
               document.querySelector("#btn-flash").style.display = "flex";
             }
           }
         });
 
-        // LÓGICA DE FLASH CORREGIDA (ON/OFF)
         document.querySelector("#btn-flash").addEventListener("click", function() {
           if (trackRef.track) {
             const settings = trackRef.track.getSettings();
             const isCurrentlyOn = settings.torch || false;
-            
-            trackRef.track.applyConstraints({
-              advanced: [{ torch: !isCurrentlyOn }]
-            }).then(() => {
+            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
               this.classList.toggle("active", !isCurrentlyOn);
               this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
-            }).catch(err => console.error("Error con el flash:", err));
+            });
           }
+        });
+
+        // 2. Lógica del Botón de Audio Restaurada
+        document.querySelector("#btn-audio").addEventListener("click", function() {
+          const isMuted = this.classList.contains("muted");
+          this.classList.toggle("muted", !isMuted);
+          this.classList.toggle("on", isMuted);
+          this.innerHTML = isMuted ? "🔊 AUDIO ON" : "🔇 SILENCIO";
+          
+          // Aquí podrías añadir lógica para silenciar sonidos 3D nativos
+          // Ex: sceneEl.emit(isMuted ? 'play-sounds' : 'stop-sounds');
         });
 
         document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
           document.querySelector("#ui-controls").classList.toggle("hidden");
+        });
+
+        document.querySelector("#btn-hd").addEventListener("click", function() {
+          const hMode = this.innerHTML.includes("HD");
+          this.innerHTML = hMode ? "📺 SD" : "📺 HD";
+          sceneEl.setAttribute('renderer', hMode ? 'antialias: true' : 'antialias: false');
         });
       });
     </script>
@@ -82,22 +100,23 @@
   
   <body>
     <div id="ui-controls">
+      <button id="btn-audio" class="btn muted">🔇 SILENCIO</button>
       <button id="btn-flash" class="btn" style="display:none">⚡ FLASH OFF</button>
-      <button id="btn-hd" class="btn">📺 CALIDAD: HD</button>
+      <button id="btn-hd" class="btn">📺 HD</button>
     </div>
 
-    <button id="btn-toggle-ui">⚙️</button>
+    <button id="btn-toggle-ui" class="btn">⚙️</button>
 
     <a-scene 
       keep-alive
       mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 2" 
       renderer="colorManagement: true, physicallyCorrectLights: true, preserveDrawingBuffer: true, antialias: true" 
-      vr-mode-ui="enabled: false">
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false">
       
       <a-assets>
         <a-asset-item id="bearModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/bear/scene.gltf"></a-asset-item>
         <a-asset-item id="raccoonModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf"></a-asset-item>
-        <a-asset-item id="ModelPRUEBA" src="https://files.catbox.moe/6v70to.gltf"></a-asset-item>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -109,11 +128,6 @@
       <a-entity mindar-image-target="targetIndex: 1">
         <a-gltf-model rotation="0 0 0" position="0 -0.25 0" scale="0.05 0.05 0.05" src="#bearModel" animation-mixer></a-gltf-model>
       </a-entity>
-
-      <a-entity mindar-image-target="targetIndex: 2">
-        <a-gltf-model rotation="0 0 0" position="0 -0.25 0" scale="0.05 0.05 0.05" src="#ModelPRUEBA" animation-mixer></a-gltf-model>
-      </a-entity>
-
     </a-scene>
   </body>
 </html>
