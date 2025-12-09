@@ -56,13 +56,13 @@
         <div id="loading-view">Cargando datos...</div>
 
         <div id="input-view" style="display: none;">
-            <h2>Nuevo Acceso</h2>
-            <label>Tu Nombre:</label>
+            <h2>Registrar Nuevo Acceso</h2>
+            <label>Tu Nombre (opcional):</label>
             <input type="text" id="user-name" placeholder="IDENTIFICADOR">
             <label>Código de Usuario:</label>
             <input type="text" id="user-code" placeholder="CÓDIGO ÚNICO">
             <button onclick="handleAccess()" id="access-button">Acceder</button>
-            <button onclick="toggleViews('selection')" id="back-button" style="display:none; background:#6c757d">Guardados</button>
+            <button onclick="toggleViews('selection')" id="back-button" style="display:none; background:#6c757d">Usuarios Guardados</button>
             <p id="error-message"></p>
         </div>
 
@@ -74,7 +74,7 @@
     </div>
     
     <div class="theme-selector">
-        <label>Tema:</label>
+        <label>Tema</label>
         <div class="theme-circles">
             <div class="circle" data-value="auto" title="Automático"></div>
             <div class="circle" data-value="light" title="Claro"></div>
@@ -182,3 +182,4 @@
     </script>
 </body>
 </html>
+
