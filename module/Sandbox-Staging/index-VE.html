@@ -1,5 +1,3 @@
-Solo enlaces directos para Videos Estandar
-
 <!DOCTYPE html>
 <html>
   <head>
@@ -17,7 +15,7 @@ Solo enlaces directos para Videos Estandar
         top: 15px;
         left: 15px;
         right: 15px;
-        z-index: 2000; /* Prioridad alta */
+        z-index: 2000;
         display: flex;
         justify-content: center;
         gap: 10px;
@@ -49,7 +47,7 @@ Solo enlaces directos para Videos Estandar
         position: fixed;
         bottom: 20px;
         right: 20px;
-        z-index: 3000 !important; /* Capa suprema para evitar bloqueo de VR */
+        z-index: 3000 !important;
         width: 50px;
         height: 50px;
         border-radius: 50%;
@@ -83,6 +81,7 @@ Solo enlaces directos para Videos Estandar
         const controls = document.querySelector("#ui-controls");
         const trackRef = { track: null };
 
+        // Lógica de detección y reproducción de videos
         const setup = (t, v) => {
           const target = document.querySelector(t);
           const vid = document.querySelector(v);
@@ -93,72 +92,65 @@ Solo enlaces directos para Videos Estandar
         setup('#target-1', '#vid-1');
         setup('#target-2', '#vid-2');
 
-      
-            // 1. Lógica del Flash
-        /*
+        // *** MODIFICACIÓN CLAVE AQUÍ PARA OBTENER EL TRACK DE LA CÁMARA ***
         sceneEl.addEventListener("arReady", () => {
-          const video = document.querySelector('video');
-          if (video && video.srcObject) {
-            const track = video.srcObject.getVideoTracks()[0];
-            trackRef.track = track;
-            if (track.getCapabilities().torch) {
-              document.querySelector("#btn-flash").style.display = "flex";
-            }
-          }
-        });*/
+          // Intenta encontrar el elemento de video inyectado por MindAR,
+          // que suele ser el elemento <video> dentro de la escena y que tiene un stream.
+          // Nota: a-scene > div > video es la jerarquía típica.
+          const cameraVideoElement = document.querySelector('a-scene > div > video');
 
-      // Función arReady CORREGIDA para obtener el track directamente del componente MindAR
-
-    sceneEl.addEventListener("arReady", () => {
-    // Accede al componente MindAR y luego a su controlador
-    const mindarComponent = sceneEl.components['mindar-image'];
-    
-    // Verifica si el controlador de la cámara tiene el método getCameraStream
-    if (mindarComponent && mindarComponent.getCameraStream) {
-        
-        const stream = mindarComponent.getCameraStream();
-        
-        if (stream) {
+          if (cameraVideoElement && cameraVideoElement.srcObject) {
+            const stream = cameraVideoElement.srcObject;
             const track = stream.getVideoTracks()[0];
             trackRef.track = track;
             
-            // Verifica la capacidad de flash (torch)
-            if (track.getCapabilities().torch) {
-                // Si la capacidad existe, muestra el botón.
-                document.querySelector("#btn-flash").style.display = "flex";
+            if (track && track.getCapabilities().torch) {
+              document.querySelector("#btn-flash").style.display = "flex";
             }
-        }
-    }
-});
+          } else {
+             // Si el selector anterior falla, intentamos la solución basada en el componente
+             const mindarComponent = sceneEl.components['mindar-image'];
+             if (mindarComponent && mindarComponent.getCameraStream) {
+                 const stream = mindarComponent.getCameraStream();
+                 if (stream) {
+                     const track = stream.getVideoTracks()[0];
+                     trackRef.track = track;
+                     if (track.getCapabilities().torch) {
+                         document.querySelector("#btn-flash").style.display = "flex";
+                     }
+                 }
+             }
+          }
+        });
+        // ***************************************************************
 
-
-
-
-
-        
-      
+        // Lógica de click del botón de flash
         document.querySelector("#btn-flash").addEventListener("click", function() {
           if (trackRef.track) {
-            const isOff = !(trackRef.track.getConstraints().torch);
-            trackRef.track.applyConstraints({ advanced: [{ torch: isOff }] });
-            this.classList.toggle("active", isOff);
-            this.innerHTML = isOff ? "⚡ FLASH ON" : "⚡ FLASH OFF";
+            const settings = trackRef.track.getSettings();
+            const isCurrentlyOn = settings.torch || false;
+
+            // Uso de applyConstraints es la forma correcta de alternar el flash (torch)
+            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
+                 this.classList.toggle("active", !isCurrentlyOn);
+                 this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
+            });
           }
         });
 
-            
-        // LÓGICA DE AUDIO GLOBAL SIN CONGELAR PANTALLA
+        // LÓGICA DE AUDIO GLOBAL
         document.querySelector("#btn-audio").addEventListener("click", function() {
           const videos = document.querySelectorAll("video");
-          const mutedState = !videos[0].muted;
+          const isCurrentlyMuted = videos[0].muted; // Usamos el estado actual del primer video
 
           videos.forEach(v => {
-            v.muted = mutedState;
-            if (!mutedState && !v.paused) v.play();
+            v.muted = !isCurrentlyMuted;
+            // Si vamos a activar el sonido y el video está en pausa, lo forzamos a reproducir.
+            if (!isCurrentlyMuted && !v.paused) v.play();
           });
 
-          this.style.background = mutedState ? "var(--danger)" : "var(--accent)";
-          this.innerHTML = mutedState ? "🔇 SILENCIO" : "🔊 SONIDO";
+          this.style.background = isCurrentlyMuted ? "var(--accent)" : "var(--danger)";
+          this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
         });
 
         document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
@@ -167,8 +159,9 @@ Solo enlaces directos para Videos Estandar
 
         document.querySelector("#btn-hd").addEventListener("click", function() {
           const isHD = this.innerHTML.includes("HD");
-          this.innerHTML = isHD ? "📺 Calidad: SD" : "📺 Calidad: HD";
-          sceneEl.setAttribute('renderer', isHD ? 'antialias: true' : 'antialias: false');
+          this.innerHTML = isHD ? "📺 CALIDAD: SD" : "📺 CALIDAD: HD";
+          // Solo se necesita ajustar 'antialias' para cambiar la calidad de renderizado
+          sceneEl.setAttribute('renderer', `preserveDrawingBuffer: true; antialias: ${isHD ? 'false' : 'true'}; colorManagement: true`);
         });
       });
     </script>
@@ -178,7 +171,7 @@ Solo enlaces directos para Videos Estandar
     <div id="ui-controls">
       <button id="btn-audio" class="btn">🔇 SILENCIO</button>
       <button id="btn-flash" class="btn" style="display:none">⚡ FLASH OFF</button>
-      <button id="btn-hd" class="btn">📺 Calidad: HD</button>
+      <button id="btn-hd" class="btn">📺 CALIDAD: HD</button>
     </div>
 
     <button id="btn-toggle-ui" class="btn">⚙️</button>
@@ -199,15 +192,15 @@ Solo enlaces directos para Videos Estandar
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       <a-entity id="target-0" mindar-image-target="targetIndex: 0">
-        <a-video src="#vid-0" width="0.9999" height="1.5"></a-video>
+        <a-video src="#vid-0" width="1" height="0.6"></a-video>
       </a-entity>
 
       <a-entity id="target-1" mindar-image-target="targetIndex: 1">
-        <a-video src="#vid-1" width="0.9999" height="1.5"></a-video>
+        <a-video src="#vid-1" width="1" height="0.6"></a-video>
       </a-entity>
 
       <a-entity id="target-2" mindar-image-target="targetIndex: 2">
-        <a-video src="#vid-2" width="1" height="0.6733"></a-video>
+        <a-video src="#vid-2" width="1" height="0.6"></a-video>
       </a-entity>
     </a-scene>
   </body>
