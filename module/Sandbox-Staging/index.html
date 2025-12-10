@@ -185,6 +185,7 @@
           }
         });
 
+            /* Codigo original de la versión para video estandar
         document.querySelector("#btn-flash").addEventListener("click", function() {
           if (trackRef.track) {
             const isOff = !(trackRef.track.getConstraints().torch);
@@ -193,6 +194,21 @@
             this.innerHTML = isOff ? "⚡ FLASH ON" : "⚡ FLASH OFF";
           }
         });
+        */
+
+
+            // Codigo original de la versión 3D
+      document.querySelector("#btn-flash").addEventListener("click", function() {
+          if (trackRef.track) {
+            const settings = trackRef.track.getSettings();
+            const isCurrentlyOn = settings.torch || false;
+            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
+              this.classList.toggle("active", !isCurrentlyOn);
+              this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
+            });
+          }
+        });
+            
 
         // LÓGICA DE AUDIO GLOBAL SIN CONGELAR PANTALLA
         document.querySelector("#btn-audio").addEventListener("click", function() {
