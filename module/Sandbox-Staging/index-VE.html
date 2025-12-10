@@ -106,7 +106,7 @@ Solo enlaces directos para Videos Estandar
           }
         });
       
-      /*
+      
         document.querySelector("#btn-flash").addEventListener("click", function() {
           if (trackRef.track) {
             const isOff = !(trackRef.track.getConstraints().torch);
@@ -115,23 +115,6 @@ Solo enlaces directos para Videos Estandar
             this.innerHTML = isOff ? "⚡ FLASH ON" : "⚡ FLASH OFF";
           }
         });
-      */
-
-
-
-
-        document.querySelector("#btn-flash").addEventListener("click", function() {
-          if (trackRef.track) {
-            const settings = trackRef.track.getSettings();
-            const isCurrentlyOn = settings.torch || false;
-            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
-              this.classList.toggle("active", !isCurrentlyOn);
-              this.innerHTML = !isCurrentlyOn ? "📸 ON" : "📷 OFF";
-            });
-          }
-        });
-
-
 
             
         // LÓGICA DE AUDIO GLOBAL SIN CONGELAR PANTALLA
@@ -154,7 +137,7 @@ Solo enlaces directos para Videos Estandar
 
         document.querySelector("#btn-hd").addEventListener("click", function() {
           const isHD = this.innerHTML.includes("HD");
-          this.innerHTML = isHD ? "📺 SD" : "📺 HD";
+          this.innerHTML = isHD ? "📺 Calidad: SD" : "📺 Calidad: HD";
           sceneEl.setAttribute('renderer', isHD ? 'antialias: true' : 'antialias: false');
         });
       });
@@ -164,8 +147,8 @@ Solo enlaces directos para Videos Estandar
   <body>
     <div id="ui-controls">
       <button id="btn-audio" class="btn">🔇 SILENCIO</button>
-      <button id="btn-flash" class="btn" style="display:none">📷 OFF</button>
-      <button id="btn-hd" class="btn">📺 HD</button>
+      <button id="btn-flash" class="btn" style="display:none">⚡ FLASH OFF</button>
+      <button id="btn-hd" class="btn">📺 Calidad: HD</button>
     </div>
 
     <button id="btn-toggle-ui" class="btn">⚙️</button>
