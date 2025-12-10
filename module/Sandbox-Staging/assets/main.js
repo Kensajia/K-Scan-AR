@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const JSON_PATH = './assets/IndexSet2.json';
+    const JSON_PATH = './IndexSet2.json';
     const sceneEl = document.querySelector('a-scene');
     const controls = document.querySelector("#ui-controls");
     const trackRef = { track: null };
@@ -299,4 +299,5 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // --- INICIO DEL CÓDIGO ---
     loadConfig();
+
 });
