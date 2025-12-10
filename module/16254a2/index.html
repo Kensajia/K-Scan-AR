@@ -89,8 +89,6 @@
         }
         setup('#target-0', '#vid-0');
         setup('#target-1', '#vid-1');
-        setup('#target-2', '#vid-2');
-		setup('#target-3', '#vid-3');
 
         sceneEl.addEventListener("arReady", () => {
           const video = document.querySelector('video');
@@ -172,14 +170,15 @@
         <a-video src="#vid-1" width="0.6666" height="1"></a-video>
       </a-entity>
 
-      <a-entity id="target-2" mindar-image-target="targetIndex: 0">
-        <a-video src="#vid-2" width="0.6666" height="1"></a-video>
+      <a-entity id="target-0" mindar-image-target="targetIndex: 0">
+        <a-video src="#vid-0" width="0.6666" height="1"></a-video>
       </a-entity>
 	  
-	  <a-entity id="target-3" mindar-image-target="targetIndex: 1">
-        <a-video src="#vid-3" width="0.6666" height="1"></a-video>
+	  <a-entity id="target-1" mindar-image-target="targetIndex: 1">
+        <a-video src="#vid-1" width="0.6666" height="1"></a-video>
       </a-entity>
 	  
     </a-scene>
   </body>
+
 </html>
