@@ -95,6 +95,7 @@ Solo enlaces directos para Videos Estandar
 
       
             // 1. Lógica del Flash
+        /*
         sceneEl.addEventListener("arReady", () => {
           const video = document.querySelector('video');
           if (video && video.srcObject) {
@@ -104,8 +105,37 @@ Solo enlaces directos para Videos Estandar
               document.querySelector("#btn-flash").style.display = "flex";
             }
           }
-        });
-      
+        });*/
+
+      // Función arReady CORREGIDA para obtener el track directamente del componente MindAR
+
+    sceneEl.addEventListener("arReady", () => {
+    // Accede al componente MindAR y luego a su controlador
+    const mindarComponent = sceneEl.components['mindar-image'];
+    
+    // Verifica si el controlador de la cámara tiene el método getCameraStream
+    if (mindarComponent && mindarComponent.getCameraStream) {
+        
+        const stream = mindarComponent.getCameraStream();
+        
+        if (stream) {
+            const track = stream.getVideoTracks()[0];
+            trackRef.track = track;
+            
+            // Verifica la capacidad de flash (torch)
+            if (track.getCapabilities().torch) {
+                // Si la capacidad existe, muestra el botón.
+                document.querySelector("#btn-flash").style.display = "flex";
+            }
+        }
+    }
+});
+
+
+
+
+
+        
       
         document.querySelector("#btn-flash").addEventListener("click", function() {
           if (trackRef.track) {
