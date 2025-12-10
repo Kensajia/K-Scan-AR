@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function() {
             initializeScene();
         } catch (error) {
             console.error("Error al cargar la configuración JSON. Asegúrate que la ruta './IndexSet2.json' es correcta.", error);
-            alert("No se pudo cargar la configuración de videos. Revisa la ruta JSON.");
+            alert("No se pudo cargar la configuración de videos. Revisa la ruta JSON. Intento 3");
         }
     }
     
@@ -303,3 +303,4 @@ document.addEventListener("DOMContentLoaded", function() {
     // --- INICIO DEL CÓDIGO ---
     loadConfig();
 });
+
