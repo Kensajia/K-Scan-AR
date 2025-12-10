@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MindAR AR Multi-Content</title>
+    
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    
+    <link rel="stylesheet" href="./assets/styles.css">
+    <script src="./assets/main.js" defer></script>
+</head>
+<body>
+    
+    <div id="ui-controls">
+        <button id="btn-audio" class="btn">🔇 SILENCIO</button>
+        <button id="btn-flash" class="btn" style="display:none">⚡ FLASH OFF</button>
+        <button id="btn-next-video" class="btn" style="display:none">⏩ SIGUIENTE</button>
+        <button id="btn-hd" class="btn">📺 CALIDAD: SD</button>
+    </div>
+
+    <button id="btn-toggle-ui" class="btn">⚙️</button>
+
+    <a-scene 
+      id="ar-scene"
+      keep-alive
+      mindar-image="" 
+      renderer="preserveDrawingBuffer: true; antialias: false; colorManagement: true" 
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false">
+      
+      <a-assets id="assets-container"></a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity id="target-container"></a-entity>
+      
+    </a-scene>
+</body>
+</html>
