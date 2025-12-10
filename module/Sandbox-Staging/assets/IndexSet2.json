@@ -1,7 +1,7 @@
 {
     "MindARConfig": {
-        "imageTargetSrc": "/targets.mind",
-        "maxTrack": 3,
+        "imageTargetSrc": "./assets/targets.mind",
+        "maxTrack": 1,
         "filterMinCF": 0.0001,
         "filterBeta": 0.001
     },
@@ -23,9 +23,9 @@
                 },
                 {
                     "id": "vid-0-2",
-                    "src": "https://files.catbox.moe/ob3b9g.mp4",
+                    "src": "https://files.catbox.moe/mq8k1z.mp4",
                     "width": 1.5,
-                    "height": 0.8
+                    "height": 0.84375
                 }
             ]
         },
@@ -60,5 +60,6 @@
     ]
 
 }
+
 
 
