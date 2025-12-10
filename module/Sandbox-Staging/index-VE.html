@@ -41,7 +41,6 @@
       #btn-audio { background: var(--danger); }
 
       #btn-flash.active { background: var(--warn); color: black; }
-      /* Estilo para botón deshabilitado */
       #btn-flash:disabled { background: gray; cursor: not-allowed; }
 
       /* Botón de control INFERIOR*/
@@ -95,46 +94,44 @@
         setup('#target-1', '#vid-1');
         setup('#target-2', '#vid-2');
 
-        // *** LÓGICA DE DETECCIÓN Y DEBUGGING DEL FLASH ***
+        // *** LÓGICA DE DETECCIÓN Y DEBUGGING DEL FLASH MEJORADA ***
         sceneEl.addEventListener("arReady", () => {
           
-          // Métodos para obtener el track de la cámara
           const mindarComponent = sceneEl.components['mindar-image'];
           let track = null;
 
-          if (mindarComponent && mindarComponent.getCameraStream) {
+          // 1. Intentamos encontrar el video de la cámara (el que NO tiene ID de contenido):
+          const allVideos = document.querySelectorAll('video');
+          const cameraVideoElement = Array.from(allVideos).find(v => !v.id.startsWith('vid-'));
+          
+          if (cameraVideoElement && cameraVideoElement.srcObject) {
+              track = cameraVideoElement.srcObject.getVideoTracks()[0];
+          } 
+          // 2. Si el selector falló, intenta el método directo de MindAR como alternativa
+          else if (mindarComponent && mindarComponent.getCameraStream) {
               const stream = mindarComponent.getCameraStream();
               if (stream) {
                   track = stream.getVideoTracks()[0];
               }
           }
-          // Si el método directo de MindAR falla, intentamos con el selector DOM (método alternativo)
-          if (!track) {
-            const cameraVideoElement = document.querySelector('a-scene > div > video');
-            if (cameraVideoElement && cameraVideoElement.srcObject) {
-              track = cameraVideoElement.srcObject.getVideoTracks()[0];
-            }
-          }
 
-          // 2. Si el track existe, realizar la prueba y forzar la visibilidad
+          // 3. Lógica para mostrar y habilitar/deshabilitar el flash
           if (track) {
               trackRef.track = track;
               const flashAvailable = track.getCapabilities().torch;
 
-              // FORZAR VISIBILIDAD DEL BOTÓN PARA DEPURACIÓN
               btnFlash.style.display = "flex"; 
 
               if (flashAvailable) {
-                  btnFlash.innerHTML = "⚡ FLASH (COMPATIBLE)";
-                  btnFlash.disabled = false; // Habilitamos el botón
+                  btnFlash.innerHTML = "⚡ FLASH OFF"; 
+                  btnFlash.disabled = false;
               } else {
-                  // Si no es compatible (iOS, o navegador sin permiso), mostramos el error
-                  btnFlash.innerHTML = "❌ FLASH (NO SOPORTADO)";
-                  btnFlash.disabled = true; // Deshabilitamos el botón para que no se pueda hacer click
+                  btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
+                  btnFlash.disabled = true;
               }
 
           } else {
-              // Si falla la detección del track (fallo de inicialización de cámara)
+              // Fallo final: el botón permanece visible con este error
               btnFlash.style.display = "flex";
               btnFlash.innerHTML = "🔴 CÁMARA NO DETECTADA";
               btnFlash.disabled = true;
@@ -144,11 +141,10 @@
 
         // Lógica de click del botón de flash
         btnFlash.addEventListener("click", function() {
-          if (trackRef.track) {
+          if (trackRef.track && !this.disabled) {
             const settings = trackRef.track.getSettings();
             const isCurrentlyOn = settings.torch || false;
 
-            // Uso de applyConstraints para alternar el flash (torch)
             trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
                  this.classList.toggle("active", !isCurrentlyOn);
                  this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
@@ -159,7 +155,6 @@
         // LÓGICA DE AUDIO GLOBAL
         document.querySelector("#btn-audio").addEventListener("click", function() {
           const videos = document.querySelectorAll("video");
-          // Filtramos solo los videos de contenido (no el feed de la cámara si fue detectado como video)
           const contentVideos = Array.from(videos).filter(v => v.id.startsWith('vid-'));
           
           const isCurrentlyMuted = contentVideos[0] ? contentVideos[0].muted : true;
@@ -193,7 +188,7 @@
       <button id="btn-hd" class="btn">📺 CALIDAD: HD</button>
     </div>
 
-    <button id="btn-toggle-ui" class="btn">⚙️ intento 4</button>
+    <button id="btn-toggle-ui" class="btn">⚙️</button>
 
     <a-scene 
       keep-alive
