@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const JSON_PATH = './IndexSet2.json';
+    // AJUSTE DE RUTA: Asume que main.js y IndexSet2.json están en la misma carpeta (assets/)
+    const JSON_PATH = './IndexSet2.json'; 
+    
     const sceneEl = document.querySelector('a-scene');
     const controls = document.querySelector("#ui-controls");
     const trackRef = { track: null };
@@ -11,8 +13,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // Video Rotation State: Objeto para manejar el estado de cada marcador
     let videoRotationState = {}; 
     let config = null; 
-
-    // Variable para rastrear qué marcador está actualmente visible para la rotación manual
     let activeTargetIndex = null;
 
     // Componente custom para mantener el renderizado activo
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
     
-    // === FUNCIONES DE INICIALIZACIÓN ===
+    // === FUNCIONES DE INICIALIZACIÓN Y CARGA ===
 
     async function loadConfig() {
         try {
@@ -32,10 +32,26 @@ document.addEventListener("DOMContentLoaded", function() {
             config = await response.json();
             initializeScene();
         } catch (error) {
-            console.error("Error al cargar la configuración JSON:", error);
+            console.error("Error al cargar la configuración JSON. Asegúrate que la ruta './IndexSet2.json' es correcta.", error);
             alert("No se pudo cargar la configuración de videos. Revisa la ruta JSON.");
         }
     }
+    
+    // Nueva función para asignar las URLs de video SOLAMENTE después de que A-Frame se cargue
+    function assignVideoSources() {
+        // Itera sobre todos los estados de marcador
+        Object.values(videoRotationState).forEach(state => {
+            state.htmlVideos.forEach((videoAsset, index) => {
+                // Asigna la URL desde la data almacenada, esto dispara la carga.
+                const url = state.videoURLs[index];
+                if (url && !videoAsset.src) {
+                    videoAsset.src = url;
+                }
+            });
+        });
+        // IMPORTANTE: Después de asignar las fuentes, MindAR debería comenzar a inicializar el tracking.
+    }
+
 
     function initializeScene() {
         const { MindARConfig, Targets } = config; 
@@ -48,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function() {
             `filterBeta: ${MindARConfig.filterBeta}`;
         sceneEl.setAttribute('mindar-image', mindarAttrs);
 
-        // 2. Iterar sobre CADA MARCADOR para crear sus videos y estados
+        // 2. Iterar sobre CADA MARCADOR
         Targets.forEach(target => {
             const { targetIndex, videos } = target;
             
@@ -57,6 +73,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 currentVideoIndex: 0,
                 htmlVideos: [],
                 arVideos: [],
+                videoURLs: [], // Almacena URLs para asignación tardía
                 numVideos: videos.length
             };
 
@@ -65,12 +82,14 @@ document.addEventListener("DOMContentLoaded", function() {
             targetEntity.setAttribute('id', `target-${targetIndex}`);
             targetEntity.setAttribute('mindar-image-target', `targetIndex: ${targetIndex}`);
 
-            // 4. Crear los elementos <video> y <a-video> para ESTE MARCADOR
+            // 4. Crear los elementos <video> y <a-video>
             videos.forEach((videoData, index) => {
                 // Elemento <video> en <a-assets>
                 const videoAsset = document.createElement('video');
                 videoAsset.setAttribute('id', videoData.id);
-                videoAsset.setAttribute('src', videoData.src);
+                // *** CORRECCIÓN CLAVE: NO ASIGNAR SRC INICIALMENTE ***
+                videoAsset.setAttribute('preload', 'none'); 
+                
                 videoAsset.setAttribute('loop', 'true');
                 videoAsset.setAttribute('playsinline', 'true');
                 videoAsset.setAttribute('webkit-playsinline', 'true');
@@ -87,20 +106,24 @@ document.addEventListener("DOMContentLoaded", function() {
                 videoEntity.setAttribute('width', videoData.width);
                 videoEntity.setAttribute('height', videoData.height);
                 
-                videoEntity.setAttribute('visible', index === 0); // Solo el primer video visible
+                videoEntity.setAttribute('visible', index === 0); 
 
                 targetEntity.appendChild(videoEntity);
                 
-                // Almacenar referencias en el estado del marcador
+                // Almacenar referencias y URLs
                 videoRotationState[targetIndex].htmlVideos.push(videoAsset);
                 videoRotationState[targetIndex].arVideos.push(videoEntity);
+                videoRotationState[targetIndex].videoURLs.push(videoData.src); // Guarda la URL para usarla después
             });
             
             targetContainer.appendChild(targetEntity);
             
-            // 5. Asignar Eventos de Tracking a CADA MARCADOR
+            // 5. Asignar Eventos de Tracking
             setupTrackingEvents(targetIndex, targetEntity);
         });
+        
+        // 6. ASIGNACIÓN TARDÍA DE FUENTES: Llama a la función SOLO cuando A-Frame dispara 'loaded'
+        sceneEl.addEventListener('loaded', assignVideoSources, { once: true });
     }
     
     // === LÓGICA DE ROTACIÓN DE VIDEOS ===
@@ -108,12 +131,10 @@ document.addEventListener("DOMContentLoaded", function() {
     function showVideo(targetIndex, videoIndex) {
         const state = videoRotationState[targetIndex];
         
-        // 1. Oculta todos los videos de ESTE MARCADOR
         state.arVideos.forEach((vidEl, i) => {
             vidEl.setAttribute('visible', i === videoIndex);
         });
 
-        // 2. Actualiza el índice en el estado de ESTE MARCADOR
         state.currentVideoIndex = videoIndex;
     }
 
@@ -121,23 +142,18 @@ document.addEventListener("DOMContentLoaded", function() {
         const state = videoRotationState[targetIndex];
         const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
 
-        // 1. Asegurarse de que el video sea visible
         showVideo(targetIndex, state.currentVideoIndex);
 
-        // 2. Lógica de Rotación Automática al finalizar (si tiene más de un video)
+        // Lógica de Rotación Automática al finalizar (si tiene más de un video)
         if (state.numVideos > 1) {
              currentVidAsset.onended = () => {
-                // Solo rota si el marcador sigue visible
                 const isTracking = sceneEl.components['mindar-image'].data.trackedTargetIndex === targetIndex;
 
                 if (isTracking) {
                     const nextIndex = (state.currentVideoIndex + 1) % state.numVideos;
-                    
-                    // Detiene el video actual antes de cambiar
-                    currentVidAsset.currentTime = 0;
-
-                    showVideo(targetIndex, nextIndex); // Muestra el siguiente
-                    playCurrentVideo(targetIndex);    // Reproduce el siguiente
+                    currentVidAsset.currentTime = 0; // Detiene y resetea
+                    showVideo(targetIndex, nextIndex);
+                    playCurrentVideo(targetIndex);
                 } else {
                     currentVidAsset.onended = null;
                 }
@@ -146,28 +162,23 @@ document.addEventListener("DOMContentLoaded", function() {
             currentVidAsset.onended = null;
         }
 
-
-        // 3. Reproducir (y manejar promesas de reproducción)
+        // Reproducir (y manejar promesas de reproducción)
         currentVidAsset.play().catch(error => {
-            // Este catch es común, puede ignorarse si el usuario no ha interactuado.
+            console.warn(`Error de reproducción del video ${targetIndex}-${state.currentVideoIndex}. Puede requerir interacción del usuario:`, error);
         });
     }
 
     function rotateVideoManually() {
-        // Solo rota si HAY un marcador activo y si ese marcador tiene más de un video
         const state = videoRotationState[activeTargetIndex];
         if (activeTargetIndex === null || state.numVideos <= 1) return;
         
-        // Pausa y resetea el video actual
         const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
         currentVidAsset.pause();
         currentVidAsset.currentTime = 0;
-        currentVidAsset.onended = null; // Quita el evento de rotación automática
+        currentVidAsset.onended = null; 
 
-        // Calcula el siguiente video
         const nextIndex = (state.currentVideoIndex + 1) % state.numVideos;
         
-        // Muestra y reproduce el nuevo video
         showVideo(activeTargetIndex, nextIndex);
         playCurrentVideo(activeTargetIndex);
     }
@@ -176,10 +187,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function setupTrackingEvents(targetIndex, targetEntity) {
         targetEntity.addEventListener("targetFound", () => {
-            // Establece el marcador actual para rotación manual
             activeTargetIndex = targetIndex; 
             
-            // Si el marcador tiene más de un video, muestra el botón de rotación
             if (videoRotationState[targetIndex].numVideos > 1) {
                 btnNextVideo.style.display = 'flex';
             } else {
@@ -190,24 +199,20 @@ document.addEventListener("DOMContentLoaded", function() {
         });
 
         targetEntity.addEventListener("targetLost", () => {
-            // Si el marcador perdido es el activo, oculta el botón de rotación
             if (activeTargetIndex === targetIndex) {
                 activeTargetIndex = null;
                 btnNextVideo.style.display = 'none';
             }
             
-            // Pausa y resetea todos los videos de ESTE MARCADOR para liberar recursos
             const state = videoRotationState[targetIndex];
             state.htmlVideos.forEach(vid => {
                 vid.pause();
                 vid.currentTime = 0;
-                vid.onended = null; // Quita el evento de rotación automática
+                vid.onended = null; 
             });
-            // Oculta todas las entidades de video de este target
-            state.arVideos.forEach(el => el.setAttribute('visible', false));
             
-            // IMPORTANTE: Asegúrate de que el primer video de ESTE target sea visible para la próxima detección
-            showVideo(targetIndex, 0);
+            state.arVideos.forEach(el => el.setAttribute('visible', false));
+            showVideo(targetIndex, 0); // Reset al primer video para la próxima detección
         });
     }
     
@@ -218,6 +223,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const mindarComponent = sceneEl.components['mindar-image'];
         let track = null;
 
+        // Se mantiene la lógica para obtener el track de la cámara.
         if (mindarComponent && mindarComponent.getCameraStream) {
             const stream = mindarComponent.getCameraStream();
             if (stream) {
@@ -225,7 +231,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
         
-        // Si el track existe, configura el flash
         if (track) {
             trackRef.track = track;
             const flashAvailable = track.getCapabilities().torch;
@@ -238,7 +243,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
                 btnFlash.disabled = true;
             }
-
         } else {
             console.error("🔴 CÁMARA NO DETECTADA");
             btnFlash.style.display = "flex";
@@ -262,15 +266,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // LÓGICA DE AUDIO GLOBAL
     document.querySelector("#btn-audio").addEventListener("click", function() {
-        // Usamos el estado del primer video del primer marcador como referencia
         const state0 = videoRotationState[0];
-        const isCurrentlyMuted = state0 && state0.htmlVideos[0] ? state0.htmlVideos[0].muted : true;
+        // Asumimos que si hay videos, el primero es la referencia de muteo
+        const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
 
-        // Itera sobre TODOS los videos de TODOS los marcadores
         Object.values(videoRotationState).forEach(state => {
             state.htmlVideos.forEach(v => {
                 v.muted = !isCurrentlyMuted;
-                if (!v.muted && v.paused) v.play();
+                // Intentar reproducir si no está muteado y está pausado (para iniciar el audio si es necesario)
+                if (!v.muted && v.paused) v.play().catch(e => {}); 
             });
         });
 
@@ -285,12 +289,11 @@ document.addEventListener("DOMContentLoaded", function() {
     // Botón de Rotación Manual
     btnNextVideo.addEventListener("click", rotateVideoManually);
 
-    // Botón de Calidad (Inicia en SD)
+    // Botón de Calidad
     document.querySelector("#btn-hd").addEventListener("click", function() {
         const isSD = this.innerHTML.includes("SD");
         this.innerHTML = isSD ? "📺 CALIDAD: HD" : "📺 CALIDAD: SD";
         
-        // antialias: true es HD, antialias: false es SD (mejora el rendimiento)
         const antialiasValue = isSD ? 'true' : 'false';
         
         sceneEl.setAttribute('renderer', `preserveDrawingBuffer: true; antialias: ${antialiasValue}; colorManagement: true`);
@@ -299,5 +302,4 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // --- INICIO DEL CÓDIGO ---
     loadConfig();
-
 });
