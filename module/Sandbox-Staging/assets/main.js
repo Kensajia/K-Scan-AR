@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
     // AJUSTE DE RUTA: Asume que main.js y IndexSet2.json están en la misma carpeta (assets/)
-    const JSON_PATH = './IndexSet2.json'; 
+    const JSON_PATH = './assets/IndexSet2.json'; 
     
     const sceneEl = document.querySelector('a-scene');
     const controls = document.querySelector("#ui-controls");
@@ -303,4 +303,5 @@ document.addEventListener("DOMContentLoaded", function() {
     // --- INICIO DEL CÓDIGO ---
     loadConfig();
 });
+
 
