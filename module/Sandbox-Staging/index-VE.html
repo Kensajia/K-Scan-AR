@@ -41,6 +41,8 @@
       #btn-audio { background: var(--danger); }
 
       #btn-flash.active { background: var(--warn); color: black; }
+      /* Estilo para botón deshabilitado */
+      #btn-flash:disabled { background: gray; cursor: not-allowed; }
 
       /* Botón de control INFERIOR*/
       #btn-toggle-ui {
@@ -80,6 +82,7 @@
         const sceneEl = document.querySelector('a-scene');
         const controls = document.querySelector("#ui-controls");
         const trackRef = { track: null };
+        const btnFlash = document.querySelector("#btn-flash");
 
         // Lógica de detección y reproducción de videos
         const setup = (t, v) => {
@@ -92,45 +95,60 @@
         setup('#target-1', '#vid-1');
         setup('#target-2', '#vid-2');
 
-        // *** MODIFICACIÓN CLAVE AQUÍ PARA OBTENER EL TRACK DE LA CÁMARA ***
+        // *** LÓGICA DE DETECCIÓN Y DEBUGGING DEL FLASH ***
         sceneEl.addEventListener("arReady", () => {
-          // Intenta encontrar el elemento de video inyectado por MindAR,
-          // que suele ser el elemento <video> dentro de la escena y que tiene un stream.
-          // Nota: a-scene > div > video es la jerarquía típica.
-          const cameraVideoElement = document.querySelector('a-scene > div > video');
+          
+          // Métodos para obtener el track de la cámara
+          const mindarComponent = sceneEl.components['mindar-image'];
+          let track = null;
 
-          if (cameraVideoElement && cameraVideoElement.srcObject) {
-            const stream = cameraVideoElement.srcObject;
-            const track = stream.getVideoTracks()[0];
-            trackRef.track = track;
-            
-            if (track && track.getCapabilities().torch) {
-              document.querySelector("#btn-flash").style.display = "flex";
+          if (mindarComponent && mindarComponent.getCameraStream) {
+              const stream = mindarComponent.getCameraStream();
+              if (stream) {
+                  track = stream.getVideoTracks()[0];
+              }
+          }
+          // Si el método directo de MindAR falla, intentamos con el selector DOM (método alternativo)
+          if (!track) {
+            const cameraVideoElement = document.querySelector('a-scene > div > video');
+            if (cameraVideoElement && cameraVideoElement.srcObject) {
+              track = cameraVideoElement.srcObject.getVideoTracks()[0];
             }
+          }
+
+          // 2. Si el track existe, realizar la prueba y forzar la visibilidad
+          if (track) {
+              trackRef.track = track;
+              const flashAvailable = track.getCapabilities().torch;
+
+              // FORZAR VISIBILIDAD DEL BOTÓN PARA DEPURACIÓN
+              btnFlash.style.display = "flex"; 
+
+              if (flashAvailable) {
+                  btnFlash.innerHTML = "⚡ FLASH (COMPATIBLE)";
+                  btnFlash.disabled = false; // Habilitamos el botón
+              } else {
+                  // Si no es compatible (iOS, o navegador sin permiso), mostramos el error
+                  btnFlash.innerHTML = "❌ FLASH (NO SOPORTADO)";
+                  btnFlash.disabled = true; // Deshabilitamos el botón para que no se pueda hacer click
+              }
+
           } else {
-             // Si el selector anterior falla, intentamos la solución basada en el componente
-             const mindarComponent = sceneEl.components['mindar-image'];
-             if (mindarComponent && mindarComponent.getCameraStream) {
-                 const stream = mindarComponent.getCameraStream();
-                 if (stream) {
-                     const track = stream.getVideoTracks()[0];
-                     trackRef.track = track;
-                     if (track.getCapabilities().torch) {
-                         document.querySelector("#btn-flash").style.display = "flex";
-                     }
-                 }
-             }
+              // Si falla la detección del track (fallo de inicialización de cámara)
+              btnFlash.style.display = "flex";
+              btnFlash.innerHTML = "🔴 CÁMARA NO DETECTADA";
+              btnFlash.disabled = true;
           }
         });
         // ***************************************************************
 
         // Lógica de click del botón de flash
-        document.querySelector("#btn-flash").addEventListener("click", function() {
+        btnFlash.addEventListener("click", function() {
           if (trackRef.track) {
             const settings = trackRef.track.getSettings();
             const isCurrentlyOn = settings.torch || false;
 
-            // Uso de applyConstraints es la forma correcta de alternar el flash (torch)
+            // Uso de applyConstraints para alternar el flash (torch)
             trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
                  this.classList.toggle("active", !isCurrentlyOn);
                  this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
@@ -141,15 +159,17 @@
         // LÓGICA DE AUDIO GLOBAL
         document.querySelector("#btn-audio").addEventListener("click", function() {
           const videos = document.querySelectorAll("video");
-          const isCurrentlyMuted = videos[0].muted; // Usamos el estado actual del primer video
+          // Filtramos solo los videos de contenido (no el feed de la cámara si fue detectado como video)
+          const contentVideos = Array.from(videos).filter(v => v.id.startsWith('vid-'));
+          
+          const isCurrentlyMuted = contentVideos[0] ? contentVideos[0].muted : true;
 
-          videos.forEach(v => {
+          contentVideos.forEach(v => {
             v.muted = !isCurrentlyMuted;
-            // Si vamos a activar el sonido y el video está en pausa, lo forzamos a reproducir.
-            if (!isCurrentlyMuted && !v.paused) v.play();
+            if (!v.muted && v.paused) v.play();
           });
 
-          this.style.background = isCurrentlyMuted ? "var(--accent)" : "var(--danger)";
+          this.style.background = !isCurrentlyMuted ? "var(--danger)" : "var(--accent)";
           this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
         });
 
@@ -160,7 +180,6 @@
         document.querySelector("#btn-hd").addEventListener("click", function() {
           const isHD = this.innerHTML.includes("HD");
           this.innerHTML = isHD ? "📺 CALIDAD: SD" : "📺 CALIDAD: HD";
-          // Solo se necesita ajustar 'antialias' para cambiar la calidad de renderizado
           sceneEl.setAttribute('renderer', `preserveDrawingBuffer: true; antialias: ${isHD ? 'false' : 'true'}; colorManagement: true`);
         });
       });
@@ -174,7 +193,7 @@
       <button id="btn-hd" class="btn">📺 CALIDAD: HD</button>
     </div>
 
-    <button id="btn-toggle-ui" class="btn">⚙️</button>
+    <button id="btn-toggle-ui" class="btn">⚙️ intento 4</button>
 
     <a-scene 
       keep-alive
