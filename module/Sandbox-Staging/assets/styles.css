@@ -1,0 +1,82 @@
+:root { 
+    --accent: #4CAF50; 
+    --danger: #f44336; 
+    --warn: #FFC107; 
+}
+
+body { 
+    font-family: sans-serif; 
+    margin: 0; 
+    overflow: hidden; 
+}
+
+/* Panel superior */
+#ui-controls {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn {
+    padding: 10px 18px;
+    border-radius: 50px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* BOTÓN AUDIO - ESTADO INICIAL ROJO */
+#btn-audio { background: var(--danger); }
+
+#btn-flash.active { background: var(--warn); color: black; }
+#btn-flash:disabled { background: gray; cursor: not-allowed; }
+
+/* Botón de control INFERIOR*/
+#btn-toggle-ui {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 3000 !important;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    color: white;
+}
+
+.hidden { 
+    opacity: 0; 
+    transform: translateY(-20px); 
+    pointer-events: none; 
+}
+
+/* Botones para rotar contenido */
+#btn-next-video {
+    background: var(--accent);
+}
+
+/* ELIMINACIÓN TOTAL DEL BOTÓN VR */
+.a-enter-vr { 
+    display: none !important; 
+    visibility: hidden !important; 
+    pointer-events: none !important; 
+}
