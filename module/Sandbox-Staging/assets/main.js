@@ -1,6 +1,5 @@
 // main.js (Ejecución Inmediata)
 
-// RUTA CORRECTA: Asume que main.js está en assets/ y el JSON está en assets/IndexSet2.json
 const JSON_PATH = './assets/IndexSet2.json'; 
     
 const sceneEl = document.querySelector('a-scene');
@@ -16,7 +15,6 @@ let config = null;
 let activeTargetIndex = null;
 
 // === COMPONENTE KEEP-ALIVE CORREGIDO ===
-// Componente custom para mantener el renderizado activo, con chequeo de seguridad
 AFRAME.registerComponent('keep-alive', {
     tick: function () {
         const scene = this.el.sceneEl; 
@@ -61,11 +59,9 @@ function initializeScene() {
         targetEntity.setAttribute('mindar-image-target', `targetIndex: ${targetIndex}`);
 
         videos.forEach((videoData, index) => {
-            // Elemento <video> en <a-assets> - Se deja el SRC vacío.
             const videoAsset = document.createElement('video');
             videoAsset.setAttribute('id', videoData.id);
             videoAsset.setAttribute('preload', 'none'); 
-            
             videoAsset.setAttribute('loop', 'true');
             videoAsset.setAttribute('playsinline', 'true');
             videoAsset.setAttribute('webkit-playsinline', 'true');
@@ -73,14 +69,11 @@ function initializeScene() {
             videoAsset.setAttribute('crossorigin', 'anonymous');
             assetsContainer.appendChild(videoAsset);
             
-            // Elemento <a-video> (entidad AR)
             const videoEntity = document.createElement('a-video');
             videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
             videoEntity.setAttribute('src', `#${videoData.id}`);
-            
             videoEntity.setAttribute('width', videoData.width);
             videoEntity.setAttribute('height', videoData.height);
-            
             videoEntity.setAttribute('visible', index === 0); 
 
             targetEntity.appendChild(videoEntity);
@@ -96,7 +89,7 @@ function initializeScene() {
     });
 }
 
-// === LÓGICA DE ROTACIÓN Y VIDEO ===
+// === LÓGICA DE ROTACIÓN Y VIDEO (CORREGIDA) ===
 
 function showVideo(targetIndex, videoIndex) {
     const state = videoRotationState[targetIndex];
@@ -113,11 +106,12 @@ function playCurrentVideo(targetIndex) {
 
     showVideo(targetIndex, state.currentVideoIndex);
 
-    // SOLUCIÓN CLAVE: Asignar el SRC y forzar la carga justo antes de reproducir
-    if (currentVidAsset.src !== currentUrl) {
+    // 🚨 CORRECCIÓN CLAVE: Usar un atributo de datos para asegurar que el SRC se asigne solo una vez.
+    if (currentVidAsset.dataset.loadedSrc !== currentUrl) {
         currentVidAsset.src = currentUrl;
-        currentVidAsset.load(); // Forzar al navegador a iniciar el fetch
-        console.log(`[TARGET ${targetIndex}] Iniciando carga de video: ${currentUrl}`);
+        currentVidAsset.load(); 
+        currentVidAsset.dataset.loadedSrc = currentUrl; // Marcar como cargado
+        console.log(`[TARGET ${targetIndex}] Asignando SRC y cargando video: ${currentUrl}`);
     }
     
     if (state.numVideos > 1) {
@@ -188,12 +182,12 @@ function setupTrackingEvents(targetIndex, targetEntity) {
     });
 }
 
-// === LÓGICA DE UI Y FLASH (FINAL Y ROBUSTA) ===
+// === LÓGICA DE UI Y FLASH ===
 
 // Detección de Flash
 sceneEl.addEventListener("arReady", () => {
     
-    // 🚨 CAMBIO CLAVE: Hacemos el botón visible inmediatamente.
+    // El botón debe aparecer.
     btnFlash.style.display = "flex";
     
     const mindarComponent = sceneEl.components['mindar-image'];
@@ -201,7 +195,6 @@ sceneEl.addEventListener("arReady", () => {
 
     if (mindarComponent && mindarComponent.stream) {
         try {
-             // Acceso directo al stream de MindAR
              track = mindarComponent.stream.getVideoTracks()[0]; 
         } catch (e) {
              console.warn("No se pudo obtener el track de video del stream:", e);
@@ -226,7 +219,6 @@ sceneEl.addEventListener("arReady", () => {
             btnFlash.disabled = true;
         }
     } else {
-        // Si el track es NULL, deshabilitamos el botón y mostramos el mensaje.
         console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado.");
         btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
         btnFlash.disabled = true;
