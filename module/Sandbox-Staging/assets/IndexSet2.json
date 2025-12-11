@@ -1,9 +1,6 @@
 {
-    "MindARConfig": {
-        "imageTargetSrc": "./targets.mind",
-        "maxTrack": 3,
-        "filterMinCF": 0.0001,
-        "filterBeta": 0.001
+    "meta": {
+        "description": "Identificaor Sandbox-Staging"
     },
     "Targets": [
         {
@@ -59,9 +56,3 @@
         }
     ]
 }
-
-
-
-
-
-
