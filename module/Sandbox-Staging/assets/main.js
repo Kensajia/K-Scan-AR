@@ -42,13 +42,6 @@ async function loadConfig() {
     }
 }
 
-// NOTE: Esta función assignVideoSources ya no se llama al inicio. 
-// La lógica de asignación de SRC se movió a playCurrentVideo.
-function assignVideoSources() {
-    console.warn("La función assignVideoSources() ya no es necesaria en esta versión.");
-}
-
-
 function initializeScene() {
     const { Targets } = config; 
 
@@ -76,7 +69,8 @@ function initializeScene() {
             videoAsset.setAttribute('loop', 'true');
             videoAsset.setAttribute('playsinline', 'true');
             videoAsset.setAttribute('webkit-playsinline', 'true');
-            videoAsset.setAttribute('muted', 'muted');
+            // Nota: Inicialmente mutes para permitir autoplay en la mayoría de navegadores.
+            videoAsset.setAttribute('muted', 'muted'); 
             videoAsset.setAttribute('crossorigin', 'anonymous');
             assetsContainer.appendChild(videoAsset);
             
@@ -101,8 +95,6 @@ function initializeScene() {
         
         setupTrackingEvents(targetIndex, targetEntity);
     });
-    
-    // Eliminamos todos los listeners 'loaded' o 'arReady' para asignación de video.
 }
 
 // === LÓGICA DE ROTACIÓN Y VIDEO ===
@@ -118,11 +110,11 @@ function showVideo(targetIndex, videoIndex) {
 function playCurrentVideo(targetIndex) {
     const state = videoRotationState[targetIndex];
     const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
-    const currentUrl = state.videoURLs[state.currentVideoIndex]; // URL del video actual
+    const currentUrl = state.videoURLs[state.currentVideoIndex]; 
 
     showVideo(targetIndex, state.currentVideoIndex);
 
-    // 🚨 SOLUCIÓN CLAVE: Asignar el SRC y forzar la carga justo antes de reproducir
+    // SOLUCIÓN CLAVE: Asignar el SRC y forzar la carga justo antes de reproducir
     if (currentVidAsset.src !== currentUrl) {
         currentVidAsset.src = currentUrl;
         currentVidAsset.load(); // Forzar al navegador a iniciar el fetch
@@ -197,12 +189,12 @@ function setupTrackingEvents(targetIndex, targetEntity) {
     });
 }
 
-// === LÓGICA DE UI Y FLASH ===
+// === LÓGICA DE UI Y FLASH (CORREGIDA) ===
 
 // Detección de Flash
 sceneEl.addEventListener("arReady", () => {
     
-    // 🚨 SOLUCIÓN DE TIMING: Espera 100ms para asegurar la asignación del stream
+    // SOLUCIÓN DE TIMING: Espera 100ms para asegurar la asignación del stream
     setTimeout(() => {
         const mindarComponent = sceneEl.components['mindar-image'];
         let track = null;
@@ -211,26 +203,37 @@ sceneEl.addEventListener("arReady", () => {
             try {
                  track = mindarComponent.stream.getVideoTracks()[0]; 
             } catch (e) {
-                 console.warn("No se pudo obtener el track de video del stream:", e);
+                 // Advertencia si no se puede obtener el track
+                 console.warn("No se pudo obtener el track de video del stream, pero MindAR inició.", e);
             }
         }
         
         if (track) {
             trackRef.track = track;
-            const flashAvailable = track.getCapabilities().torch;
+            let flashAvailable = false;
+            
+            // Chequeo de capacidades más tolerante
+            try {
+                flashAvailable = track.getCapabilities().torch || false;
+            } catch (e) {
+                // Captura el error si el navegador no tiene el método getCapabilities() para 'torch'
+                console.warn("El dispositivo no soporta la capacidad 'torch' (flash).", e);
+            }
 
             btnFlash.style.display = "flex"; 
             if (flashAvailable) {
                 btnFlash.innerHTML = "⚡ FLASH OFF"; 
                 btnFlash.disabled = false;
             } else {
+                // Si no es compatible, se muestra deshabilitado con un mensaje neutral.
                 btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
                 btnFlash.disabled = true;
             }
         } else {
-            console.error("🔴 CÁMARA NO DETECTADA (Fallo asíncrono)");
+            // Si el track sigue siendo nulo después del timeout, mostramos un mensaje neutral.
+            console.error("🔴 CÁMARA NO DETECTADA (No se pudo obtener el Track de video para Flash).");
             btnFlash.style.display = "flex";
-            btnFlash.innerHTML = "🔴 CÁMARA NO DETECTADA";
+            btnFlash.innerHTML = "🔴 CÁMARA NO DISPONIBLE"; 
             btnFlash.disabled = true;
         }
     }, 100); 
@@ -245,22 +248,28 @@ btnFlash.addEventListener("click", function() {
         trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
             this.classList.toggle("active", !isCurrentlyOn);
             this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
+        }).catch(error => {
+            console.error("Error al intentar aplicar la restricción del flash:", error);
+            alert("No se pudo controlar el flash en este dispositivo.");
         });
     }
 });
 
 // LÓGICA DE AUDIO GLOBAL
 document.querySelector("#btn-audio").addEventListener("click", function() {
+    // Tomamos el estado actual de mute del primer video como referencia
     const state0 = videoRotationState[0];
     const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
 
     Object.values(videoRotationState).forEach(state => {
         state.htmlVideos.forEach(v => {
             v.muted = !isCurrentlyMuted;
+            // Intentar reproducir si no estaba muteado y estaba en pausa
             if (!v.muted && v.paused) v.play().catch(e => {}); 
         });
     });
 
+    // Nota: El usuario debe hacer la corrección en el HTML para que inicie correctamente
     this.style.background = !isCurrentlyMuted ? "var(--danger)" : "var(--accent)";
     this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
 });
