@@ -11,7 +11,6 @@ const btnNextVideo = document.querySelector("#btn-next-video");
 const targetContainer = document.querySelector("#target-container");
 const assetsContainer = document.querySelector("#assets-container");
 
-// Video Rotation State: Objeto para manejar el estado de cada marcador
 let videoRotationState = {}; 
 let config = null; 
 let activeTargetIndex = null;
@@ -30,7 +29,6 @@ AFRAME.registerComponent('keep-alive', {
 async function loadConfig() {
     try {
         const response = await fetch(JSON_PATH);
-        // Verificar si la respuesta fue OK antes de intentar parsear JSON
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status}`);
         }
@@ -38,14 +36,11 @@ async function loadConfig() {
         initializeScene();
     } catch (error) {
         console.error("Error al cargar la configuración JSON. Revisada la ruta y sintaxis.", error);
-        // Usar un alert genérico, ya que el usuario final no necesita ver el error de la consola
         alert("No se pudo cargar la configuración de videos. Revisa la ruta JSON y su contenido.");
     }
 }
 
-// Nueva función para asignar las URLs de video SOLAMENTE después de que A-Frame se cargue
 function assignVideoSources() {
-    // Itera sobre todos los estados de marcador
     Object.values(videoRotationState).forEach(state => {
         state.htmlVideos.forEach((videoAsset, index) => {
             const url = state.videoURLs[index];
@@ -58,23 +53,15 @@ function assignVideoSources() {
 
 
 function initializeScene() {
-    const { MindARConfig, Targets } = config; 
-    
-    // 1. Configurar A-Scene con JSON
-    const mindarAttrs = 
-        `imageTargetSrc: ${MindARConfig.imageTargetSrc}; ` +
-        `maxTrack: ${MindARConfig.maxTrack}; ` +
-        `filterMinCF: ${MindARConfig.filterMinCF}; ` +
-        `filterBeta: ${MindARConfig.filterBeta}`;
-        
-    // 🚨 ESTA LLAMADA DEBE SER LO MÁS TEMPRANA POSIBLE
-    sceneEl.setAttribute('mindar-image', mindarAttrs); 
+    // 🚨 MindARConfig YA NO SE USA AQUÍ, se configura en el HTML.
+    const { Targets } = config; 
 
+    // 1. Ya no establecemos el atributo mindar-image en la escena.
+    
     // 2. Iterar sobre CADA MARCADOR
     Targets.forEach(target => {
         const { targetIndex, videos } = target;
         
-        // Inicializar el estado de rotación para este marcador
         videoRotationState[targetIndex] = {
             currentVideoIndex: 0,
             htmlVideos: [],
@@ -93,7 +80,7 @@ function initializeScene() {
             // Elemento <video> en <a-assets>
             const videoAsset = document.createElement('video');
             videoAsset.setAttribute('id', videoData.id);
-            videoAsset.setAttribute('preload', 'none'); // Previene la carga y audio prematuros
+            videoAsset.setAttribute('preload', 'none'); 
             
             videoAsset.setAttribute('loop', 'true');
             videoAsset.setAttribute('playsinline', 'true');
@@ -107,7 +94,6 @@ function initializeScene() {
             videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
             videoEntity.setAttribute('src', `#${videoData.id}`);
             
-            // Usar dimensiones específicas del video
             videoEntity.setAttribute('width', videoData.width);
             videoEntity.setAttribute('height', videoData.height);
             
@@ -115,7 +101,6 @@ function initializeScene() {
 
             targetEntity.appendChild(videoEntity);
             
-            // Almacenar referencias y URLs
             videoRotationState[targetIndex].htmlVideos.push(videoAsset);
             videoRotationState[targetIndex].arVideos.push(videoEntity);
             videoRotationState[targetIndex].videoURLs.push(videoData.src); 
@@ -131,29 +116,24 @@ function initializeScene() {
     sceneEl.addEventListener('loaded', assignVideoSources, { once: true });
 }
 
-// === LÓGICA DE ROTACIÓN DE VIDEOS ===
+// === LÓGICA DE ROTACIÓN, TRACKING, y UI (Se mantiene igual) ===
 
 function showVideo(targetIndex, videoIndex) {
     const state = videoRotationState[targetIndex];
-    
     state.arVideos.forEach((vidEl, i) => {
         vidEl.setAttribute('visible', i === videoIndex);
     });
-
     state.currentVideoIndex = videoIndex;
 }
 
 function playCurrentVideo(targetIndex) {
     const state = videoRotationState[targetIndex];
     const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
-
     showVideo(targetIndex, state.currentVideoIndex);
 
-    // Lógica de Rotación Automática al finalizar (si tiene más de un video)
     if (state.numVideos > 1) {
             currentVidAsset.onended = () => {
             const isTracking = sceneEl.components['mindar-image'].data.trackedTargetIndex === targetIndex;
-
             if (isTracking) {
                 const nextIndex = (state.currentVideoIndex + 1) % state.numVideos;
                 currentVidAsset.currentTime = 0; 
@@ -166,11 +146,7 @@ function playCurrentVideo(targetIndex) {
     } else {
         currentVidAsset.onended = null;
     }
-
-    // Reproducir (y manejar promesas de reproducción)
-    currentVidAsset.play().catch(error => {
-        // Error común si el usuario no ha interactuado.
-    });
+    currentVidAsset.play().catch(error => {});
 }
 
 function rotateVideoManually() {
@@ -183,12 +159,9 @@ function rotateVideoManually() {
     currentVidAsset.onended = null; 
 
     const nextIndex = (state.currentVideoIndex + 1) % state.numVideos;
-    
     showVideo(activeTargetIndex, nextIndex);
     playCurrentVideo(activeTargetIndex);
 }
-
-// === LÓGICA DE TRACKING Y EVENTOS ===
 
 function setupTrackingEvents(targetIndex, targetEntity) {
     targetEntity.addEventListener("targetFound", () => {
@@ -220,8 +193,6 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         showVideo(targetIndex, 0); 
     });
 }
-
-// === LÓGICA DE UI Y FLASH ===
 
 // Detección de Flash
 sceneEl.addEventListener("arReady", () => {
@@ -255,7 +226,7 @@ sceneEl.addEventListener("arReady", () => {
     }
 });
 
-// Lógica de click del botón de flash
+// Lógica de UI
 btnFlash.addEventListener("click", function() {
     if (trackRef.track && !this.disabled) {
         const settings = trackRef.track.getSettings();
@@ -268,7 +239,6 @@ btnFlash.addEventListener("click", function() {
     }
 });
 
-// LÓGICA DE AUDIO GLOBAL
 document.querySelector("#btn-audio").addEventListener("click", function() {
     const state0 = videoRotationState[0];
     const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
@@ -288,10 +258,8 @@ document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
     controls.classList.toggle("hidden");
 });
 
-// Botón de Rotación Manual
 btnNextVideo.addEventListener("click", rotateVideoManually);
 
-// Botón de Calidad
 document.querySelector("#btn-hd").addEventListener("click", function() {
     const isSD = this.innerHTML.includes("SD");
     this.innerHTML = isSD ? "📺 CALIDAD: HD" : "📺 CALIDAD: SD";
@@ -304,6 +272,3 @@ document.querySelector("#btn-hd").addEventListener("click", function() {
 
 // --- INICIO DEL CÓDIGO (EJECUCIÓN INMEDIATA) ---
 loadConfig();
-
-
-
