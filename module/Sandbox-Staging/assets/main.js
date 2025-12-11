@@ -381,20 +381,39 @@ function initializeUI() {
     });
 
     // LÓGICA DE AUDIO GLOBAL
-    safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
-        const state0 = videoRotationState[0];
-        const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
+    
+safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
+    // Tomar el estado mute de un video si existe
+    const state0 = videoRotationState[0];
+    const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
 
-        Object.values(videoRotationState).forEach(state => {
-            state.htmlVideos.forEach(v => {
-                v.muted = !isCurrentlyMuted;
-                if (!v.muted && v.paused) v.play().catch(e => {}); 
-            });
+    // 1. Alternar Mute/Unmute para todos los VIDEOS
+    Object.values(videoRotationState).forEach(state => {
+        state.htmlVideos.forEach(v => {
+            v.muted = !isCurrentlyMuted;
+            if (!v.muted && v.paused) v.play().catch(e => {}); 
         });
-
-        this.style.background = !isCurrentlyMuted ? "var(--danger)" : "var(--accent)";
-        this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
+        
+        // 2. 🚨 Alternar Mute/Unmute para todos los MODELOS 3D con audio
+        if (state.audioEntity && state.audioEntity.components.sound) {
+            const soundComp = state.audioEntity.components.sound;
+            
+            if (isCurrentlyMuted) { // Si el estado es MUTEADO y vamos a DESMUTE (play)
+                soundComp.setVolume(1.0); // Restaura el volumen
+                if (activeTargetIndex === state.targetIndex) {
+                    soundComp.playSound(); // Intenta reproducir si está activo
+                }
+            } else { // Si el estado es NO MUTEADO y vamos a MUTE
+                soundComp.setVolume(0.0); // Baja el volumen
+            }
+            // NOTA: A-Frame no tiene una propiedad 'muted' simple para el sonido. 
+            // Usamos volumen 0.0 para mutear y 1.0 para desmutear.
+        }
     });
+
+    this.style.background = !isCurrentlyMuted ? "var(--danger)" : "var(--accent)";
+    this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
+});
 
     // LÓGICA DE TOGGLE UI
     safeQuerySelector("#btn-toggle-ui", 'Toggle UI Button').addEventListener("click", () => {
@@ -426,4 +445,5 @@ loadConfig();
 
 // 3. Inicializa los Listeners de la UI de forma segura después de que el DOM esté cargado.
 document.addEventListener('DOMContentLoaded', initializeUI);
+
 
