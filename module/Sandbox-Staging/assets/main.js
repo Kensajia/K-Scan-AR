@@ -2,7 +2,6 @@
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
-// Usamos let para reasignar en initializeUI si es necesario.
 let sceneEl;
 let controls;
 let trackRef = { track: null };
@@ -72,7 +71,6 @@ async function loadConfig() {
 function initializeScene() {
     const { Targets } = config; 
     
-    // Si no se pudo obtener el assetsContainer (ERROR FATAL en safeQuerySelector), detenemos la escena
     if (!assetsContainer.appendChild) return; 
 
     Targets.forEach(target => {
@@ -136,6 +134,16 @@ function playCurrentVideo(targetIndex) {
     const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
     const currentUrl = state.videoURLs[state.currentVideoIndex]; 
 
+    // Pausa preventiva de todos los videos para evitar conflictos
+    Object.values(videoRotationState).forEach(s => {
+        s.htmlVideos.forEach(v => {
+            if (v !== currentVidAsset) {
+                v.pause();
+                v.currentTime = 0;
+            }
+        });
+    });
+
     showVideo(targetIndex, state.currentVideoIndex);
 
     // Corregido: Usar un atributo de datos para asegurar que el SRC se asigne solo una vez (Elimina el bucle de carga).
@@ -185,6 +193,13 @@ function rotateVideoManually() {
 
 function setupTrackingEvents(targetIndex, targetEntity) {
     targetEntity.addEventListener("targetFound", () => {
+        // Pausar todos los otros videos antes de empezar la reproducción del nuevo
+        Object.keys(videoRotationState).forEach(idx => {
+            if (parseInt(idx) !== targetIndex) {
+                videoRotationState[idx].htmlVideos.forEach(v => { v.pause(); v.currentTime = 0; });
+            }
+        });
+        
         activeTargetIndex = targetIndex; 
         
         if (videoRotationState[targetIndex].numVideos > 1) {
@@ -220,7 +235,6 @@ function initializeUI() {
     // Detección de Flash
     sceneEl.addEventListener("arReady", () => {
         
-        // Hacemos el botón visible aquí, asegurando que el elemento existe
         btnFlash.style.display = "flex";
         
         const mindarComponent = sceneEl.components['mindar-image'];
@@ -252,7 +266,6 @@ function initializeUI() {
                 btnFlash.disabled = true;
             }
         } else {
-            // Este es el caso que tu dispositivo siempre activa.
             console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado.");
             btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
             btnFlash.disabled = true;
@@ -278,7 +291,6 @@ function initializeUI() {
     // LÓGICA DE AUDIO GLOBAL
     safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
         const state0 = videoRotationState[0];
-        // Asumimos que si no hay videos, está muteado por defecto
         const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
 
         Object.values(videoRotationState).forEach(state => {
@@ -318,9 +330,7 @@ function initializeUI() {
 initializeSelectors();
 
 // 2. Carga la configuración (crea los elementos de video y entidades AR)
-// Esta función debe ejecutarse inmediatamente.
 loadConfig();
 
 // 3. Inicializa los Listeners de la UI de forma segura después de que el DOM esté cargado.
-// Esto asegura que los botones tienen todos los estilos y listeners adjuntos.
 document.addEventListener('DOMContentLoaded', initializeUI);
