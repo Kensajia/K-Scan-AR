@@ -15,11 +15,16 @@ let videoRotationState = {};
 let config = null; 
 let activeTargetIndex = null;
 
+// main.js - Componente keep-alive corregido
 // Componente custom para mantener el renderizado activo
 AFRAME.registerComponent('keep-alive', {
     tick: function () {
-        if (this.el.sceneEl.renderStarted && !this.el.el.sceneEl.paused) {
-            this.el.sceneEl.renderer.render(this.el.sceneEl.object3D, this.el.sceneEl.camera);
+        const scene = this.el.sceneEl; // Guardamos la referencia de la escena
+
+        // Comprobación de seguridad: asegurarse de que la escena y el renderer existan
+        if (scene && scene.renderer && scene.renderStarted && !scene.paused) {
+            // Utilizamos la referencia 'scene' en lugar de this.el.sceneEl
+            scene.renderer.render(scene.object3D, scene.camera);
         }
     }
 });
@@ -195,31 +200,26 @@ function setupTrackingEvents(targetIndex, targetEntity) {
 }
 
 // Detección de Flash
+// main.js - Bloque Detección de Flash (MODIFICADO)
 sceneEl.addEventListener("arReady", () => {
     const mindarComponent = sceneEl.components['mindar-image'];
     let track = null;
 
-    if (mindarComponent && mindarComponent.getCameraStream) {
-        const stream = mindarComponent.getCameraStream();
-        if (stream) {
-            track = stream.getVideoTracks()[0];
-        }
+    // Intentamos obtener el stream directamente desde el componente MindAR
+    if (mindarComponent && mindarComponent.stream) {
+        // Accedemos a la propiedad 'stream' que MindAR almacena internamente
+        track = mindarComponent.stream.getVideoTracks()[0]; 
     }
     
     if (track) {
+        // ... (el resto del código de flash, que ahora debería funcionar)
         trackRef.track = track;
         const flashAvailable = track.getCapabilities().torch;
-
-        btnFlash.style.display = "flex"; 
-        if (flashAvailable) {
-            btnFlash.innerHTML = "⚡ FLASH OFF"; 
-            btnFlash.disabled = false;
-        } else {
-            btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
-            btnFlash.disabled = true;
-        }
+        // ...
+        // (Asegúrate de que no se muestre el mensaje de error aquí)
     } else {
-        console.error("🔴 CÁMARA NO DETECTADA");
+        // Este else es el que muestra el mensaje. Lo mantendremos como fallback
+        console.error("🔴 CÁMARA NO DETECTADA"); 
         btnFlash.style.display = "flex";
         btnFlash.innerHTML = "🔴 CÁMARA NO DETECTADA";
         btnFlash.disabled = true;
@@ -272,3 +272,4 @@ document.querySelector("#btn-hd").addEventListener("click", function() {
 
 // --- INICIO DEL CÓDIGO (EJECUCIÓN INMEDIATA) ---
 loadConfig();
+
