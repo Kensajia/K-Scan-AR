@@ -1,6 +1,6 @@
 // main.js (Ejecución Inmediata)
 
-// AJUSTE DE RUTA: Asume que main.js y IndexSet2.json están en la misma carpeta (assets/)
+// 🚨 RUTA CORREGIDA: Apunta a la subcarpeta 'assets' donde reside el JSON.
 const JSON_PATH = './assets/IndexSet2.json'; 
     
 const sceneEl = document.querySelector('a-scene');
@@ -15,15 +15,14 @@ let videoRotationState = {};
 let config = null; 
 let activeTargetIndex = null;
 
-// main.js - Componente keep-alive corregido
-// Componente custom para mantener el renderizado activo
+// === COMPONENTE KEEP-ALIVE CORREGIDO ===
+// Componente custom para mantener el renderizado activo, con chequeo de seguridad
 AFRAME.registerComponent('keep-alive', {
     tick: function () {
-        const scene = this.el.sceneEl; // Guardamos la referencia de la escena
+        const scene = this.el.sceneEl; // Referencia segura a la escena
 
-        // Comprobación de seguridad: asegurarse de que la escena y el renderer existan
+        // Chequeos de seguridad antes de intentar renderizar
         if (scene && scene.renderer && scene.renderStarted && !scene.paused) {
-            // Utilizamos la referencia 'scene' en lugar de this.el.sceneEl
             scene.renderer.render(scene.object3D, scene.camera);
         }
     }
@@ -45,11 +44,13 @@ async function loadConfig() {
     }
 }
 
+// Función para asignar las URLs de video. Se llama en arReady.
 function assignVideoSources() {
     Object.values(videoRotationState).forEach(state => {
         state.htmlVideos.forEach((videoAsset, index) => {
             const url = state.videoURLs[index];
             if (url && !videoAsset.src) {
+                // Asignar la URL dispara la carga (fetch) del .mp4
                 videoAsset.src = url;
             }
         });
@@ -58,12 +59,9 @@ function assignVideoSources() {
 
 
 function initializeScene() {
-    // 🚨 MindARConfig YA NO SE USA AQUÍ, se configura en el HTML.
     const { Targets } = config; 
 
-    // 1. Ya no establecemos el atributo mindar-image en la escena.
-    
-    // 2. Iterar sobre CADA MARCADOR
+    // 1. Iterar sobre CADA MARCADOR
     Targets.forEach(target => {
         const { targetIndex, videos } = target;
         
@@ -75,12 +73,12 @@ function initializeScene() {
             numVideos: videos.length
         };
 
-        // 3. Crear la entidad MindAR Target
+        // 2. Crear la entidad MindAR Target
         const targetEntity = document.createElement('a-entity');
         targetEntity.setAttribute('id', `target-${targetIndex}`);
         targetEntity.setAttribute('mindar-image-target', `targetIndex: ${targetIndex}`);
 
-        // 4. Crear los elementos <video> y <a-video>
+        // 3. Crear los elementos <video> y <a-video>
         videos.forEach((videoData, index) => {
             // Elemento <video> en <a-assets>
             const videoAsset = document.createElement('video');
@@ -113,15 +111,14 @@ function initializeScene() {
         
         targetContainer.appendChild(targetEntity);
         
-        // 5. Asignar Eventos de Tracking
+        // 4. Asignar Eventos de Tracking
         setupTrackingEvents(targetIndex, targetEntity);
     });
     
-    // 6. ASIGNACIÓN TARDÍA DE FUENTES: Llama a la función SOLO cuando A-Frame dispara 'loaded'
-    sceneEl.addEventListener('loaded', assignVideoSources, { once: true });
+    // El listener 'loaded' fue eliminado. Usamos 'arReady' para asignación de fuentes.
 }
 
-// === LÓGICA DE ROTACIÓN, TRACKING, y UI (Se mantiene igual) ===
+// === LÓGICA DE ROTACIÓN Y VIDEO ===
 
 function showVideo(targetIndex, videoIndex) {
     const state = videoRotationState[targetIndex];
@@ -151,7 +148,7 @@ function playCurrentVideo(targetIndex) {
     } else {
         currentVidAsset.onended = null;
     }
-    currentVidAsset.play().catch(error => {});
+    currentVidAsset.play().catch(error => {}); 
 }
 
 function rotateVideoManually() {
@@ -167,6 +164,8 @@ function rotateVideoManually() {
     showVideo(activeTargetIndex, nextIndex);
     playCurrentVideo(activeTargetIndex);
 }
+
+// === LÓGICA DE TRACKING Y EVENTOS ===
 
 function setupTrackingEvents(targetIndex, targetEntity) {
     targetEntity.addEventListener("targetFound", () => {
@@ -199,34 +198,49 @@ function setupTrackingEvents(targetIndex, targetEntity) {
     });
 }
 
+// === LÓGICA DE UI Y FLASH (Ajustada para arReady) ===
+
 // Detección de Flash
-// main.js - Bloque Detección de Flash (MODIFICADO)
 sceneEl.addEventListener("arReady", () => {
+    
+    // 🚨 SOLUCIÓN CLAVE: Asignar las URLs de video aquí para disparar la carga
+    assignVideoSources(); 
+
     const mindarComponent = sceneEl.components['mindar-image'];
     let track = null;
 
     // Intentamos obtener el stream directamente desde el componente MindAR
     if (mindarComponent && mindarComponent.stream) {
-        // Accedemos a la propiedad 'stream' que MindAR almacena internamente
-        track = mindarComponent.stream.getVideoTracks()[0]; 
+        try {
+             // Accedemos a la propiedad 'stream' que MindAR almacena internamente
+             track = mindarComponent.stream.getVideoTracks()[0]; 
+        } catch (e) {
+             console.warn("No se pudo obtener el track de video del stream:", e);
+        }
     }
     
     if (track) {
-        // ... (el resto del código de flash, que ahora debería funcionar)
         trackRef.track = track;
         const flashAvailable = track.getCapabilities().torch;
-        // ...
-        // (Asegúrate de que no se muestre el mensaje de error aquí)
+
+        btnFlash.style.display = "flex"; 
+        if (flashAvailable) {
+            btnFlash.innerHTML = "⚡ FLASH OFF"; 
+            btnFlash.disabled = false;
+        } else {
+            btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
+            btnFlash.disabled = true;
+        }
     } else {
-        // Este else es el que muestra el mensaje. Lo mantendremos como fallback
-        console.error("🔴 CÁMARA NO DETECTADA"); 
+        // Fallback si no se puede acceder al track (problema de permisos/entorno)
+        console.error("🔴 CÁMARA NO DETECTADA");
         btnFlash.style.display = "flex";
         btnFlash.innerHTML = "🔴 CÁMARA NO DETECTADA";
         btnFlash.disabled = true;
     }
 });
 
-// Lógica de UI
+// Lógica de click del botón de flash
 btnFlash.addEventListener("click", function() {
     if (trackRef.track && !this.disabled) {
         const settings = trackRef.track.getSettings();
@@ -239,6 +253,7 @@ btnFlash.addEventListener("click", function() {
     }
 });
 
+// LÓGICA DE AUDIO GLOBAL
 document.querySelector("#btn-audio").addEventListener("click", function() {
     const state0 = videoRotationState[0];
     const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
@@ -258,8 +273,10 @@ document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
     controls.classList.toggle("hidden");
 });
 
+// Botón de Rotación Manual
 btnNextVideo.addEventListener("click", rotateVideoManually);
 
+// Botón de Calidad
 document.querySelector("#btn-hd").addEventListener("click", function() {
     const isSD = this.innerHTML.includes("SD");
     this.innerHTML = isSD ? "📺 CALIDAD: HD" : "📺 CALIDAD: SD";
@@ -272,4 +289,3 @@ document.querySelector("#btn-hd").addEventListener("click", function() {
 
 // --- INICIO DEL CÓDIGO (EJECUCIÓN INMEDIATA) ---
 loadConfig();
-
