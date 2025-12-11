@@ -23,6 +23,7 @@
     <button id="btn-toggle-ui" class="btn">⚙️</button>
 
     <a-scene
+        
         id="scene-ar"
         keep-alive
         mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 10000" 
@@ -37,9 +38,26 @@
         <a-entity id="target-container"></a-entity>
     </a-scene>
 
+    <!-- filterMinCF
+    Control de Latencia y Sensibilidad.
+    Determina qué tan rápido el objeto reacciona a los movimientos de la cámara. Controla el equilibrio entre la precisión y la fluidez.
+    Mínimo: 0.0001 (Más sensible/rápido).
+    Máximo: 0.01 (Más lento/estable).
+    Recomendado: 0.0001 (Para un seguimiento rápido y de baja latencia).
+    -->
+
+    <!-- filterBeta
+    Control de Estabilidad y Suavizado.
+    Determina qué tan agresivamente se suavizan los temblores rápidos ("jitter") y las variaciones inesperadas de posición.
+    Mínimo: 0 (Sin suavizado).
+    Máximo: 10000 (Suavizado muy fuerte).
+    Recomendado: 10000 (Para máxima estabilidad y evitar temblores).
+    -->
+    
     <script src="assets/main.js"></script>
 
 </body>
 </html>
+
 
 
