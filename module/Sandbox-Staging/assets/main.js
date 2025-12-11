@@ -2,17 +2,47 @@
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
-const sceneEl = document.querySelector('a-scene');
-const controls = document.querySelector("#ui-controls");
-const trackRef = { track: null };
-const btnFlash = document.querySelector("#btn-flash");
-const btnNextVideo = document.querySelector("#btn-next-video");
-const targetContainer = document.querySelector("#target-container");
-const assetsContainer = document.querySelector("#assets-container");
+// Usamos let para reasignar en initializeUI si es necesario, pero mantenemos los nombres
+let sceneEl = document.querySelector('a-scene');
+let controls = document.querySelector("#ui-controls");
+let trackRef = { track: null };
+let btnFlash = document.querySelector("#btn-flash");
+let btnNextVideo = document.querySelector("#btn-next-video");
+let targetContainer = document.querySelector("#target-container");
+let assetsContainer = document.querySelector("#assets-container");
 
 let videoRotationState = {}; 
 let config = null; 
 let activeTargetIndex = null;
+
+// Función de utilidad para seleccionar elementos de forma segura
+function safeQuerySelector(selector, name) {
+    const el = document.querySelector(selector);
+    if (!el) {
+        console.error(`ERROR FATAL: El elemento UI '${name}' con selector '${selector}' no se encontró. Los botones no funcionarán.`);
+        // Devolvemos un objeto Dummy para evitar errores si se llama a addEventListener
+        return { 
+            addEventListener: () => {}, 
+            style: { display: 'none' }, 
+            innerHTML: `[FALTA ${name}]`,
+            disabled: true,
+            classList: { toggle: () => {} }
+        };
+    }
+    return el;
+}
+
+// 1. REASIGNAR SELECTORES DE FORMA SEGURA (para evitar que un error de selector mate el script)
+function initializeSelectors() {
+    sceneEl = safeQuerySelector('a-scene', 'Scene A-Frame');
+    controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
+    btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
+    // Aseguramos que btnNextVideo exista en el HTML para evitar errores
+    btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
+    targetContainer = safeQuerySelector("#target-container", 'Target Container');
+    assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
+}
+
 
 // === COMPONENTE KEEP-ALIVE CORREGIDO ===
 AFRAME.registerComponent('keep-alive', {
@@ -89,7 +119,7 @@ function initializeScene() {
     });
 }
 
-// === LÓGICA DE ROTACIÓN Y VIDEO (CORREGIDA) ===
+// === LÓGICA DE ROTACIÓN Y VIDEO ===
 
 function showVideo(targetIndex, videoIndex) {
     const state = videoRotationState[targetIndex];
@@ -106,11 +136,11 @@ function playCurrentVideo(targetIndex) {
 
     showVideo(targetIndex, state.currentVideoIndex);
 
-    // 🚨 CORRECCIÓN CLAVE: Usar un atributo de datos para asegurar que el SRC se asigne solo una vez.
+    // Corregido: Usar un atributo de datos para asegurar que el SRC se asigne solo una vez.
     if (currentVidAsset.dataset.loadedSrc !== currentUrl) {
         currentVidAsset.src = currentUrl;
         currentVidAsset.load(); 
-        currentVidAsset.dataset.loadedSrc = currentUrl; // Marcar como cargado
+        currentVidAsset.dataset.loadedSrc = currentUrl; 
         console.log(`[TARGET ${targetIndex}] Asignando SRC y cargando video: ${currentUrl}`);
     }
     
@@ -182,98 +212,110 @@ function setupTrackingEvents(targetIndex, targetEntity) {
     });
 }
 
-// === LÓGICA DE UI Y FLASH ===
-
-// Detección de Flash
-sceneEl.addEventListener("arReady", () => {
+// === INICIALIZACIÓN DE LA INTERFAZ DE USUARIO (UI) ===
+// 🚨 MOVEMOS TODA LA LÓGICA DE LISTENERS AQUÍ PARA AISLAR ERRORES DE DOM
+function initializeUI() {
     
-    // El botón debe aparecer.
-    btnFlash.style.display = "flex";
-    
-    const mindarComponent = sceneEl.components['mindar-image'];
-    let track = null;
-
-    if (mindarComponent && mindarComponent.stream) {
-        try {
-             track = mindarComponent.stream.getVideoTracks()[0]; 
-        } catch (e) {
-             console.warn("No se pudo obtener el track de video del stream:", e);
-        }
-    }
-    
-    if (track) {
-        trackRef.track = track;
-        let flashAvailable = false;
+    // Detección de Flash
+    sceneEl.addEventListener("arReady", () => {
         
-        try {
-            flashAvailable = track.getCapabilities().torch || false;
-        } catch (e) {
-            console.warn("El dispositivo no soporta la capacidad 'torch' (flash).", e);
-        }
+        btnFlash.style.display = "flex";
+        
+        const mindarComponent = sceneEl.components['mindar-image'];
+        let track = null;
 
-        if (flashAvailable) {
-            btnFlash.innerHTML = "⚡ FLASH OFF"; 
-            btnFlash.disabled = false;
+        if (mindarComponent && mindarComponent.stream) {
+            try {
+                 track = mindarComponent.stream.getVideoTracks()[0]; 
+            } catch (e) {
+                 console.warn("No se pudo obtener el track de video del stream:", e);
+            }
+        }
+        
+        if (track) {
+            trackRef.track = track;
+            let flashAvailable = false;
+            
+            try {
+                flashAvailable = track.getCapabilities().torch || false;
+            } catch (e) {
+                console.warn("El dispositivo no soporta la capacidad 'torch' (flash).", e);
+            }
+
+            if (flashAvailable) {
+                btnFlash.innerHTML = "⚡ FLASH OFF"; 
+                btnFlash.disabled = false;
+            } else {
+                btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
+                btnFlash.disabled = true;
+            }
         } else {
-            btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
+            console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado.");
+            btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
             btnFlash.disabled = true;
         }
-    } else {
-        console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado.");
-        btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
-        btnFlash.disabled = true;
-    }
-});
-
-// Lógica de click del botón de flash
-btnFlash.addEventListener("click", function() {
-    if (trackRef.track && !this.disabled) {
-        const settings = trackRef.track.getSettings();
-        const isCurrentlyOn = settings.torch || false;
-
-        trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
-            this.classList.toggle("active", !isCurrentlyOn);
-            this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
-        }).catch(error => {
-            console.error("Error al intentar aplicar la restricción del flash:", error);
-            alert("No se pudo controlar el flash en este dispositivo.");
-        });
-    }
-});
-
-// LÓGICA DE AUDIO GLOBAL
-document.querySelector("#btn-audio").addEventListener("click", function() {
-    const state0 = videoRotationState[0];
-    const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
-
-    Object.values(videoRotationState).forEach(state => {
-        state.htmlVideos.forEach(v => {
-            v.muted = !isCurrentlyMuted;
-            if (!v.muted && v.paused) v.play().catch(e => {}); 
-        });
     });
 
-    this.style.background = !isCurrentlyMuted ? "var(--danger)" : "var(--accent)";
-    this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
-});
+    // Lógica de click del botón de flash
+    btnFlash.addEventListener("click", function() {
+        if (trackRef.track && !this.disabled) {
+            const settings = trackRef.track.getSettings();
+            const isCurrentlyOn = settings.torch || false;
 
-document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
-    controls.classList.toggle("hidden");
-});
+            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
+                this.classList.toggle("active", !isCurrentlyOn);
+                this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
+            }).catch(error => {
+                console.error("Error al intentar aplicar la restricción del flash:", error);
+                alert("No se pudo controlar el flash en este dispositivo.");
+            });
+        }
+    });
 
-// Botón de Rotación Manual
-btnNextVideo.addEventListener("click", rotateVideoManually);
+    // LÓGICA DE AUDIO GLOBAL
+    safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
+        const state0 = videoRotationState[0];
+        const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
 
-// Botón de Calidad
-document.querySelector("#btn-hd").addEventListener("click", function() {
-    const isSD = this.innerHTML.includes("SD");
-    this.innerHTML = isSD ? "📺 CALIDAD: HD" : "📺 CALIDAD: SD";
-    
-    const antialiasValue = isSD ? 'true' : 'false';
-    
-    sceneEl.setAttribute('renderer', `preserveDrawingBuffer: true; antialias: ${antialiasValue}; colorManagement: true`);
-});
+        Object.values(videoRotationState).forEach(state => {
+            state.htmlVideos.forEach(v => {
+                v.muted = !isCurrentlyMuted;
+                if (!v.muted && v.paused) v.play().catch(e => {}); 
+            });
+        });
+
+        this.style.background = !isCurrentlyMuted ? "var(--danger)" : "var(--accent)";
+        this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
+    });
+
+    // LÓGICA DE TOGGLE UI
+    safeQuerySelector("#btn-toggle-ui", 'Toggle UI Button').addEventListener("click", () => {
+        controls.classList.toggle("hidden");
+    });
+
+    // Botón de Rotación Manual
+    btnNextVideo.addEventListener("click", rotateVideoManually);
+
+    // Botón de Calidad
+    safeQuerySelector("#btn-hd", 'HD Button').addEventListener("click", function() {
+        const isSD = this.innerHTML.includes("SD");
+        this.innerHTML = isSD ? "📺 CALIDAD: HD" : "📺 CALIDAD: SD";
+        
+        const antialiasValue = isSD ? 'true' : 'false';
+        
+        sceneEl.setAttribute('renderer', `preserveDrawingBuffer: true; antialias: ${antialiasValue}; colorManagement: true`);
+    });
+}
 
 
 // --- INICIO DEL CÓDIGO (EJECUCIÓN INMEDIATA) ---
+
+// 1. Inicializa los selectores de forma segura
+initializeSelectors();
+
+// 2. Carga la configuración (crea los elementos de video y entidades AR)
 loadConfig();
+
+// 3. Inicializa los Listeners de la UI DE FORMA SEGURA después de que el DOM esté completamente cargado.
+// Esto asegura que los botones tienen tiempo de renderizarse.
+window.onload = initializeUI;
