@@ -193,6 +193,9 @@ function setupTrackingEvents(targetIndex, targetEntity) {
 // Detección de Flash
 sceneEl.addEventListener("arReady", () => {
     
+    // 🚨 CAMBIO CLAVE: Hacemos el botón visible inmediatamente.
+    btnFlash.style.display = "flex";
+    
     const mindarComponent = sceneEl.components['mindar-image'];
     let track = null;
 
@@ -210,13 +213,11 @@ sceneEl.addEventListener("arReady", () => {
         let flashAvailable = false;
         
         try {
-            // Asume que si el track existe, podemos intentar obtener capacidades
             flashAvailable = track.getCapabilities().torch || false;
         } catch (e) {
             console.warn("El dispositivo no soporta la capacidad 'torch' (flash).", e);
         }
 
-        btnFlash.style.display = "flex"; 
         if (flashAvailable) {
             btnFlash.innerHTML = "⚡ FLASH OFF"; 
             btnFlash.disabled = false;
@@ -225,10 +226,9 @@ sceneEl.addEventListener("arReady", () => {
             btnFlash.disabled = true;
         }
     } else {
-        // Esto solo ocurre si MindAR falla completamente en exponer el stream.
-        console.error("🔴 CÁMARA NO DISPONIBLE (El stream de MindAR no fue detectado en arReady).");
-        btnFlash.style.display = "flex";
-        btnFlash.innerHTML = "🔴 CÁMARA NO DISPONIBLE"; 
+        // Si el track es NULL, deshabilitamos el botón y mostramos el mensaje.
+        console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado.");
+        btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
         btnFlash.disabled = true;
     }
 });
