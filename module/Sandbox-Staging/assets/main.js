@@ -1,6 +1,6 @@
 // main.js (Ejecución Inmediata)
 
-// RUTA CORREGIDA: Apunta a la subcarpeta 'assets' donde reside el JSON.
+// RUTA CORRECTA: Asume que main.js está en assets/ y el JSON está en assets/IndexSet2.json
 const JSON_PATH = './assets/IndexSet2.json'; 
     
 const sceneEl = document.querySelector('a-scene');
@@ -19,9 +19,7 @@ let activeTargetIndex = null;
 // Componente custom para mantener el renderizado activo, con chequeo de seguridad
 AFRAME.registerComponent('keep-alive', {
     tick: function () {
-        const scene = this.el.sceneEl; // Referencia segura a la escena
-
-        // Chequeos de seguridad antes de intentar renderizar
+        const scene = this.el.sceneEl; 
         if (scene && scene.renderer && scene.renderStarted && !scene.paused) {
             scene.renderer.render(scene.object3D, scene.camera);
         }
@@ -44,25 +42,16 @@ async function loadConfig() {
     }
 }
 
-// Función para asignar las URLs de video. Se llama en el evento 'loaded'.
+// NOTE: Esta función assignVideoSources ya no se llama al inicio. 
+// La lógica de asignación de SRC se movió a playCurrentVideo.
 function assignVideoSources() {
-    console.log("Asignando URLs de video a elementos <video>...");
-    Object.values(videoRotationState).forEach(state => {
-        state.htmlVideos.forEach((videoAsset, index) => {
-            const url = state.videoURLs[index];
-            if (url && !videoAsset.src) {
-                // Asignar la URL dispara la carga (fetch) del .mp4
-                videoAsset.src = url;
-            }
-        });
-    });
+    console.warn("La función assignVideoSources() ya no es necesaria en esta versión.");
 }
 
 
 function initializeScene() {
     const { Targets } = config; 
 
-    // 1. Iterar sobre CADA MARCADOR
     Targets.forEach(target => {
         const { targetIndex, videos } = target;
         
@@ -74,14 +63,12 @@ function initializeScene() {
             numVideos: videos.length
         };
 
-        // 2. Crear la entidad MindAR Target
         const targetEntity = document.createElement('a-entity');
         targetEntity.setAttribute('id', `target-${targetIndex}`);
         targetEntity.setAttribute('mindar-image-target', `targetIndex: ${targetIndex}`);
 
-        // 3. Crear los elementos <video> y <a-video>
         videos.forEach((videoData, index) => {
-            // Elemento <video> en <a-assets>
+            // Elemento <video> en <a-assets> - Se deja el SRC vacío.
             const videoAsset = document.createElement('video');
             videoAsset.setAttribute('id', videoData.id);
             videoAsset.setAttribute('preload', 'none'); 
@@ -112,14 +99,10 @@ function initializeScene() {
         
         targetContainer.appendChild(targetEntity);
         
-        // 4. Asignar Eventos de Tracking
         setupTrackingEvents(targetIndex, targetEntity);
     });
     
-    // 🚨 Corrección de Timing: Asignamos las URLs cuando A-Frame confirma que los assets están listos.
-    sceneEl.addEventListener('loaded', () => {
-        assignVideoSources();
-    }, { once: true });
+    // Eliminamos todos los listeners 'loaded' o 'arReady' para asignación de video.
 }
 
 // === LÓGICA DE ROTACIÓN Y VIDEO ===
@@ -135,8 +118,17 @@ function showVideo(targetIndex, videoIndex) {
 function playCurrentVideo(targetIndex) {
     const state = videoRotationState[targetIndex];
     const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
+    const currentUrl = state.videoURLs[state.currentVideoIndex]; // URL del video actual
+
     showVideo(targetIndex, state.currentVideoIndex);
 
+    // 🚨 SOLUCIÓN CLAVE: Asignar el SRC y forzar la carga justo antes de reproducir
+    if (currentVidAsset.src !== currentUrl) {
+        currentVidAsset.src = currentUrl;
+        currentVidAsset.load(); // Forzar al navegador a iniciar el fetch
+        console.log(`[TARGET ${targetIndex}] Iniciando carga de video: ${currentUrl}`);
+    }
+    
     if (state.numVideos > 1) {
             currentVidAsset.onended = () => {
             const isTracking = sceneEl.components['mindar-image'].data.trackedTargetIndex === targetIndex;
@@ -152,9 +144,9 @@ function playCurrentVideo(targetIndex) {
     } else {
         currentVidAsset.onended = null;
     }
-    // Intentar reproducir. (Debe ser en respuesta a una interacción del usuario)
+    
     currentVidAsset.play().catch(error => {
-        console.warn("Fallo al intentar reproducir video. Generalmente requiere interacción de usuario.", error);
+        console.warn("Fallo al intentar reproducir video. Causa común: Autoplay bloqueado.", error);
     }); 
 }
 
@@ -205,20 +197,18 @@ function setupTrackingEvents(targetIndex, targetEntity) {
     });
 }
 
-// === LÓGICA DE UI Y FLASH (Ajustada con setTimeout) ===
+// === LÓGICA DE UI Y FLASH ===
 
 // Detección de Flash
 sceneEl.addEventListener("arReady", () => {
     
-    // 🚨 SOLUCIÓN FINAL DE TIMING PARA EL TRACK DE LA CÁMARA
+    // 🚨 SOLUCIÓN DE TIMING: Espera 100ms para asegurar la asignación del stream
     setTimeout(() => {
         const mindarComponent = sceneEl.components['mindar-image'];
         let track = null;
 
-        // Intentamos obtener el stream directamente desde el componente MindAR
-        if (mindarComponent && mindarComponent.stream) {
+        if (mindarComponent && mindarComponent.el.components['mindar-image'] && mindarComponent.stream) {
             try {
-                 // Accedemos a la propiedad 'stream' que MindAR almacena internamente
                  track = mindarComponent.stream.getVideoTracks()[0]; 
             } catch (e) {
                  console.warn("No se pudo obtener el track de video del stream:", e);
@@ -238,13 +228,12 @@ sceneEl.addEventListener("arReady", () => {
                 btnFlash.disabled = true;
             }
         } else {
-            // Fallback si no se puede acceder al track 
             console.error("🔴 CÁMARA NO DETECTADA (Fallo asíncrono)");
             btnFlash.style.display = "flex";
             btnFlash.innerHTML = "🔴 CÁMARA NO DETECTADA";
             btnFlash.disabled = true;
         }
-    }, 1); // Espera 1ms para que el stream se asigne completamente.
+    }, 100); 
 });
 
 // Lógica de click del botón de flash
