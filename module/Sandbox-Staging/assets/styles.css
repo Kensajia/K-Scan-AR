@@ -1,287 +1,83 @@
-// main.js (Ejecución Inmediata)
+/* styles.css */
 
-// RUTA CORRECTA: Asume que main.js está en assets/ y el JSON está en assets/IndexSet2.json
-const JSON_PATH = './assets/IndexSet2.json'; 
-    
-const sceneEl = document.querySelector('a-scene');
-const controls = document.querySelector("#ui-controls");
-const trackRef = { track: null };
-const btnFlash = document.querySelector("#btn-flash");
-const btnNextVideo = document.querySelector("#btn-next-video");
-const targetContainer = document.querySelector("#target-container");
-const assetsContainer = document.querySelector("#assets-container");
-
-let videoRotationState = {}; 
-let config = null; 
-let activeTargetIndex = null;
-
-// === COMPONENTE KEEP-ALIVE CORREGIDO ===
-// Componente custom para mantener el renderizado activo, con chequeo de seguridad
-AFRAME.registerComponent('keep-alive', {
-    tick: function () {
-        const scene = this.el.sceneEl; 
-        if (scene && scene.renderer && scene.renderStarted && !scene.paused) {
-            scene.renderer.render(scene.object3D, scene.camera);
-        }
-    }
-});
-
-// === FUNCIONES DE INICIALIZACIÓN Y CARGA ===
-
-async function loadConfig() {
-    try {
-        const response = await fetch(JSON_PATH);
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-        config = await response.json();
-        initializeScene();
-    } catch (error) {
-        console.error("Error al cargar la configuración JSON. Revisada la ruta y sintaxis.", error);
-        alert("No se pudo cargar la configuración de videos. Revisa la ruta JSON y su contenido.");
-    }
+:root { 
+    --accent: #4CAF50; /* Verde */
+    --danger: #f44336; /* Rojo */
+    --warn: #FFC107; /* Amarillo */
+}
+body { 
+    font-family: sans-serif; 
+    margin: 0; 
+    overflow: hidden; 
 }
 
-function initializeScene() {
-    const { Targets } = config; 
-
-    Targets.forEach(target => {
-        const { targetIndex, videos } = target;
-        
-        videoRotationState[targetIndex] = {
-            currentVideoIndex: 0,
-            htmlVideos: [],
-            arVideos: [],
-            videoURLs: [], 
-            numVideos: videos.length
-        };
-
-        const targetEntity = document.createElement('a-entity');
-        targetEntity.setAttribute('id', `target-${targetIndex}`);
-        targetEntity.setAttribute('mindar-image-target', `targetIndex: ${targetIndex}`);
-
-        videos.forEach((videoData, index) => {
-            // Elemento <video> en <a-assets> - Se deja el SRC vacío.
-            const videoAsset = document.createElement('video');
-            videoAsset.setAttribute('id', videoData.id);
-            videoAsset.setAttribute('preload', 'none'); 
-            
-            videoAsset.setAttribute('loop', 'true');
-            videoAsset.setAttribute('playsinline', 'true');
-            videoAsset.setAttribute('webkit-playsinline', 'true');
-            videoAsset.setAttribute('muted', 'muted'); 
-            videoAsset.setAttribute('crossorigin', 'anonymous');
-            assetsContainer.appendChild(videoAsset);
-            
-            // Elemento <a-video> (entidad AR)
-            const videoEntity = document.createElement('a-video');
-            videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
-            videoEntity.setAttribute('src', `#${videoData.id}`);
-            
-            videoEntity.setAttribute('width', videoData.width);
-            videoEntity.setAttribute('height', videoData.height);
-            
-            videoEntity.setAttribute('visible', index === 0); 
-
-            targetEntity.appendChild(videoEntity);
-            
-            videoRotationState[targetIndex].htmlVideos.push(videoAsset);
-            videoRotationState[targetIndex].arVideos.push(videoEntity);
-            videoRotationState[targetIndex].videoURLs.push(videoData.src); 
-        });
-        
-        targetContainer.appendChild(targetEntity);
-        
-        setupTrackingEvents(targetIndex, targetEntity);
-    });
+/* Panel superior */
+#ui-controls {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
 }
 
-// === LÓGICA DE ROTACIÓN Y VIDEO ===
-
-function showVideo(targetIndex, videoIndex) {
-    const state = videoRotationState[targetIndex];
-    state.arVideos.forEach((vidEl, i) => {
-        vidEl.setAttribute('visible', i === videoIndex);
-    });
-    state.currentVideoIndex = videoIndex;
+.btn {
+    padding: 10px 18px;
+    border-radius: 50px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    /* Transición simple para estados */
+    transition: background 0.2s, opacity 0.3s;
 }
 
-function playCurrentVideo(targetIndex) {
-    const state = videoRotationState[targetIndex];
-    const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
-    const currentUrl = state.videoURLs[state.currentVideoIndex]; 
-
-    showVideo(targetIndex, state.currentVideoIndex);
-
-    // SOLUCIÓN CLAVE: Asignar el SRC y forzar la carga justo antes de reproducir
-    if (currentVidAsset.src !== currentUrl) {
-        currentVidAsset.src = currentUrl;
-        currentVidAsset.load(); // Forzar al navegador a iniciar el fetch
-        console.log(`[TARGET ${targetIndex}] Iniciando carga de video: ${currentUrl}`);
-    }
-    
-    if (state.numVideos > 1) {
-            currentVidAsset.onended = () => {
-            const isTracking = sceneEl.components['mindar-image'].data.trackedTargetIndex === targetIndex;
-            if (isTracking) {
-                const nextIndex = (state.currentVideoIndex + 1) % state.numVideos;
-                currentVidAsset.currentTime = 0; 
-                showVideo(targetIndex, nextIndex);
-                playCurrentVideo(targetIndex);
-            } else {
-                currentVidAsset.onended = null;
-            }
-        };
-    } else {
-        currentVidAsset.onended = null;
-    }
-    
-    currentVidAsset.play().catch(error => {
-        console.warn("Fallo al intentar reproducir video. Causa común: Autoplay bloqueado.", error);
-    }); 
+/* Estado de los botones */
+#btn-flash.active { background: var(--warn); color: black; }
+#btn-flash:disabled,
+#btn-next-video:disabled,
+#btn-audio:disabled { 
+    background: gray !important; 
+    cursor: not-allowed; 
 }
 
-function rotateVideoManually() {
-    const state = videoRotationState[activeTargetIndex];
-    if (activeTargetIndex === null || state.numVideos <= 1) return;
-    
-    const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
-    currentVidAsset.pause();
-    currentVidAsset.currentTime = 0;
-    currentVidAsset.onended = null; 
-
-    const nextIndex = (state.currentVideoIndex + 1) % state.numVideos;
-    showVideo(activeTargetIndex, nextIndex);
-    playCurrentVideo(activeTargetIndex);
+/* Botón de control INFERIOR */
+#btn-toggle-ui {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 3000 !important;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    color: white;
 }
 
-// === LÓGICA DE TRACKING Y EVENTOS ===
-
-function setupTrackingEvents(targetIndex, targetEntity) {
-    targetEntity.addEventListener("targetFound", () => {
-        activeTargetIndex = targetIndex; 
-        
-        if (videoRotationState[targetIndex].numVideos > 1) {
-            btnNextVideo.style.display = 'flex';
-        } else {
-            btnNextVideo.style.display = 'none';
-        }
-        
-        playCurrentVideo(targetIndex);
-    });
-
-    targetEntity.addEventListener("targetLost", () => {
-        if (activeTargetIndex === targetIndex) {
-            activeTargetIndex = null;
-            btnNextVideo.style.display = 'none';
-        }
-        
-        const state = videoRotationState[targetIndex];
-        state.htmlVideos.forEach(vid => {
-            vid.pause();
-            vid.currentTime = 0;
-            vid.onended = null; 
-        });
-        
-        state.arVideos.forEach(el => el.setAttribute('visible', false));
-        showVideo(targetIndex, 0); 
-    });
+.hidden { 
+    opacity: 0; 
+    transform: translateY(-20px); 
+    pointer-events: none; 
 }
 
-// === LÓGICA DE UI Y FLASH (FINAL Y ROBUSTA) ===
-
-// Detección de Flash
-sceneEl.addEventListener("arReady", () => {
-    
-    // 🚨 CAMBIO CLAVE: Hacemos el botón visible inmediatamente.
-    btnFlash.style.display = "flex";
-    
-    const mindarComponent = sceneEl.components['mindar-image'];
-    let track = null;
-
-    if (mindarComponent && mindarComponent.stream) {
-        try {
-             // Acceso directo al stream de MindAR
-             track = mindarComponent.stream.getVideoTracks()[0]; 
-        } catch (e) {
-             console.warn("No se pudo obtener el track de video del stream:", e);
-        }
-    }
-    
-    if (track) {
-        trackRef.track = track;
-        let flashAvailable = false;
-        
-        try {
-            flashAvailable = track.getCapabilities().torch || false;
-        } catch (e) {
-            console.warn("El dispositivo no soporta la capacidad 'torch' (flash).", e);
-        }
-
-        if (flashAvailable) {
-            btnFlash.innerHTML = "⚡ FLASH OFF"; 
-            btnFlash.disabled = false;
-        } else {
-            btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
-            btnFlash.disabled = true;
-        }
-    } else {
-        // Si el track es NULL, deshabilitamos el botón y mostramos el mensaje.
-        console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado.");
-        btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
-        btnFlash.disabled = true;
-    }
-});
-
-// Lógica de click del botón de flash
-btnFlash.addEventListener("click", function() {
-    if (trackRef.track && !this.disabled) {
-        const settings = trackRef.track.getSettings();
-        const isCurrentlyOn = settings.torch || false;
-
-        trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
-            this.classList.toggle("active", !isCurrentlyOn);
-            this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
-        }).catch(error => {
-            console.error("Error al intentar aplicar la restricción del flash:", error);
-            alert("No se pudo controlar el flash en este dispositivo.");
-        });
-    }
-});
-
-// LÓGICA DE AUDIO GLOBAL
-document.querySelector("#btn-audio").addEventListener("click", function() {
-    const state0 = videoRotationState[0];
-    const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
-
-    Object.values(videoRotationState).forEach(state => {
-        state.htmlVideos.forEach(v => {
-            v.muted = !isCurrentlyMuted;
-            if (!v.muted && v.paused) v.play().catch(e => {}); 
-        });
-    });
-
-    this.style.background = !isCurrentlyMuted ? "var(--danger)" : "var(--accent)";
-    this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
-});
-
-document.querySelector("#btn-toggle-ui").addEventListener("click", () => {
-    controls.classList.toggle("hidden");
-});
-
-// Botón de Rotación Manual
-btnNextVideo.addEventListener("click", rotateVideoManually);
-
-// Botón de Calidad
-document.querySelector("#btn-hd").addEventListener("click", function() {
-    const isSD = this.innerHTML.includes("SD");
-    this.innerHTML = isSD ? "📺 CALIDAD: HD" : "📺 CALIDAD: SD";
-    
-    const antialiasValue = isSD ? 'true' : 'false';
-    
-    sceneEl.setAttribute('renderer', `preserveDrawingBuffer: true; antialias: ${antialiasValue}; colorManagement: true`);
-});
-
-
-// --- INICIO DEL CÓDIGO (EJECUCIÓN INMEDIATA) ---
-loadConfig();
+/* ELIMINACIÓN TOTAL DEL BOTÓN VR */
+.a-enter-vr { 
+    display: none !important; 
+    visibility: hidden !important; 
+    pointer-events: none !important; 
+}
