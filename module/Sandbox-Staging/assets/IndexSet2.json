@@ -1,6 +1,6 @@
 {
     "MindARConfig": {
-        "imageTargetSrc": "assets/targets.mind",
+        "imageTargetSrc": "./assets/targets.mind",
         "maxTrack": 3,
         "filterMinCF": 0.0001,
         "filterBeta": 0.001
@@ -59,3 +59,4 @@
         }
     ]
 }
+
