@@ -68,7 +68,7 @@ async function loadConfig() {
     }
 }
 
-// LÓGICA DE CREACIÓN DE ENTIDADES (SOPORTE 3D, CHROMA Y VIDEO)
+// LÓGICA DE CREACIÓN DE ENTIDADES (SOPORTE 3D, 3D CON AUDIO, VIDEO CHROMA Y VIDEO ESTANDAR)
 function initializeScene() {
     const { Targets } = config; 
     
@@ -82,8 +82,11 @@ function initializeScene() {
             htmlVideos: [],
             arEntities: [], 
             videoURLs: [], 
-            numVideos: 0, // Cuenta solo contenido de video/croma
-            hasVideoContent: false
+            numVideos: 0, 
+            hasVideoContent: false,
+            // 🚨 Nuevo: Almacenar la referencia al audio 3D si existe
+            audioAsset: null, 
+            audioEntity: null
         };
 
         const targetEntity = document.createElement('a-entity');
@@ -107,26 +110,37 @@ function initializeScene() {
                 modelEntity.setAttribute('id', `ar-model-${targetIndex}-${index}`);
                 modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
                 
-                // Aplicar propiedades 3D
                 modelEntity.setAttribute('position', contentData.position || '0 0 0');
                 modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
                 modelEntity.setAttribute('rotation', contentData.rotation || '0 0 0');
                 modelEntity.setAttribute('visible', index === 0); 
                 
-                // 🚨 SOPORTE PARA ANIMACIÓN 3D
                 if (contentData.animated) {
-                    // Usamos animation-mixer para reproducir animaciones GLTF/GLB
                     modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
+                }
+
+                // 🚨 SOPORTE PARA AUDIO 3D
+                if (contentData.audioSrc) {
+                    const audioId = `${contentData.id}_audio`;
+                    
+                    const audioAsset = document.createElement('a-asset-item');
+                    audioAsset.setAttribute('id', audioId);
+                    audioAsset.setAttribute('src', contentData.audioSrc);
+                    assetsContainer.appendChild(audioAsset);
+                    
+                    // Adjuntar el componente sound al modelo 3D
+                    modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 1.0; positional: true;`);
+                    
+                    // Guardar referencias para control en los eventos de tracking
+                    videoRotationState[targetIndex].audioEntity = modelEntity;
                 }
 
                 targetEntity.appendChild(modelEntity);
                 videoRotationState[targetIndex].arEntities.push(modelEntity);
 
-
             } else {
                 
                 // === LÓGICA DE VIDEOS (Estándar o Chroma) ===
-                
                 videoCount++;
                 videoRotationState[targetIndex].hasVideoContent = true;
 
@@ -143,9 +157,7 @@ function initializeScene() {
                 const videoEntity = document.createElement('a-video');
                 videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
                 
-                // 🚨 LÓGICA DE CHROMA KEY AGREGADA
                 if (contentData.chromakey) {
-                    // Si chromakey es true, usamos el shader, asumiendo el color verde por defecto (#00ff00)
                     videoEntity.setAttribute('material', 'shader: chromakey');
                     videoEntity.setAttribute('chromakey', 'color: #00ff00');
                 } else {
@@ -164,7 +176,6 @@ function initializeScene() {
             }
         });
         
-        // Contar videos reales solo si hay videos
         videoRotationState[targetIndex].numVideos = videoCount;
         
         targetContainer.appendChild(targetEntity);
@@ -253,24 +264,35 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         Object.keys(videoRotationState).forEach(idx => {
             if (parseInt(idx) !== targetIndex) {
                 videoRotationState[idx].htmlVideos.forEach(v => { v.pause(); v.currentTime = 0; });
+                
+                // 🚨 Detener audio de otros modelos 3D
+                const otherAudioEntity = videoRotationState[idx].audioEntity;
+                if (otherAudioEntity && otherAudioEntity.components.sound) {
+                    otherAudioEntity.components.sound.stopSound();
+                }
             }
         });
         
         activeTargetIndex = targetIndex; 
         const state = videoRotationState[targetIndex];
 
-        // Mostrar botón SIGUIENTE solo si hay MÁS de un video
+        // Mostrar botón SIGUIENTE solo si hay MÁS de un video (no aplica a 3D)
         if (state.hasVideoContent && state.numVideos > 1) {
             btnNextVideo.style.display = 'flex';
         } else {
             btnNextVideo.style.display = 'none';
         }
         
-        // Si hay videos, reproducir. Si es 3D, solo hacerlo visible.
+        // Reproducir video o hacer visible 3D
         if (state.hasVideoContent) {
             playCurrentVideo(targetIndex);
         } else {
             showVideo(targetIndex, 0); // Mostrar el primer elemento (modelo 3D)
+        }
+        
+        // 🚨 Iniciar audio si es un modelo 3D con audio (sin importar si es el elemento 0)
+        if (state.audioEntity && state.audioEntity.components.sound) {
+             state.audioEntity.components.sound.playSound();
         }
     });
 
@@ -282,12 +304,17 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         
         const state = videoRotationState[targetIndex];
         
-        // Pausar y resetear videos (solo si existen)
+        // Pausar y resetear videos
         state.htmlVideos.forEach(vid => {
             vid.pause();
             vid.currentTime = 0;
             vid.onended = null; 
         });
+        
+        // 🚨 Detener audio del modelo 3D
+        if (state.audioEntity && state.audioEntity.components.sound) {
+             state.audioEntity.components.sound.stopSound();
+        }
         
         // Ocultar todas las entidades (videos o 3D)
         state.arEntities.forEach(el => el.setAttribute('visible', false));
@@ -399,3 +426,4 @@ loadConfig();
 
 // 3. Inicializa los Listeners de la UI de forma segura después de que el DOM esté cargado.
 document.addEventListener('DOMContentLoaded', initializeUI);
+
