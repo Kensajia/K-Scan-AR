@@ -1,4 +1,4 @@
-// main.js (Ejecución Inmediata)
+// main.js
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -134,7 +134,7 @@ function playCurrentVideo(targetIndex) {
     const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
     const currentUrl = state.videoURLs[state.currentVideoIndex]; 
 
-    // Pausa preventiva de todos los videos para evitar conflictos
+    // Pausa preventiva de todos los videos para evitar conflictos al cambiar de target
     Object.values(videoRotationState).forEach(s => {
         s.htmlVideos.forEach(v => {
             if (v !== currentVidAsset) {
@@ -235,11 +235,13 @@ function initializeUI() {
     // Detección de Flash
     sceneEl.addEventListener("arReady", () => {
         
-        btnFlash.style.display = "flex";
+        // El botón de Flash NO se hace visible automáticamente.
         
         const mindarComponent = sceneEl.components['mindar-image'];
         let track = null;
+        let flashAvailable = false;
 
+        // Intentar obtener el track
         if (mindarComponent && mindarComponent.stream) {
             try {
                  track = mindarComponent.stream.getVideoTracks()[0]; 
@@ -250,23 +252,27 @@ function initializeUI() {
         
         if (track) {
             trackRef.track = track;
-            let flashAvailable = false;
             
             try {
+                // Verificar si el dispositivo soporta 'torch'
                 flashAvailable = track.getCapabilities().torch || false;
             } catch (e) {
                 console.warn("El dispositivo no soporta la capacidad 'torch' (flash).", e);
             }
 
             if (flashAvailable) {
+                // 🟢 Compatible: Hacemos el botón visible y habilitado.
+                btnFlash.style.display = "flex"; 
                 btnFlash.innerHTML = "⚡ FLASH OFF"; 
                 btnFlash.disabled = false;
             } else {
+                // 🔴 No Soportado: Se mantiene invisible (display: none en HTML) y deshabilitado.
                 btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
                 btnFlash.disabled = true;
             }
         } else {
-            console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado.");
+            // ⚠️ No se detectó el track: Se mantiene invisible (display: none en HTML) y deshabilitado.
+            console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado e invisible.");
             btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
             btnFlash.disabled = true;
         }
