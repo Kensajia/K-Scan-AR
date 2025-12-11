@@ -9,7 +9,7 @@
             "videos": [
                 {
                     
-                    "id": "video_1_estandar",
+                    "id": "Elem-0-0",
                     "src": "https://files.catbox.moe/mq8k1z.mp4",
                     "width": 1.5,
                     "height": 1.0
@@ -17,7 +17,7 @@
                 },
                 {
                     
-                    "id": "video_2_croma",
+                    "id": "Elem-0-1",
                     "src": "https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4",
                     "width": 1.2,
                     "height": 0.9,
@@ -25,7 +25,7 @@
                 },
                 {
                     
-                    "id": "modelo_3_estatico",
+                    "id": "Elem-0-2",
                     "src": "./assets/Logo.stl",
                     "type": "3d", 
                     "position": "0 0 0.1", 
@@ -39,7 +39,7 @@
             "videos": [
                 {
                     
-                    "id": "modelo_1_animado",
+                    "id": "Elem-1-0",
                     "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/bear/scene.gltf",
                     "type": "3d",
                     "position": "0 0 0.1", 
@@ -49,7 +49,7 @@
                 },
                 {
                     
-                    "id": "video_2_estandar",
+                    "id": "Elem-1-1",
                     "src": "https://cdn.pixabay.com/video/2025/10/05/308073_large.mp4",
                     "width": 1.0,
                     "height": 0.7
@@ -61,7 +61,7 @@
             "videos": [
                 {
                     
-                    "id": "modelo_1_con_audio",
+                    "id": "Elem-2-0",
                     "src": "./assets/scene.gltf",
                     "type": "3d",
                     "position": "0 0 0.1", 
@@ -75,5 +75,6 @@
         }
     ]
 }
+
 
 
