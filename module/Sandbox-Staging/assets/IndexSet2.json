@@ -26,10 +26,10 @@
                 {
                     
                     "id": "modelo_3_estatico",
-                    "src": "./assets/modelos/T0_Casa.glb",
+                    "src": "./assets/Logo.stl",
                     "type": "3d", 
                     "position": "0 0 0.1", 
-                    "scale": "0.5 0.5 0.5",
+                    "scale": "0.25 0.25 0.25",
                     "rotation": "0 45 0"
                 }
             ]
@@ -62,17 +62,18 @@
                 {
                     
                     "id": "modelo_1_con_audio",
-                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf",
+                    "src": "./assets/scene.gltf",
                     "type": "3d",
                     "position": "0 0 0.1", 
-                    "scale": "0.3 0.3 0.3",
+                    "scale": "0.25 0.25 0.25",
                     "rotation": "0 0 0",
                     "animated": true,
                     "animationMixer": "clip: action; timeScale: 1.0",
-                    "audioSrc": "./assets/audio/alarma.mp3"
+                    "audioSrc": "./assets/AA.mp3"
                 }
             ]
         }
     ]
 }
+
 
