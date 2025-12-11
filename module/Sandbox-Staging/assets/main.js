@@ -64,6 +64,17 @@ document.addEventListener("DOMContentLoaded", function() {
             `filterBeta: ${MindARConfig.filterBeta}`;
         sceneEl.setAttribute('mindar-image', mindarAttrs);
 
+// *** CÓDIGO AÑADIDO: Forzar la inicialización/actualización de A-Frame ***
+    // Esto asegura que A-Frame se dé cuenta de que el atributo acaba de ser establecido 
+    // y debe inicializar el componente MindAR, que a su vez dispara la carga del .mind.
+    if (sceneEl.components['mindar-image']) {
+        sceneEl.components['mindar-image'].update(mindarAttrs);
+    } else {
+         // Si el componente aún no existe, forzamos el re-render de la escena.
+         sceneEl.sceneEl.isMobile = true; // Truco común para forzar la inicialización de la cámara
+    }
+    // *************************************************************************
+        
         // 2. Iterar sobre CADA MARCADOR
         Targets.forEach(target => {
             const { targetIndex, videos } = target;
@@ -303,5 +314,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // --- INICIO DEL CÓDIGO ---
     loadConfig();
 });
+
 
 
