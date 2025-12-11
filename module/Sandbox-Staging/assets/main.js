@@ -2,14 +2,14 @@
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
-// Usamos let para reasignar en initializeUI si es necesario, pero mantenemos los nombres
-let sceneEl = document.querySelector('a-scene');
-let controls = document.querySelector("#ui-controls");
+// Usamos let para reasignar en initializeUI si es necesario.
+let sceneEl;
+let controls;
 let trackRef = { track: null };
-let btnFlash = document.querySelector("#btn-flash");
-let btnNextVideo = document.querySelector("#btn-next-video");
-let targetContainer = document.querySelector("#target-container");
-let assetsContainer = document.querySelector("#assets-container");
+let btnFlash;
+let btnNextVideo;
+let targetContainer;
+let assetsContainer;
 
 let videoRotationState = {}; 
 let config = null; 
@@ -19,8 +19,8 @@ let activeTargetIndex = null;
 function safeQuerySelector(selector, name) {
     const el = document.querySelector(selector);
     if (!el) {
-        console.error(`ERROR FATAL: El elemento UI '${name}' con selector '${selector}' no se encontró. Los botones no funcionarán.`);
-        // Devolvemos un objeto Dummy para evitar errores si se llama a addEventListener
+        console.error(`ERROR FATAL: El elemento UI '${name}' con selector '${selector}' no se encontró.`);
+        // Devolvemos un objeto Dummy para evitar errores en addEventListener
         return { 
             addEventListener: () => {}, 
             style: { display: 'none' }, 
@@ -32,19 +32,18 @@ function safeQuerySelector(selector, name) {
     return el;
 }
 
-// 1. REASIGNAR SELECTORES DE FORMA SEGURA (para evitar que un error de selector mate el script)
+// 1. Inicializa los selectores de forma segura
 function initializeSelectors() {
-    sceneEl = safeQuerySelector('a-scene', 'Scene A-Frame');
+    sceneEl = safeQuerySelector('#scene-ar', 'Scene A-Frame');
     controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
     btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
-    // Aseguramos que btnNextVideo exista en el HTML para evitar errores
     btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
     targetContainer = safeQuerySelector("#target-container", 'Target Container');
     assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
 }
 
 
-// === COMPONENTE KEEP-ALIVE CORREGIDO ===
+// === COMPONENTE KEEP-ALIVE ===
 AFRAME.registerComponent('keep-alive', {
     tick: function () {
         const scene = this.el.sceneEl; 
@@ -72,6 +71,9 @@ async function loadConfig() {
 
 function initializeScene() {
     const { Targets } = config; 
+    
+    // Si no se pudo obtener el assetsContainer (ERROR FATAL en safeQuerySelector), detenemos la escena
+    if (!assetsContainer.appendChild) return; 
 
     Targets.forEach(target => {
         const { targetIndex, videos } = target;
@@ -136,7 +138,7 @@ function playCurrentVideo(targetIndex) {
 
     showVideo(targetIndex, state.currentVideoIndex);
 
-    // Corregido: Usar un atributo de datos para asegurar que el SRC se asigne solo una vez.
+    // Corregido: Usar un atributo de datos para asegurar que el SRC se asigne solo una vez (Elimina el bucle de carga).
     if (currentVidAsset.dataset.loadedSrc !== currentUrl) {
         currentVidAsset.src = currentUrl;
         currentVidAsset.load(); 
@@ -213,12 +215,12 @@ function setupTrackingEvents(targetIndex, targetEntity) {
 }
 
 // === INICIALIZACIÓN DE LA INTERFAZ DE USUARIO (UI) ===
-// 🚨 MOVEMOS TODA LA LÓGICA DE LISTENERS AQUÍ PARA AISLAR ERRORES DE DOM
 function initializeUI() {
     
     // Detección de Flash
     sceneEl.addEventListener("arReady", () => {
         
+        // Hacemos el botón visible aquí, asegurando que el elemento existe
         btnFlash.style.display = "flex";
         
         const mindarComponent = sceneEl.components['mindar-image'];
@@ -250,6 +252,7 @@ function initializeUI() {
                 btnFlash.disabled = true;
             }
         } else {
+            // Este es el caso que tu dispositivo siempre activa.
             console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado.");
             btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
             btnFlash.disabled = true;
@@ -275,6 +278,7 @@ function initializeUI() {
     // LÓGICA DE AUDIO GLOBAL
     safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
         const state0 = videoRotationState[0];
+        // Asumimos que si no hay videos, está muteado por defecto
         const isCurrentlyMuted = state0 && state0.htmlVideos.length > 0 ? state0.htmlVideos[0].muted : true;
 
         Object.values(videoRotationState).forEach(state => {
@@ -308,14 +312,15 @@ function initializeUI() {
 }
 
 
-// --- INICIO DEL CÓDIGO (EJECUCIÓN INMEDIATA) ---
+// --- INICIO DEL CÓDIGO ---
 
 // 1. Inicializa los selectores de forma segura
 initializeSelectors();
 
 // 2. Carga la configuración (crea los elementos de video y entidades AR)
+// Esta función debe ejecutarse inmediatamente.
 loadConfig();
 
-// 3. Inicializa los Listeners de la UI DE FORMA SEGURA después de que el DOM esté completamente cargado.
-// Esto asegura que los botones tienen tiempo de renderizarse.
-window.onload = initializeUI;
+// 3. Inicializa los Listeners de la UI de forma segura después de que el DOM esté cargado.
+// Esto asegura que los botones tienen todos los estilos y listeners adjuntos.
+document.addEventListener('DOMContentLoaded', initializeUI);
