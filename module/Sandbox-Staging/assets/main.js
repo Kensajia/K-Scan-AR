@@ -1,6 +1,6 @@
 // main.js (Ejecución Inmediata)
 
-// 🚨 RUTA CORREGIDA: Apunta a la subcarpeta 'assets' donde reside el JSON.
+// RUTA CORREGIDA: Apunta a la subcarpeta 'assets' donde reside el JSON.
 const JSON_PATH = './assets/IndexSet2.json'; 
     
 const sceneEl = document.querySelector('a-scene');
@@ -44,8 +44,9 @@ async function loadConfig() {
     }
 }
 
-// Función para asignar las URLs de video. Se llama en arReady.
+// Función para asignar las URLs de video. Se llama en el evento 'loaded'.
 function assignVideoSources() {
+    console.log("Asignando URLs de video a elementos <video>...");
     Object.values(videoRotationState).forEach(state => {
         state.htmlVideos.forEach((videoAsset, index) => {
             const url = state.videoURLs[index];
@@ -115,7 +116,10 @@ function initializeScene() {
         setupTrackingEvents(targetIndex, targetEntity);
     });
     
-    // El listener 'loaded' fue eliminado. Usamos 'arReady' para asignación de fuentes.
+    // 🚨 Corrección de Timing: Asignamos las URLs cuando A-Frame confirma que los assets están listos.
+    sceneEl.addEventListener('loaded', () => {
+        assignVideoSources();
+    }, { once: true });
 }
 
 // === LÓGICA DE ROTACIÓN Y VIDEO ===
@@ -148,7 +152,10 @@ function playCurrentVideo(targetIndex) {
     } else {
         currentVidAsset.onended = null;
     }
-    currentVidAsset.play().catch(error => {}); 
+    // Intentar reproducir. (Debe ser en respuesta a una interacción del usuario)
+    currentVidAsset.play().catch(error => {
+        console.warn("Fallo al intentar reproducir video. Generalmente requiere interacción de usuario.", error);
+    }); 
 }
 
 function rotateVideoManually() {
@@ -198,46 +205,46 @@ function setupTrackingEvents(targetIndex, targetEntity) {
     });
 }
 
-// === LÓGICA DE UI Y FLASH (Ajustada para arReady) ===
+// === LÓGICA DE UI Y FLASH (Ajustada con setTimeout) ===
 
 // Detección de Flash
 sceneEl.addEventListener("arReady", () => {
     
-    // 🚨 SOLUCIÓN CLAVE: Asignar las URLs de video aquí para disparar la carga
-    assignVideoSources(); 
+    // 🚨 SOLUCIÓN FINAL DE TIMING PARA EL TRACK DE LA CÁMARA
+    setTimeout(() => {
+        const mindarComponent = sceneEl.components['mindar-image'];
+        let track = null;
 
-    const mindarComponent = sceneEl.components['mindar-image'];
-    let track = null;
-
-    // Intentamos obtener el stream directamente desde el componente MindAR
-    if (mindarComponent && mindarComponent.stream) {
-        try {
-             // Accedemos a la propiedad 'stream' que MindAR almacena internamente
-             track = mindarComponent.stream.getVideoTracks()[0]; 
-        } catch (e) {
-             console.warn("No se pudo obtener el track de video del stream:", e);
+        // Intentamos obtener el stream directamente desde el componente MindAR
+        if (mindarComponent && mindarComponent.stream) {
+            try {
+                 // Accedemos a la propiedad 'stream' que MindAR almacena internamente
+                 track = mindarComponent.stream.getVideoTracks()[0]; 
+            } catch (e) {
+                 console.warn("No se pudo obtener el track de video del stream:", e);
+            }
         }
-    }
-    
-    if (track) {
-        trackRef.track = track;
-        const flashAvailable = track.getCapabilities().torch;
+        
+        if (track) {
+            trackRef.track = track;
+            const flashAvailable = track.getCapabilities().torch;
 
-        btnFlash.style.display = "flex"; 
-        if (flashAvailable) {
-            btnFlash.innerHTML = "⚡ FLASH OFF"; 
-            btnFlash.disabled = false;
+            btnFlash.style.display = "flex"; 
+            if (flashAvailable) {
+                btnFlash.innerHTML = "⚡ FLASH OFF"; 
+                btnFlash.disabled = false;
+            } else {
+                btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
+                btnFlash.disabled = true;
+            }
         } else {
-            btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
+            // Fallback si no se puede acceder al track 
+            console.error("🔴 CÁMARA NO DETECTADA (Fallo asíncrono)");
+            btnFlash.style.display = "flex";
+            btnFlash.innerHTML = "🔴 CÁMARA NO DETECTADA";
             btnFlash.disabled = true;
         }
-    } else {
-        // Fallback si no se puede acceder al track (problema de permisos/entorno)
-        console.error("🔴 CÁMARA NO DETECTADA");
-        btnFlash.style.display = "flex";
-        btnFlash.innerHTML = "🔴 CÁMARA NO DETECTADA";
-        btnFlash.disabled = true;
-    }
+    }, 1); // Espera 1ms para que el stream se asigne completamente.
 });
 
 // Lógica de click del botón de flash
