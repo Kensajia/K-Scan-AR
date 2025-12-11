@@ -31,7 +31,8 @@ body {
     font-weight: 600;
     cursor: pointer;
     font-size: 11px;
-    background: rgba(0, 0, 0, 0.6);
+    /* 🚨 CAMBIO AQUÍ: Bajamos el valor alfa de 0.6 a 0.4 para más transparencia */
+    background: rgba(0, 0, 0, 0.4); 
     backdrop-filter: blur(8px);
     border: 1px solid rgba(255,255,255,0.2);
     display: flex;
@@ -81,3 +82,4 @@ body {
     visibility: hidden !important; 
     pointer-events: none !important; 
 }
+
