@@ -31,13 +31,13 @@
             "videos": [
                 {
                     "id": "vid-1-0",
-                    "src": "https://cdn.pixabay.com/video/2023/09/20/179267-859739097_large.mp4",
+                    "src": "https://cdn.pixabay.com/video/2025/09/24/306155_large.mp4",
                     "width": 1.0,
                     "height": 0.5
                 },
                 {
                     "id": "vid-1-1",
-                    "src": "https://cdn.pixabay.com/video/2023/08/17/174984-855734567_large.mp4",
+                    "src": "https://cdn.pixabay.com/video/2025/10/05/308073_large.mp4",
                     "width": 1.0,
                     "height": 0.6
                 }
@@ -48,7 +48,7 @@
             "videos": [
                 {
                     "id": "vid-2-0",
-                    "src": "https://cdn.pixabay.com/video/2023/04/09/156321-820875709_large.mp4",
+                    "src": "https://files.catbox.moe/mq8k1z.mp4",
                     "width": 1.0,
                     "height": 0.6
                 }
@@ -56,3 +56,4 @@
         }
     ]
 }
+
