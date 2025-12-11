@@ -8,23 +8,23 @@
             "targetIndex": 0,
             "videos": [
                 {
-                    // 1. VIDEO ESTÁNDAR
+                    
                     "id": "video_1_estandar",
-                    "src": "./assets/videos/T0_Video_1.mp4",
+                    "src": "https://files.catbox.moe/mq8k1z.mp4",
                     "width": 1.5,
                     "height": 1.0
-                    // type: video, chromakey: false (asumido por defecto)
+                    
                 },
                 {
-                    // 2. VIDEO CHROMA KEY
+                    
                     "id": "video_2_croma",
-                    "src": "./assets/videos/T0_Video_2_Croma.mp4",
+                    "src": "https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4",
                     "width": 1.2,
                     "height": 0.9,
                     "chromakey": true 
                 },
                 {
-                    // 3. MODELO 3D ESTÁTICO (NO rota, NO reproduce)
+                    
                     "id": "modelo_3_estatico",
                     "src": "./assets/modelos/T0_Casa.glb",
                     "type": "3d", 
@@ -38,9 +38,9 @@
             "targetIndex": 1,
             "videos": [
                 {
-                    // 4. MODELO 3D ANIMADO (Usa animation-mixer)
+                    
                     "id": "modelo_1_animado",
-                    "src": "./assets/modelos/T1_Robot.glb",
+                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/bear/scene.gltf",
                     "type": "3d",
                     "position": "0 0 0.1", 
                     "scale": "0.1 0.1 0.1",
@@ -48,9 +48,9 @@
                     "animationMixer": "clip: *; timeScale: 1.0" 
                 },
                 {
-                    // 5. VIDEO ESTÁNDAR (segundo en el target)
+                    
                     "id": "video_2_estandar",
-                    "src": "./assets/videos/T1_Video_2.mp4",
+                    "src": "https://cdn.pixabay.com/video/2025/10/05/308073_large.mp4",
                     "width": 1.0,
                     "height": 0.7
                 }
@@ -60,18 +60,19 @@
             "targetIndex": 2,
             "videos": [
                 {
-                    // 6. MODELO 3D CON AUDIO (Asume que el 3D es estático o animado, pero aquí se agrega audio)
+                    
                     "id": "modelo_1_con_audio",
-                    "src": "./assets/modelos/T2_Alarma.glb",
+                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf",
                     "type": "3d",
                     "position": "0 0 0.1", 
                     "scale": "0.3 0.3 0.3",
                     "rotation": "0 0 0",
                     "animated": true,
                     "animationMixer": "clip: action; timeScale: 1.0",
-                    "audioSrc": "./assets/audio/alarma.mp3" // 🚨 Fuente de audio para el 3D
+                    "audioSrc": "./assets/audio/alarma.mp3"
                 }
             ]
         }
     ]
 }
+
