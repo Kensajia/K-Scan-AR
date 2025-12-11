@@ -1,4 +1,4 @@
-// main.js
+// main.js (PLANTILLA ÚNICA: Videos Estándar, Chroma, 3D Estático/Animado)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -68,6 +68,7 @@ async function loadConfig() {
     }
 }
 
+// LÓGICA DE CREACIÓN DE ENTIDADES (SOPORTE 3D, CHROMA Y VIDEO)
 function initializeScene() {
     const { Targets } = config; 
     
@@ -79,39 +80,92 @@ function initializeScene() {
         videoRotationState[targetIndex] = {
             currentVideoIndex: 0,
             htmlVideos: [],
-            arVideos: [],
+            arEntities: [], 
             videoURLs: [], 
-            numVideos: videos.length
+            numVideos: 0, // Cuenta solo contenido de video/croma
+            hasVideoContent: false
         };
 
         const targetEntity = document.createElement('a-entity');
         targetEntity.setAttribute('id', `target-${targetIndex}`);
         targetEntity.setAttribute('mindar-image-target', `targetIndex: ${targetIndex}`);
 
-        videos.forEach((videoData, index) => {
-            const videoAsset = document.createElement('video');
-            videoAsset.setAttribute('id', videoData.id);
-            videoAsset.setAttribute('preload', 'none'); 
-            videoAsset.setAttribute('loop', 'true');
-            videoAsset.setAttribute('playsinline', 'true');
-            videoAsset.setAttribute('webkit-playsinline', 'true');
-            videoAsset.setAttribute('muted', 'muted'); 
-            videoAsset.setAttribute('crossorigin', 'anonymous');
-            assetsContainer.appendChild(videoAsset);
+        let videoCount = 0;
+        
+        videos.forEach((contentData, index) => {
             
-            const videoEntity = document.createElement('a-video');
-            videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
-            videoEntity.setAttribute('src', `#${videoData.id}`);
-            videoEntity.setAttribute('width', videoData.width);
-            videoEntity.setAttribute('height', videoData.height);
-            videoEntity.setAttribute('visible', index === 0); 
+            if (contentData.type === "3d") {
+                
+                // === LÓGICA DE MODELOS 3D (GLTF/GLB) ===
+                
+                const modelAsset = document.createElement('a-asset-item');
+                modelAsset.setAttribute('id', contentData.id);
+                modelAsset.setAttribute('src', contentData.src);
+                assetsContainer.appendChild(modelAsset);
+                
+                const modelEntity = document.createElement('a-entity');
+                modelEntity.setAttribute('id', `ar-model-${targetIndex}-${index}`);
+                modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
+                
+                // Aplicar propiedades 3D
+                modelEntity.setAttribute('position', contentData.position || '0 0 0');
+                modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
+                modelEntity.setAttribute('rotation', contentData.rotation || '0 0 0');
+                modelEntity.setAttribute('visible', index === 0); 
+                
+                // 🚨 SOPORTE PARA ANIMACIÓN 3D
+                if (contentData.animated) {
+                    // Usamos animation-mixer para reproducir animaciones GLTF/GLB
+                    modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
+                }
 
-            targetEntity.appendChild(videoEntity);
-            
-            videoRotationState[targetIndex].htmlVideos.push(videoAsset);
-            videoRotationState[targetIndex].arVideos.push(videoEntity);
-            videoRotationState[targetIndex].videoURLs.push(videoData.src); 
+                targetEntity.appendChild(modelEntity);
+                videoRotationState[targetIndex].arEntities.push(modelEntity);
+
+
+            } else {
+                
+                // === LÓGICA DE VIDEOS (Estándar o Chroma) ===
+                
+                videoCount++;
+                videoRotationState[targetIndex].hasVideoContent = true;
+
+                const videoAsset = document.createElement('video');
+                videoAsset.setAttribute('id', contentData.id);
+                videoAsset.setAttribute('preload', 'none'); 
+                videoAsset.setAttribute('loop', 'true');
+                videoAsset.setAttribute('playsinline', 'true');
+                videoAsset.setAttribute('webkit-playsinline', 'true');
+                videoAsset.setAttribute('muted', 'muted'); 
+                videoAsset.setAttribute('crossorigin', 'anonymous');
+                assetsContainer.appendChild(videoAsset);
+                
+                const videoEntity = document.createElement('a-video');
+                videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
+                
+                // 🚨 LÓGICA DE CHROMA KEY AGREGADA
+                if (contentData.chromakey) {
+                    // Si chromakey es true, usamos el shader, asumiendo el color verde por defecto (#00ff00)
+                    videoEntity.setAttribute('material', 'shader: chromakey');
+                    videoEntity.setAttribute('chromakey', 'color: #00ff00');
+                } else {
+                    videoEntity.setAttribute('src', `#${contentData.id}`);
+                }
+                
+                videoEntity.setAttribute('width', contentData.width);
+                videoEntity.setAttribute('height', contentData.height);
+                videoEntity.setAttribute('visible', index === 0); 
+
+                targetEntity.appendChild(videoEntity);
+                
+                videoRotationState[targetIndex].htmlVideos.push(videoAsset);
+                videoRotationState[targetIndex].arEntities.push(videoEntity);
+                videoRotationState[targetIndex].videoURLs.push(contentData.src); 
+            }
         });
+        
+        // Contar videos reales solo si hay videos
+        videoRotationState[targetIndex].numVideos = videoCount;
         
         targetContainer.appendChild(targetEntity);
         
@@ -121,12 +175,13 @@ function initializeScene() {
 
 // === LÓGICA DE ROTACIÓN Y VIDEO ===
 
-function showVideo(targetIndex, videoIndex) {
+function showVideo(targetIndex, contentIndex) {
     const state = videoRotationState[targetIndex];
-    state.arVideos.forEach((vidEl, i) => {
-        vidEl.setAttribute('visible', i === videoIndex);
+    // Aplica la visibilidad a la entidad A-Frame correspondiente (Video o 3D)
+    state.arEntities.forEach((entityEl, i) => {
+        entityEl.setAttribute('visible', i === contentIndex);
     });
-    state.currentVideoIndex = videoIndex;
+    state.currentVideoIndex = contentIndex;
 }
 
 function playCurrentVideo(targetIndex) {
@@ -134,7 +189,7 @@ function playCurrentVideo(targetIndex) {
     const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
     const currentUrl = state.videoURLs[state.currentVideoIndex]; 
 
-    // Pausa preventiva de todos los videos para evitar conflictos al cambiar de target
+    // Pausa preventiva de todos los videos al cambiar de target
     Object.values(videoRotationState).forEach(s => {
         s.htmlVideos.forEach(v => {
             if (v !== currentVidAsset) {
@@ -146,14 +201,14 @@ function playCurrentVideo(targetIndex) {
 
     showVideo(targetIndex, state.currentVideoIndex);
 
-    // Corregido: Usar un atributo de datos para asegurar que el SRC se asigne solo una vez (Elimina el bucle de carga).
+    // Evita la recarga constante del SRC
     if (currentVidAsset.dataset.loadedSrc !== currentUrl) {
         currentVidAsset.src = currentUrl;
         currentVidAsset.load(); 
         currentVidAsset.dataset.loadedSrc = currentUrl; 
-        console.log(`[TARGET ${targetIndex}] Asignando SRC y cargando video: ${currentUrl}`);
     }
     
+    // Lógica de bucle de video
     if (state.numVideos > 1) {
             currentVidAsset.onended = () => {
             const isTracking = sceneEl.components['mindar-image'].data.trackedTargetIndex === targetIndex;
@@ -177,7 +232,8 @@ function playCurrentVideo(targetIndex) {
 
 function rotateVideoManually() {
     const state = videoRotationState[activeTargetIndex];
-    if (activeTargetIndex === null || state.numVideos <= 1) return;
+    // Solo rotar si el target activo tiene videos y son más de uno
+    if (activeTargetIndex === null || !state.hasVideoContent || state.numVideos <= 1) return;
     
     const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
     currentVidAsset.pause();
@@ -193,7 +249,7 @@ function rotateVideoManually() {
 
 function setupTrackingEvents(targetIndex, targetEntity) {
     targetEntity.addEventListener("targetFound", () => {
-        // Pausar todos los otros videos antes de empezar la reproducción del nuevo
+        // Pausar todos los otros videos (para transición limpia)
         Object.keys(videoRotationState).forEach(idx => {
             if (parseInt(idx) !== targetIndex) {
                 videoRotationState[idx].htmlVideos.forEach(v => { v.pause(); v.currentTime = 0; });
@@ -201,14 +257,21 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         });
         
         activeTargetIndex = targetIndex; 
-        
-        if (videoRotationState[targetIndex].numVideos > 1) {
+        const state = videoRotationState[targetIndex];
+
+        // Mostrar botón SIGUIENTE solo si hay MÁS de un video
+        if (state.hasVideoContent && state.numVideos > 1) {
             btnNextVideo.style.display = 'flex';
         } else {
             btnNextVideo.style.display = 'none';
         }
         
-        playCurrentVideo(targetIndex);
+        // Si hay videos, reproducir. Si es 3D, solo hacerlo visible.
+        if (state.hasVideoContent) {
+            playCurrentVideo(targetIndex);
+        } else {
+            showVideo(targetIndex, 0); // Mostrar el primer elemento (modelo 3D)
+        }
     });
 
     targetEntity.addEventListener("targetLost", () => {
@@ -218,13 +281,16 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         }
         
         const state = videoRotationState[targetIndex];
+        
+        // Pausar y resetear videos (solo si existen)
         state.htmlVideos.forEach(vid => {
             vid.pause();
             vid.currentTime = 0;
             vid.onended = null; 
         });
         
-        state.arVideos.forEach(el => el.setAttribute('visible', false));
+        // Ocultar todas las entidades (videos o 3D)
+        state.arEntities.forEach(el => el.setAttribute('visible', false));
         showVideo(targetIndex, 0); 
     });
 }
@@ -232,16 +298,13 @@ function setupTrackingEvents(targetIndex, targetEntity) {
 // === INICIALIZACIÓN DE LA INTERFAZ DE USUARIO (UI) ===
 function initializeUI() {
     
-    // Detección de Flash
+    // Detección de Flash y lógica de UI (código omitido por ser el mismo de la última versión)
     sceneEl.addEventListener("arReady", () => {
-        
-        // El botón de Flash NO se hace visible automáticamente.
         
         const mindarComponent = sceneEl.components['mindar-image'];
         let track = null;
         let flashAvailable = false;
 
-        // Intentar obtener el track
         if (mindarComponent && mindarComponent.stream) {
             try {
                  track = mindarComponent.stream.getVideoTracks()[0]; 
@@ -254,24 +317,20 @@ function initializeUI() {
             trackRef.track = track;
             
             try {
-                // Verificar si el dispositivo soporta 'torch'
                 flashAvailable = track.getCapabilities().torch || false;
             } catch (e) {
                 console.warn("El dispositivo no soporta la capacidad 'torch' (flash).", e);
             }
 
             if (flashAvailable) {
-                // 🟢 Compatible: Hacemos el botón visible y habilitado.
                 btnFlash.style.display = "flex"; 
                 btnFlash.innerHTML = "⚡ FLASH OFF"; 
                 btnFlash.disabled = false;
             } else {
-                // 🔴 No Soportado: Se mantiene invisible (display: none en HTML) y deshabilitado.
                 btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
                 btnFlash.disabled = true;
             }
         } else {
-            // ⚠️ No se detectó el track: Se mantiene invisible (display: none en HTML) y deshabilitado.
             console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado e invisible.");
             btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
             btnFlash.disabled = true;
