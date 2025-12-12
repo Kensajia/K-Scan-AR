@@ -1,4 +1,4 @@
-// main.js (CÓDIGO FINAL: Mapeo y Control Asíncrono de Elementos)
+// main.js (CÓDIGO FINAL: Estabilidad y Mapeo Corregido)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -30,6 +30,17 @@ function safeQuerySelector(selector, name) {
     }
     return el;
 }
+
+// 1. Inicializa los selectores de forma segura (FUNCIÓN QUE FALTABA O ESTABA FUERA DE ÁMBITO)
+function initializeSelectors() {
+    sceneEl = safeQuerySelector('#scene-ar', 'Scene A-Frame');
+    controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
+    btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
+    btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
+    targetContainer = safeQuerySelector("#target-container", 'Target Container');
+    assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
+}
+
 
 // === COMPONENTE KEEP-ALIVE ===
 AFRAME.registerComponent('keep-alive', {
@@ -78,7 +89,6 @@ function initializeScene() {
             currentVideoIndex: 0,
             // 🚨 USAMOS MAPAS POR ID para evitar problemas de índice entre videos y 3D
             htmlVideos: {}, 
-            videoURLs: {}, 
             arEntities: [], 
             numVideos: 0, 
             hasVideoContent: false,
@@ -113,7 +123,6 @@ function initializeScene() {
                 modelEntity.setAttribute('visible', index === 0); 
                 
                 if (contentData.animated) {
-                    // Aseguramos que el componente animation-mixer esté siempre presente si es animado
                     modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
                 }
 
@@ -125,7 +134,6 @@ function initializeScene() {
                     audioAsset.setAttribute('src', contentData.audioSrc);
                     assetsContainer.appendChild(audioAsset);
                     
-                    // Volumen inicial 0.0 (muteado por defecto)
                     modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
                     videoRotationState[targetIndex].audioEntity = modelEntity;
@@ -204,11 +212,11 @@ function playCurrentVideo(targetIndex) {
         return; 
     }
 
-    // 🚨 MODIFICADO: Mapeo correcto de assets usando el ID
-    // El SRC de A-Frame está en formato '#ID_ASSET'. Lo extraemos y buscamos el <video> HTML.
+    // 🚨 Mapeo correcto de assets usando el ID
     const videoAssetId = currentVidEntity.hasAttribute('src') 
         ? currentVidEntity.getAttribute('src').substring(1) 
-        : currentVidEntity.getAttribute('id').replace('ar-video-', 'Elem-'); // Fallback basado en el ID del entity
+        // Fallback: Si no tiene SRC, usamos una convención de ID para buscar el asset.
+        : currentVidEntity.getAttribute('id').replace('ar-video-', 'Elem-'); 
         
     const currentVidAsset = document.querySelector(`#${videoAssetId}`); // El elemento <video>
     const currentUrl = currentVidEntity.dataset.videoSrc; // El SRC real que guardamos antes
@@ -227,8 +235,7 @@ function playCurrentVideo(targetIndex) {
 
     showVideo(targetIndex, currentVideoIndex);
 
-    // 🚨 CRÍTICO: Si el video NO es Chroma (es decir, el src de A-Frame estaba vacío), lo asignamos ahora
-    // Si la entidad A-Frame no tiene SRC o no usa chromakey, lo asignamos.
+    // Si el video NO es Chroma o no tiene SRC, lo asignamos ahora.
     if (!currentVidEntity.hasAttribute('src') || 
         (currentVidEntity.components.material && currentVidEntity.components.material.shader.name !== 'chromakey')) {
          currentVidEntity.setAttribute('src', `#${currentVidAsset.id}`);
@@ -249,7 +256,7 @@ function playCurrentVideo(targetIndex) {
     }); 
 }
 
-// LÓGICA DE ROTACIÓN MANUAL (CORREGIDA LA LÓGICA DE LLAMADA A playCurrentVideo)
+// LÓGICA DE ROTACIÓN MANUAL
 function rotateVideoManually() {
     const state = videoRotationState[activeTargetIndex];
     
@@ -262,7 +269,7 @@ function rotateVideoManually() {
 
     // 1. Detener el elemento actual
     if (currentEntity.tagName === 'A-VIDEO') { 
-        // 🚨 OBTENER EL ELEMENTO <video> HTML a partir de la entidad A-Frame
+        // Obtener el elemento <video> HTML a partir de la entidad A-Frame
         const videoAssetId = currentEntity.hasAttribute('src') 
             ? currentEntity.getAttribute('src').substring(1)
             : currentEntity.getAttribute('id').replace('ar-video-', 'Elem-'); 
@@ -293,7 +300,6 @@ function rotateVideoManually() {
         playCurrentVideo(activeTargetIndex);
     } else if (state.audioEntity && nextEntity === state.audioEntity) { 
         // 5. Si el siguiente elemento es el 3D con audio
-        // Intentar reproducir audio 3D
         const soundComp = state.audioEntity.components.sound;
         if (soundComp && !isGlobalAudioMuted) {
              soundComp.setVolume(1.0);
@@ -400,8 +406,6 @@ function setupTrackingEvents(targetIndex, targetEntity) {
 // === LÓGICA DE LA INTERFAZ DE USUARIO (UI) ===
 function initializeUIListeners() {
     
-    // ... (Lógica de Flash y Audio Global sin cambios relevantes) ...
-
     // Detección de Flash
     sceneEl.addEventListener("arReady", () => {
         
@@ -529,7 +533,7 @@ function initializeUIListeners() {
 
 // --- INICIO DEL CÓDIGO ---
 
-// 1. Inicializa los selectores inmediatamente
+// 1. Inicializa los selectores inmediatamente (ESTO FUE EL PUNTO DE FALLO ANTERIOR)
 initializeSelectors();
 
 // 2. Ejecutar la carga del JSON y la inicialización de la UI después de que el DOM esté cargado.
