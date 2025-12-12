@@ -107,7 +107,8 @@ function initializeScene() {
             numVideos: 0, 
             hasVideoContent: false,
             audioEntity: null,
-            targetIndex: targetIndex 
+            targetIndex: targetIndex,
+            retryCount: 0 // <-- CONTADOR AÑADIDO PARA EVITAR BUCLE INFINITO
         };
 
         const targetEntity = document.createElement('a-entity');
@@ -374,13 +375,15 @@ function rotateVideoManually() {
     }
 }
 
-// === FUNCIÓN AUXILIAR PARA INICIAR AUDIO 3D (CON REINTENTO) ===
+// === FUNCIÓN AUXILIAR PARA INICIAR AUDIO 3D (CON REINTENTO Y LÍMITE) ===
 function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     
     if (isGlobalAudioMuted) return;
 
+    const state = videoRotationState[targetIndex]; // Obtener el estado para el contador
     let soundComp = audioEntity.components.sound;
-    
+    const MAX_RETRIES = 5; // Limitar a 5 intentos (1 segundo en total)
+
     // 1. Manejo inicial del componente (Si no existe, esperar 'componentinitialized')
     if (!soundComp) {
         audioEntity.addEventListener('componentinitialized', function handler(evt) {
@@ -389,7 +392,6 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
                 startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted); 
             }
         });
-        console.warn(`[Audio 3D] Esperando inicialización inicial del componente 'sound' en Target ${targetIndex}.`);
         return;
     }
 
@@ -398,16 +400,24 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
                             typeof soundComp.playSound === 'function';
 
     if (!hasSoundMethods) {
-        // FIX: Reintentar después de un pequeño retardo (200ms)
-        console.warn(`[Audio 3D] Métodos no listos en Target ${targetIndex}. Reintentando en 200ms...`);
+        
+        state.retryCount++;
+
+        if (state.retryCount > MAX_RETRIES) {
+             console.error(`[Audio 3D] ERROR FATAL: Componente 'sound' de Target ${targetIndex} falló en la inicialización de métodos después de ${MAX_RETRIES} reintentos. Verifique la carga del asset de audio. Deteniendo el reintento.`);
+             return; // Romper el ciclo infinito
+        }
+
+        // Reintentar después de un pequeño retardo (200ms)
+        console.warn(`[Audio 3D] Métodos no listos en Target ${targetIndex}. Reintento ${state.retryCount}/${MAX_RETRIES}.`);
         setTimeout(() => {
-            // Reintentar la ejecución de startAudio3D
             startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted); 
         }, 200); 
         return;
     }
     
     // 3. Componente 'sound' y sus métodos están listos. Procedemos a la reproducción.
+    state.retryCount = 0; // Resetear el contador si tiene éxito
     
     const soundSrc = soundComp.data.src;
     if (soundSrc && soundSrc.startsWith('#')) {
@@ -416,15 +426,17 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
 
         if (audioAsset) {
             audioAsset.muted = false; 
-            audioAsset.load();
+            audioAsset.load(); 
             audioAsset.play().catch(error => {
-                console.warn("Fallo al intentar reproducir audio 3D (Autoplay bloqueado).", error);
+                console.warn(`[Audio 3D] Fallo al iniciar reproducción de asset HTML #${audioAssetId}:`, error);
             });
             console.log(`[Audio 3D] Iniciando reproducción del asset HTML: #${audioAssetId}`); 
+        } else {
+             console.error(`[Audio 3D] ERROR: El elemento <audio> #${audioAssetId} no se encontró en el DOM.`);
         }
     }
     
-    // 4. Iniciar el componente sound de A-Frame
+    // 4. Iniciar el componente sound de A-Frame (la parte que realmente da el sonido posicional)
     soundComp.setVolume(1.0);
     soundComp.playSound();
     console.log(`[Audio 3D] Audio 3D iniciado correctamente en Target ${targetIndex}.`); 
@@ -462,6 +474,8 @@ function setupTrackingEvents(targetIndex, targetEntity) {
                     }
                 }
             }
+            // Resetear contador de reintentos para todos los targets
+            s.retryCount = 0; 
         });
         
         activeTargetIndex = targetIndex; 
