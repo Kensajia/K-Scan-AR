@@ -1,4 +1,4 @@
-// main.js (PLANTILLA FINAL Y CORREGIDA: Estructura de Inicialización)
+// main.js (PLANTILLA FINAL Y ROBUSSTA: Audio y Control de Estado Corregidos)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -13,6 +13,7 @@ let assetsContainer;
 let videoRotationState = {}; 
 let config = null; 
 let activeTargetIndex = null;
+let isGlobalAudioMuted = true; // 🚨 NUEVA VARIABLE: El audio inicia MUTEADO por defecto
 
 // Función de utilidad para seleccionar elementos de forma segura
 function safeQuerySelector(selector, name) {
@@ -32,7 +33,6 @@ function safeQuerySelector(selector, name) {
 
 // 1. Inicializa los selectores de forma segura
 function initializeSelectors() {
-    // 🚨 REGRESO A LA ESTRUCTURA ORIGINAL: Definir selectores globalmente AQUÍ.
     sceneEl = safeQuerySelector('#scene-ar', 'Scene A-Frame');
     controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
     btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
@@ -70,7 +70,6 @@ async function loadConfig() {
         }
         
     } catch (error) {
-        // Este error atrapa el error de la promesa fetch (HTTP) o el error de estructura JSON (throw)
         console.error("Error al cargar la configuración JSON. Revisada la ruta y sintaxis.", error);
         alert("No se pudo cargar la configuración de videos. Revisa la ruta JSON y su contenido.");
     }
@@ -79,10 +78,8 @@ async function loadConfig() {
 // LÓGICA DE CREACIÓN DE ENTIDADES (SOPORTE 3D, CHROMA Y VIDEO)
 function initializeScene() {
     
-    // Si llegamos aquí, sabemos que config.Targets es un array válido.
     const Targets = config.Targets;
     
-    // 🚨 assetsContainer ya debe estar definido por initializeSelectors()
     if (!assetsContainer.appendChild) return; 
 
     Targets.forEach(target => {
@@ -166,7 +163,7 @@ function initializeScene() {
                 videoAsset.setAttribute('loop', 'true');
                 videoAsset.setAttribute('playsinline', 'true');
                 videoAsset.setAttribute('webkit-playsinline', 'true');
-                videoAsset.setAttribute('muted', 'muted'); 
+                videoAsset.setAttribute('muted', 'muted'); // Muteado por defecto al inicio
                 videoAsset.setAttribute('crossorigin', 'anonymous');
                 assetsContainer.appendChild(videoAsset);
                 
@@ -237,6 +234,9 @@ function playCurrentVideo(targetIndex) {
         currentVidAsset.dataset.loadedSrc = currentUrl; 
     }
     
+    // 🚨 APLICAR EL ESTADO MUTEADO GLOBAL ANTES DE REPRODUCIR
+    currentVidAsset.muted = isGlobalAudioMuted; 
+    
     // Deshabilitamos la rotación automática para que funcione el botón manual
     currentVidAsset.onended = null; 
     
@@ -285,16 +285,17 @@ function rotateVideoManually() {
 
 function setupTrackingEvents(targetIndex, targetEntity) {
     targetEntity.addEventListener("targetFound", () => {
-        // Pausar todos los otros targets
-        Object.keys(videoRotationState).forEach(idx => {
-            if (parseInt(idx) !== targetIndex) {
-                videoRotationState[idx].htmlVideos.forEach(v => { v.pause(); v.currentTime = 0; });
-                
-                // Detener audio de otros modelos 3D
-                const otherAudioEntity = videoRotationState[idx].audioEntity;
-                if (otherAudioEntity && otherAudioEntity.components.sound) {
-                    otherAudioEntity.components.sound.stopSound();
-                }
+        
+        // 🚨 PAUSA EXHAUSTIVA AL ENCONTRAR UN MARCADOR (Evita audio residual)
+        Object.values(videoRotationState).forEach(s => {
+            s.htmlVideos.forEach(v => {
+                v.pause();
+                v.currentTime = 0;
+            });
+            // Detener audio de modelos 3D
+            const audioEntity = s.audioEntity;
+            if (audioEntity && audioEntity.components.sound) {
+                audioEntity.components.sound.stopSound();
             }
         });
         
@@ -309,23 +310,20 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             btnNextVideo.style.display = 'none';
         }
         
-        // Iniciar reproducción o visibilidad del primer elemento
-        if (state.htmlVideos.length > 0) { // Si hay al menos un video en el target
-             // Checar si el elemento inicial es un video
-             const initialContentIsVideo = state.arEntities[0].tagName === 'A-VIDEO';
-             if (initialContentIsVideo) {
-                 playCurrentVideo(targetIndex);
-             } else {
-                 showVideo(targetIndex, 0); 
-             }
+        // Iniciar reproducción o visibilidad del elemento actual (índice 0 por defecto)
+        // Se determina si el elemento inicial es un video para llamar a playCurrentVideo.
+        const initialContentIsVideo = state.arEntities[0] && state.arEntities[0].tagName === 'A-VIDEO';
+        
+        if (initialContentIsVideo) {
+            playCurrentVideo(targetIndex);
         } else {
-             showVideo(targetIndex, 0); 
+            showVideo(targetIndex, 0); 
         }
         
-        // 🚨 Iniciar audio si es un modelo 3D con audio
+        // 🚨 Iniciar audio 3D si es el elemento visible y NO está globalmente muteado
         if (state.audioEntity && state.audioEntity.components.sound) {
-             // Aseguramos que solo suene si el volumen no fue seteado a 0.0 por el usuario (o por defecto)
-             if (state.audioEntity.components.sound.data.volume > 0.0) { 
+             if (!isGlobalAudioMuted) { 
+                 state.audioEntity.components.sound.setVolume(1.0);
                  state.audioEntity.components.sound.playSound();
              }
         }
@@ -415,32 +413,38 @@ function initializeUIListeners() {
         }
     });
 
-    // LÓGICA DE AUDIO GLOBAL (Fix: Verifica la existencia de setVolume)
+    // LÓGICA DE AUDIO GLOBAL (Fix: Guarda el estado global y lo aplica)
     safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
         
-        const isCurrentlyMuted = this.innerHTML.includes("🔇"); 
+        // 1. Invertimos el estado de muteo global antes de aplicarlo
+        isGlobalAudioMuted = !isGlobalAudioMuted; 
+        const targetMutedState = isGlobalAudioMuted; // El estado deseado después del click
 
-        // 1. Alternar Mute/Unmute para todos los VIDEOS
+        // 2. Aplicar el estado a todos los contenidos
         Object.values(videoRotationState).forEach(state => {
+            
+            // 2a. Aplicar a videos HTML
             state.htmlVideos.forEach(v => {
-                v.muted = isCurrentlyMuted; 
-                if (!v.muted && v.paused) v.play().catch(e => {}); 
+                v.muted = targetMutedState; 
+                // Si desmuteamos un video pausado, intentamos reproducirlo
+                if (!targetMutedState && v.paused) v.play().catch(e => {}); 
             });
             
-            // 2. Alternar Volumen para todos los MODELOS 3D con audio
+            // 2b. Aplicar a Modelos 3D con audio
             if (state.audioEntity) { 
                 const soundComp = state.audioEntity.components.sound;
                 
-                // 🚨 FIX CRÍTICO: Verificar si el componente SOUND tiene el método setVolume
                 if (soundComp && typeof soundComp.setVolume === 'function') {
                     
-                    if (isCurrentlyMuted) { // Objetivo: SONIDO (Desmutear)
+                    if (!targetMutedState) { // Objetivo: SONIDO (Desmutear)
                         soundComp.setVolume(1.0); 
+                        // Solo reproducir si este target está activo/encontrado
                         if (activeTargetIndex === state.targetIndex) {
                             soundComp.playSound(); 
                         }
                     } else { // Objetivo: MUTE (Mutear)
                         soundComp.setVolume(0.0); 
+                        soundComp.stopSound(); // Detener si se mutea
                     }
                 } else {
                      console.warn(`[Audio 3D] Componente 'sound' no inicializado completamente en Target ${state.targetIndex}.`);
@@ -449,8 +453,8 @@ function initializeUIListeners() {
         });
 
         // 3. Actualizar la UI del botón
-        this.style.background = isCurrentlyMuted ? "var(--accent)" : "var(--danger)";
-        this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
+        this.style.background = targetMutedState ? "var(--danger)" : "var(--accent)";
+        this.innerHTML = targetMutedState ? "🔇 SILENCIO" : "🔊 SONIDO";
     });
 
     // LÓGICA DE TOGGLE UI
