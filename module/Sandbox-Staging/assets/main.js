@@ -156,7 +156,8 @@ function initializeScene() {
                     assetsContainer.appendChild(audioAsset);
                     
                     // 2. Componente 'sound' de A-Frame (SOLO para la posicionalidad 3D)
-                    modelEntity.setAttribute('sound', `src: #; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
+                    // CORRECCIÓN CRÍTICA: Apuntar el componente 'sound' al asset de audio HTML
+                    modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
                     // 3. Almacenar ambas referencias en el estado
                     videoRotationState[targetIndex].audioEntity = modelEntity;
@@ -328,7 +329,7 @@ function rotateVideoManually() {
             audioAsset.pause();
             audioAsset.currentTime = 0;
         }
-        // CORRECCIÓN: Verificar setVolume antes de usar soundComp
+        // Verificar setVolume antes de usar soundComp
         if (soundComp && typeof soundComp.setVolume === 'function') { 
             soundComp.setVolume(0.0);
             if (typeof soundComp.stopSound === 'function') { 
@@ -423,7 +424,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
                 }
             });
             
-            // Pausar audio 3D (CORRECCIÓN APLICADA AQUÍ)
+            // Pausar audio 3D
             const audioEntity = s.audioEntity;
             const audioAsset = s.audioAsset; 
             
@@ -489,7 +490,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             vid.load();
         });
         
-        // Detener audio del modelo 3D (CORRECCIÓN APLICADA AQUÍ)
+        // Detener audio del modelo 3D
         const audioEntity = state.audioEntity;
         const audioAsset = state.audioAsset; 
         
