@@ -107,7 +107,7 @@ function initializeScene() {
             numVideos: 0, 
             hasVideoContent: false,
             audioEntity: null,
-            audioAsset: null, // <-- NUEVO: Referencia al <audio> HTML
+            audioAsset: null, 
             targetIndex: targetIndex 
         };
 
@@ -151,13 +151,13 @@ function initializeScene() {
                     audioAsset.setAttribute('preload', 'auto');
                     audioAsset.setAttribute('loop', 'true');
                     audioAsset.setAttribute('playsinline', 'true');
-                    audioAsset.setAttribute('muted', 'muted'); // Iniciar MUTED
+                    audioAsset.setAttribute('muted', 'muted'); 
                     audioAsset.setAttribute('crossorigin', 'anonymous');
                     assetsContainer.appendChild(audioAsset);
                     
                     // 2. Componente 'sound' de A-Frame (SOLO para la posicionalidad 3D)
-                    // Usamos 'src: #' (o un src inválido) para evitar que A-Frame intente 
-                    // cargar el audio dos veces. Solo queremos el nodo Panner 3D.
+                    // NOTA: Usamos 'volume: 0.0' y 'autoplay: false' para que A-Frame no intente
+                    // reproducir audio inmediatamente, confiando en el asset HTML.
                     modelEntity.setAttribute('sound', `src: #; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
                     // 3. Almacenar ambas referencias en el estado
@@ -316,6 +316,7 @@ function rotateVideoManually() {
             currentVidAsset.currentTime = 0;
             currentVidAsset.onended = null; 
             
+            // Limpiar la fuente del video para liberar recursos
             currentVidAsset.dataset.loadedSrc = ""; 
             currentVidAsset.src = "";
             currentVidAsset.load();
@@ -323,15 +324,15 @@ function rotateVideoManually() {
     } else if (state.audioEntity && currentEntity === state.audioEntity) {
         // 🚨 Detener audio 3D (Elemento 3D con audio)
         const soundComp = currentEntity.components.sound;
-        const audioAsset = state.audioAsset; // Referencia al <audio> HTML
+        const audioAsset = state.audioAsset; 
         
-        if (soundComp) {
-            if (typeof soundComp.stopSound === 'function') { soundComp.stopSound(); } // Detener el nodo posicional
-            
-            if (audioAsset) { // Detener el elemento HTML real
-                audioAsset.pause();
-                audioAsset.currentTime = 0;
-            }
+        if (audioAsset) { // Detener el elemento HTML real primero
+            audioAsset.pause();
+            audioAsset.currentTime = 0;
+        }
+        if (soundComp && typeof soundComp.stopSound === 'function') { 
+            soundComp.setVolume(0.0);
+            soundComp.stopSound(); 
         }
     }
     
@@ -348,23 +349,7 @@ function rotateVideoManually() {
         playCurrentVideo(activeTargetIndex);
     } else if (state.audioEntity && nextEntity === state.audioEntity) { 
         // 5. Si el siguiente elemento es el 3D con audio
-        const soundComp = state.audioEntity.components.sound;
-        const audioAsset = state.audioAsset; // Referencia al <audio> HTML
-        
-        if (soundComp && audioAsset && !isGlobalAudioMuted) {
-            
-            audioAsset.muted = false;
-            audioAsset.load();
-            audioAsset.play().catch(error => {
-                console.warn("Fallo al intentar reproducir audio 3D al rotar (Autoplay).", error);
-            });
-            
-            // Iniciar el componente sound de A-Frame para el efecto 3D
-            if (typeof soundComp.setVolume === 'function') {
-                soundComp.setVolume(1.0);
-                soundComp.playSound();
-            }
-        }
+        startAudio3D(state.audioEntity, activeTargetIndex, isGlobalAudioMuted);
     }
 }
 
@@ -384,13 +369,15 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
 
     // 1. Manejar la inicialización asíncrona del componente 'sound'
     if (!soundComp || typeof soundComp.setVolume !== 'function') {
+        console.warn(`[Audio 3D] Esperando inicialización del componente 'sound' en Target ${targetIndex}.`);
         audioEntity.addEventListener('componentinitialized', function handler(evt) {
             if (evt.detail.name === 'sound') {
                 audioEntity.removeEventListener('componentinitialized', handler);
+                console.log(`[Audio 3D] Componente 'sound' listo para Target ${targetIndex}. Reintentando inicio.`);
+                // Reintentar la llamada después de que el componente esté listo
                 startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted); 
             }
         });
-        console.warn(`[Audio 3D] Esperando inicialización del componente 'sound' en Target ${targetIndex}.`);
         return;
     }
     
@@ -401,17 +388,17 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     audioAsset.load();
 
     audioAsset.play().then(() => {
-        console.log(`[Audio 3D] Asset HTML de audio #${audioAsset.id} reproduciéndose. Intentando conectar 3D.`);
+        console.log(`[Audio 3D] Asset HTML de audio #${audioAsset.id} reproduciéndose. Conectando 3D.`);
         
-        // El componente A-Frame es necesario para que el audio se escuche en 3D
+        // Habilitar el sonido 3D de A-Frame
         soundComp.setVolume(1.0);
-        soundComp.playSound(); // Esto activa el nodo Panner 3D y conecta el audio.
+        soundComp.playSound(); 
 
     }).catch(error => {
         console.warn(`[Audio 3D] Fallo al iniciar reproducción del asset HTML #${audioAsset.id}. Posiblemente Autoplay bloqueado.`, error);
         
-        // Si falla la reproducción, aún intentamos el setVolume para habilitar el 3D
-        // en caso de que el usuario haga click más tarde.
+        // Aún si falla la reproducción inicial, forzamos el volumen en A-Frame 
+        // para que esté listo si el audio se activa luego.
         soundComp.setVolume(1.0); 
     });
     
@@ -430,6 +417,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
                 v.pause();
                 v.currentTime = 0;
                 if (s.targetIndex !== targetIndex) {
+                    // Evitar cargar innecesariamente videos de otros targets
                     v.src = "";
                     v.load();
                 }
@@ -437,15 +425,18 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             
             // Pausar audio 3D
             const audioEntity = s.audioEntity;
-            const audioAsset = s.audioAsset; // Referencia al <audio> HTML
+            const audioAsset = s.audioAsset; 
             
-            if (audioEntity && audioEntity.components.sound) {
-                const soundComp = audioEntity.components.sound;
-                if (typeof soundComp.stopSound === 'function') { soundComp.stopSound(); }
-            }
-            if (audioAsset) { // Detener el elemento HTML real
+            if (audioAsset) {
                 audioAsset.pause();
                 audioAsset.currentTime = 0;
+            }
+            if (audioEntity && audioEntity.components.sound) {
+                const soundComp = audioEntity.components.sound;
+                if (typeof soundComp.stopSound === 'function') { 
+                    soundComp.setVolume(0.0);
+                    soundComp.stopSound(); 
+                }
             }
         });
         
@@ -460,17 +451,18 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             btnNextVideo.style.display = 'none';
         }
         
-        // Si el elemento inicial (índice 0) es un video, reproducir.
+        // === LÓGICA DE INICIO DEL CONTENIDO ACTUAL (Índice 0) ===
         const initialContentIsVideo = state.arEntities[0] && 
             (state.arEntities[0].tagName === 'A-VIDEO' || state.arEntities[0].tagName === 'A-PLANE');
         
         if (initialContentIsVideo) {
             playCurrentVideo(targetIndex);
         } else {
+            // Asegura que el modelo 3D (si no es video) se muestre primero
             showVideo(targetIndex, 0); 
         }
         
-        // Manejo del Audio 3D Asíncrono
+        // Iniciar Audio 3D si el elemento actual es el modelo 3D
         if (state.audioEntity && state.currentVideoIndex === 0) {
             startAudio3D(state.audioEntity, targetIndex, isGlobalAudioMuted);
         }
@@ -497,15 +489,18 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         
         // Detener audio del modelo 3D
         const audioEntity = state.audioEntity;
-        const audioAsset = state.audioAsset; // Referencia al <audio> HTML
+        const audioAsset = state.audioAsset; 
         
-        if (audioEntity && audioEntity.components.sound) {
-            const soundComp = audioEntity.components.sound;
-            if (typeof soundComp.stopSound === 'function') { soundComp.stopSound(); }
-        }
-        if (audioAsset) { // Detener el elemento HTML real
+        if (audioAsset) {
             audioAsset.pause();
             audioAsset.currentTime = 0;
+        }
+        if (audioEntity && audioEntity.components.sound) {
+            const soundComp = audioEntity.components.sound;
+            if (typeof soundComp.stopSound === 'function') { 
+                soundComp.setVolume(0.0);
+                soundComp.stopSound(); 
+            }
         }
         
         // Ocultar todas las entidades y resetear a índice 0
@@ -582,7 +577,7 @@ function initializeUIListeners() {
         }
     });
 
-    // LÓGICA DE AUDIO GLOBAL (Guarda el estado global y lo aplica)
+    // LÓGICA DE AUDIO GLOBAL (Mejorada para manejar la asincronía)
     safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
         
         isGlobalAudioMuted = !isGlobalAudioMuted; 
@@ -590,41 +585,52 @@ function initializeUIListeners() {
 
         Object.values(videoRotationState).forEach(state => {
             
-            // Aplicar a videos HTML
+            // --- LÓGICA DE VIDEOS ---
             Object.values(state.htmlVideos).forEach(v => {
                 v.muted = targetMutedState; 
-                if (!targetMutedState && v.paused) v.play().catch(e => {}); 
+                if (!targetMutedState && activeTargetIndex === state.targetIndex && v.paused) {
+                    v.play().catch(e => {
+                        console.warn(`[Video] Fallo al intentar reanudar video al desmutear: ${e}`);
+                    }); 
+                }
             });
             
-            // Aplicar a Modelos 3D con audio
+            // --- LÓGICA DE AUDIO 3D (MODELOS) ---
             if (state.audioEntity) { 
-                const soundComp = state.audioEntity.components.sound;
+                
                 const audioAsset = state.audioAsset; // Referencia al <audio> HTML
                 
+                if (audioAsset) {
+                    audioAsset.muted = targetMutedState;
+                    if (!targetMutedState && activeTargetIndex === state.targetIndex) {
+                        // Si se desmutea, intentar reproducir el asset HTML
+                        audioAsset.load(); 
+                        audioAsset.play().catch(e => {
+                            console.warn(`[Audio 3D] Fallo al reproducir asset HTML al desmutear (Autoplay): ${e}`);
+                        });
+                    } else if (targetMutedState) {
+                        audioAsset.pause(); // Pausar el asset HTML subyacente al mutear
+                    }
+                }
+
+                const soundComp = state.audioEntity.components.sound;
+
                 if (soundComp && typeof soundComp.setVolume === 'function') {
                     
                     if (!targetMutedState) { // Objetivo: SONIDO (Desmutear)
                         soundComp.setVolume(1.0); 
                         if (activeTargetIndex === state.targetIndex) {
-                            soundComp.playSound(); 
-                        }
-                        if (audioAsset) {
-                            audioAsset.muted = false;
-                            if (audioAsset.paused) audioAsset.play().catch(e => {});
+                            soundComp.playSound(); // Activar el nodo Panner 3D
                         }
                     } else { // Objetivo: MUTE (Mutear)
                         soundComp.setVolume(0.0); 
                         soundComp.stopSound(); 
-                        if (audioAsset) {
-                            audioAsset.muted = true;
-                            audioAsset.pause(); // Pausar el asset HTML subyacente
-                        }
                     }
                 } else if (!targetMutedState && activeTargetIndex === state.targetIndex) {
-                    // Si el componente no está listo y se intenta DESMUTEAR, forzar la inicialización.
+                    // Si el componente no está listo y se intenta DESMUTEAR en el target activo:
+                    // Forzar la inicialización. Esto llamará a startAudio3D, que tiene la lógica de espera.
+                    console.warn(`[Audio 3D] Componente 'sound' no listo, forzando inicialización al desmutear.`);
                     startAudio3D(state.audioEntity, state.targetIndex, false);
-                } else {
-                    console.warn(`[Audio 3D] No se pudo mutear/desmutear el Target ${state.targetIndex}: Componente 'sound' no listo.`);
                 }
             }
         });
