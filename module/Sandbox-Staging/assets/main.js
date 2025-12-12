@@ -132,6 +132,9 @@ function initializeScene() {
                 modelEntity.setAttribute('id', `ar-model-${targetIndex}-${index}`);
                 modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
                 
+                // === ROTACIÓN TÁCTIL AÑADIDA AQUÍ ===
+                modelEntity.setAttribute('touch-controls-experimental', 'mode: rotation; rotationSpeed: 0.5'); 
+                
                 modelEntity.setAttribute('position', contentData.position || '0 0 0');
                 modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
                 modelEntity.setAttribute('rotation', contentData.rotation || '0 0 0');
@@ -156,7 +159,6 @@ function initializeScene() {
                     assetsContainer.appendChild(audioAsset);
                     
                     // 2. Componente 'sound' de A-Frame (SOLO para la posicionalidad 3D)
-                    // CORRECCIÓN CRÍTICA: Apuntar el componente 'sound' al asset de audio HTML
                     modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
                     // 3. Almacenar ambas referencias en el estado
@@ -372,7 +374,8 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     // 1. Reanudar el Web Audio Context si está suspendido (debe haber ocurrido un clic de usuario)
     const soundSystem = sceneEl.components.sound;
     if (soundSystem && soundSystem.context && soundSystem.context.state !== 'running') {
-        soundSystem.initContext(); // Esto intenta reanudar el contexto
+        // Inicializa o reanuda el AudioContext de A-Frame
+        soundSystem.initContext(); 
         console.log(`[Audio 3D] Web Audio Context reanudado/iniciado.`);
     }
 
@@ -388,10 +391,8 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
              soundComp.setVolume(1.0);
              soundComp.playSound(); 
         } else {
-             // Si el componente 'sound' AÚN no está listo (muy rápido), esperamos.
-             // En lugar de bucle, esperamos a que A-Frame lo inicialice,
-             // ya que audioAsset.play() ya inició el flujo de datos.
-             console.warn(`[Audio 3D] Componente 'sound' no listo, el audio HTML está reproduciéndose. El 3D se conectará en el siguiente tick.`);
+             // Si el componente 'sound' AÚN no está listo, esperamos al evento.
+             console.warn(`[Audio 3D] Componente 'sound' no listo, el audio HTML está reproduciéndose. El 3D se conectará cuando el componente se inicialice.`);
              
              // Agregamos un listener de una sola vez para capturar la inicialización.
              audioEntity.addEventListener('componentinitialized', function handler(evt) {
@@ -410,8 +411,7 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     }).catch(error => {
         console.warn(`[Audio 3D] Fallo al iniciar reproducción del asset HTML #${audioAsset.id}. (Posiblemente Autoplay bloqueado o URL incorrecta) - `, error);
         
-        // Aún si falla la reproducción inicial, si el componente está listo, 
-        // establecemos el volumen en A-Frame para que esté operativo tan pronto como el audio se active.
+        // Si falla el play, al menos aseguramos que el componente 3D tenga volumen 1.0.
         if (soundComp && typeof soundComp.setVolume === 'function') { 
             soundComp.setVolume(1.0); 
         }
@@ -645,7 +645,7 @@ function initializeUIListeners() {
                     }
                 } else if (!targetMutedState && activeTargetIndex === state.targetIndex) {
                     // Si el componente no está listo y se intenta DESMUTEAR en el target activo:
-                    // Forzar la inicialización.
+                    // Forzar la inicialización, que se maneja dentro de startAudio3D.
                     console.warn(`[Audio 3D] Componente 'sound' no listo, forzando inicialización al desmutear.`);
                     startAudio3D(state.audioEntity, state.targetIndex, false);
                 }
