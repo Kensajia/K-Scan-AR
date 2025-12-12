@@ -1,4 +1,4 @@
-// main.js (PLANTILLA FINAL Y CORREGIDA: Soporte de Contenido Unificado y Audio Fix)
+// main.js (PLANTILLA FINAL Y CORREGIDA)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -19,7 +19,6 @@ function safeQuerySelector(selector, name) {
     const el = document.querySelector(selector);
     if (!el) {
         console.error(`ERROR FATAL: El elemento UI '${name}' con selector '${selector}' no se encontró.`);
-        // Devolvemos un objeto Dummy para evitar errores en addEventListener
         return { 
             addEventListener: () => {}, 
             style: { display: 'none' }, 
@@ -31,7 +30,7 @@ function safeQuerySelector(selector, name) {
     return el;
 }
 
-// === COMPONENTE KEEP-ALIVE (Necesario para mantener la escena AR activa en segundo plano) ===
+// === COMPONENTE KEEP-ALIVE ===
 AFRAME.registerComponent('keep-alive', {
     tick: function () {
         const scene = this.el.sceneEl; 
@@ -50,8 +49,16 @@ async function loadConfig() {
             throw new Error(`Error HTTP: ${response.status}`);
         }
         config = await response.json();
-        initializeScene();
+        
+        // 🚨 VERIFICACIÓN DE ESTRUCTURA Y LLAMADA A INICIALIZACIÓN
+        if (config && Array.isArray(config.Targets)) {
+             initializeScene();
+        } else {
+             throw new Error("La estructura JSON es inválida: falta el array 'Targets'.");
+        }
+        
     } catch (error) {
+        // Este error atrapa el error de la promesa fetch (HTTP) o el error de estructura JSON (throw)
         console.error("Error al cargar la configuración JSON. Revisada la ruta y sintaxis.", error);
         alert("No se pudo cargar la configuración de videos. Revisa la ruta JSON y su contenido.");
     }
@@ -59,12 +66,15 @@ async function loadConfig() {
 
 // LÓGICA DE CREACIÓN DE ENTIDADES (SOPORTE 3D, CHROMA Y VIDEO)
 function initializeScene() {
-    const { Targets } = config; 
+    
+    // Si llegamos aquí, sabemos que config.Targets es un array válido.
+    const Targets = config.Targets;
     
     if (!assetsContainer.appendChild) return; 
 
     Targets.forEach(target => {
-        // 🚨 CAMBIO DE NOMENCLATURA: 'videos' ahora es 'elementos'
+        
+        // 🚨 NOMENCLATURA: Usamos 'elementos'
         const { targetIndex, elementos } = target;
         
         videoRotationState[targetIndex] = {
@@ -75,7 +85,7 @@ function initializeScene() {
             numVideos: 0, 
             hasVideoContent: false,
             audioEntity: null,
-            targetIndex: targetIndex // 🚨 AGREGADO para rastreo en errores
+            targetIndex: targetIndex 
         };
 
         const targetEntity = document.createElement('a-entity');
@@ -84,7 +94,7 @@ function initializeScene() {
 
         let videoCount = 0;
         
-        // 🚨 CAMBIO DE NOMENCLATURA: 'videos' ahora es 'elementos'
+        // 🚨 NOMENCLATURA: Iteramos sobre 'elementos'
         elementos.forEach((contentData, index) => {
             
             if (contentData.type === "3d") {
@@ -120,7 +130,6 @@ function initializeScene() {
                     audioAsset.setAttribute('src', contentData.audioSrc);
                     assetsContainer.appendChild(audioAsset);
                     
-                    // Adjuntar el componente sound al modelo 3D
                     // 🚨 Volumen inicial 0.0 (muteado por defecto), se controla con el botón de UI
                     modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
@@ -144,7 +153,7 @@ function initializeScene() {
                 videoAsset.setAttribute('loop', 'true');
                 videoAsset.setAttribute('playsinline', 'true');
                 videoAsset.setAttribute('webkit-playsinline', 'true');
-                videoAsset.setAttribute('muted', 'muted'); // Muteado por defecto
+                videoAsset.setAttribute('muted', 'muted'); 
                 videoAsset.setAttribute('crossorigin', 'anonymous');
                 assetsContainer.appendChild(videoAsset);
                 
@@ -215,8 +224,8 @@ function playCurrentVideo(targetIndex) {
         currentVidAsset.dataset.loadedSrc = currentUrl; 
     }
     
-    // Lógica de bucle de video (solo si hay más de un video, aunque ahora rotamos con el botón)
-    currentVidAsset.onended = null; // Deshabilitamos la rotación automática para que funcione el botón manual
+    // Deshabilitamos la rotación automática para que funcione el botón manual
+    currentVidAsset.onended = null; 
     
     currentVidAsset.play().catch(error => {
         console.warn("Fallo al intentar reproducir video. Causa común: Autoplay bloqueado.", error);
@@ -288,10 +297,12 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         }
         
         // Iniciar reproducción o visibilidad del primer elemento
-        if (state.hasVideoContent) {
-            playCurrentVideo(targetIndex);
+        // Si el elemento visible (index 0) es un video, se llama a playCurrentVideo. 
+        // Si es un 3D, showVideo se encarga de hacerlo visible.
+        if (state.htmlVideos.length > 0) { // Si hay al menos un video en el target
+             playCurrentVideo(targetIndex);
         } else {
-            showVideo(targetIndex, 0); // Mostrar el primer elemento (modelo 3D)
+             showVideo(targetIndex, 0); 
         }
         
         // 🚨 Iniciar audio si es un modelo 3D con audio
@@ -332,6 +343,14 @@ function setupTrackingEvents(targetIndex, targetEntity) {
 // === INICIALIZACIÓN DE LA INTERFAZ DE USUARIO (UI) ===
 function initializeUI() {
     
+    // 1. Inicializa los selectores de forma segura
+    sceneEl = safeQuerySelector('#scene-ar', 'Scene A-Frame');
+    controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
+    btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
+    btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
+    targetContainer = safeQuerySelector("#target-container", 'Target Container');
+    assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
+
     // Detección de Flash y lógica de UI
     sceneEl.addEventListener("arReady", () => {
         
@@ -447,11 +466,10 @@ function initializeUI() {
 
 // --- INICIO DEL CÓDIGO ---
 
-// 1. Inicializa los selectores de forma segura
-initializeSelectors();
-
+// 1. Inicializa la UI y Selectores (ahora dentro de initializeUI)
 // 2. Carga la configuración (crea los elementos de video y entidades AR)
-loadConfig();
-
 // 3. Inicializa los Listeners de la UI de forma segura después de que el DOM esté cargado.
-document.addEventListener('DOMContentLoaded', initializeUI);
+document.addEventListener('DOMContentLoaded', () => {
+    initializeUI();
+    loadConfig(); 
+});
