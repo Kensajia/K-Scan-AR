@@ -167,7 +167,7 @@ function initializeScene() {
                     const chromaColor = contentData.chromaColor || '#00ff00';
                     // 🚨 FIX CRÍTICO: Usar la variable chromaColor del JSON
                     videoEntity.setAttribute('material', 'shader: chromakey');
-                    videoEntity.setAttribute('chromakey', `color: ${chromaColor}`); // <-- FIX
+                    videoEntity.setAttribute('chromakey', `color: ${chromaColor}`); // <-- FIX <-- Esto usa tu color del JSON
                     videoEntity.setAttribute('src', `#${contentData.id}`); 
                 } 
                 
@@ -543,5 +543,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
 
 
