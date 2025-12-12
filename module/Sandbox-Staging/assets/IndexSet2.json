@@ -24,7 +24,7 @@
                     "width": 1.2,
                     "height": 0.9,
                     "chromakey": true,
-                    "chromaColor": "#00ff00"
+                    "chromaColor": "#19e519"
                 },
                 {
                     
@@ -98,6 +98,7 @@
         }
     ]
 }
+
 
 
 
