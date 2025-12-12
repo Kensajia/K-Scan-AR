@@ -50,7 +50,8 @@
                     "src": "https://files.catbox.moe/mq8k1z.mp4",
                     "width": 1.5,
                     "height": 1.0,
-                    "chromakey": true
+                    "chromakey": true,
+                    "chromaColor": "#00dc47"
                 }
             ]
         },
@@ -97,5 +98,6 @@
         }
     ]
 }
+
 
 
