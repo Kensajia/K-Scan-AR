@@ -93,10 +93,23 @@
                     "animated": true,
                     "animationMixer": "clip: *; timeScale: 1.0",
                     "audioSrc": "https://files.catbox.moe/1jk9yo.mp3"
+                },
+                {
+                    
+                    "id": "Elem-2-0",
+                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/bear/scene.gltf",
+                    "type": "3d",
+                    "position": "0 0 0.1", 
+                    "scale": "0.25 0.25 0.25",
+                    "rotation": "0 0 0",
+                    "animated": true,
+                    "animationMixer": "clip: *; timeScale: 1.0",
+                    "audioSrc": "https://files.catbox.moe/b3k4kg.mp4"
                 }
             ]
         }
     ]
 }
+
 
 
