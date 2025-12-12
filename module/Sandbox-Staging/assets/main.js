@@ -1,4 +1,4 @@
-// main.js (CÓDIGO FINAL: Fix Chroma Key RGB + Lógica Estable)
+// main.js (CÓDIGO FINAL: FIX de Chroma Key usando a-plane y Material Explícito)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
 
@@ -16,20 +16,19 @@ let activeTargetIndex = null;
 let isGlobalAudioMuted = true; 
 
 // === FUNCIÓN DE CONVERSIÓN DE COLOR PARA CHROMA KEY ===
-// 🟢 FIX 1: Esta función es ABSOLUTAMENTE necesaria para que el shader funcione.
+// CRÍTICO: Convierte HEX a "R G B" normalizado (0.0 a 1.0) para el shader.
 function hexToNormalizedRgb(hex) {
-    // Valor por defecto: Verde puro si el hex es inválido
     if (!hex || hex.length !== 7 || hex[0] !== '#') return '0 1 0'; 
     
     const r = parseInt(hex.substring(1, 3), 16);
     const g = parseInt(hex.substring(3, 5), 16);
     const b = parseInt(hex.substring(5, 7), 16);
 
+    // Usamos .toFixed(3) para 3 decimales redondeados
     const r_norm = (r / 255).toFixed(3);
     const g_norm = (g / 255).toFixed(3);
     const b_norm = (b / 255).toFixed(3);
 
-    // Formato de salida esperado por el shader: "R G B"
     return `${r_norm} ${g_norm} ${b_norm}`;
 }
 // =======================================================
@@ -107,7 +106,6 @@ function initializeScene() {
         
         videoRotationState[targetIndex] = {
             currentVideoIndex: 0,
-            // 🚨 USAMOS MAPAS POR ID para evitar problemas de índice entre videos y 3D
             htmlVideos: {}, 
             arEntities: [], 
             numVideos: 0, 
@@ -146,7 +144,6 @@ function initializeScene() {
                     modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
                 }
 
-                // Lógica de Audio 3D (DEJADA AQUÍ PERO SIN FIX DE VIDEO OCULTO)
                 if (contentData.audioSrc) {
                     const audioId = `${contentData.id}_audio`;
                     
@@ -181,22 +178,28 @@ function initializeScene() {
                 videoAsset.setAttribute('crossorigin', 'anonymous');
                 assetsContainer.appendChild(videoAsset);
                 
-                const videoEntity = document.createElement('a-video');
+                // 🟢 FIX 1: Usar a-plane para Chroma Key
+                const videoEntity = document.createElement(contentData.chromakey ? 'a-plane' : 'a-video');
                 videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
                 
                 if (contentData.chromakey) {
                     
                     const chromaColor = contentData.chromaColor || '#00ff00';
-                    // 🟢 FIX 2: Usar la función de conversión para obtener el color RGB normalizado
                     const normalizedRgb = hexToNormalizedRgb(chromaColor); 
 
-                    videoEntity.setAttribute('material', 'shader: chromakey');
-                    // CRÍTICO: El color DEBE estar en formato "R G B" (0.0 a 1.0)
-                    videoEntity.setAttribute('chromakey', `color: ${normalizedRgb}`); 
+                    // 🟢 FIX 2: Asignar material COMPLETO y explícito
+                    // Esto incluye el shader, el src (textura del video) y el color.
+                    videoEntity.setAttribute('material', 
+                        `shader: chromakey; 
+                         src: #${contentData.id}; 
+                         color: ${normalizedRgb}`); 
+                    
+                } else {
+                    // Para videos normales, usamos a-video y asignamos el src
                     videoEntity.setAttribute('src', `#${contentData.id}`); 
                 } 
                 
-                // 🚨 CRÍTICO: Guardar el SRC real en la entidad A-Frame para usarlo en playCurrentVideo
+                // Guardar el SRC real en la entidad A-Frame
                 videoEntity.dataset.videoSrc = contentData.src; 
                 
                 videoEntity.setAttribute('width', contentData.width);
@@ -207,7 +210,6 @@ function initializeScene() {
                 
                 videoRotationState[targetIndex].arEntities.push(videoEntity);
                 
-                // 🚨 USAR MAPA POR ID para acceder a los videos HTML sin problemas de índice
                 videoRotationState[targetIndex].htmlVideos[contentData.id] = videoAsset;
             }
         });
@@ -234,15 +236,14 @@ function playCurrentVideo(targetIndex) {
     
     const currentVidEntity = state.arEntities[currentVideoIndex];
     
-    // Si no es una entidad de video, salimos
-    if (!currentVidEntity || currentVidEntity.tagName !== 'A-VIDEO') {
+    // Si no es una entidad de video (a-video o a-plane), salimos
+    if (!currentVidEntity || (currentVidEntity.tagName !== 'A-VIDEO' && currentVidEntity.tagName !== 'A-PLANE')) {
         return; 
     }
 
-    // 🚨 Mapeo correcto de assets usando el ID
+    // Mapeo correcto de assets usando el ID
     const videoAssetId = currentVidEntity.hasAttribute('src') 
         ? currentVidEntity.getAttribute('src').substring(1) 
-        // Fallback: Si no tiene SRC, usamos una convención de ID para buscar el asset.
         : currentVidEntity.getAttribute('id').replace('ar-video-', 'Elem-'); 
         
     const currentVidAsset = document.querySelector(`#${videoAssetId}`); // El elemento <video>
@@ -262,12 +263,16 @@ function playCurrentVideo(targetIndex) {
 
     showVideo(targetIndex, currentVideoIndex);
 
-    // Si el video NO es Chroma o no tiene SRC, lo asignamos ahora.
-    if (!currentVidEntity.hasAttribute('src') || 
-        (currentVidEntity.components.material && currentVidEntity.components.material.shader.name !== 'chromakey')) {
-         currentVidEntity.setAttribute('src', `#${currentVidAsset.id}`);
+    // 🟢 FIX 3 (Asignación de material/src): Aseguramos la referencia de la textura
+    if (currentVidEntity.tagName === 'A-PLANE' && currentVidEntity.hasAttribute('material')) {
+        // Es un ChromaKey (a-plane), actualizamos la referencia src del material
+        const currentMaterial = currentVidEntity.getAttribute('material');
+        currentVidEntity.setAttribute('material', {...currentMaterial, src: `#${currentVidAsset.id}`});
+    } else {
+        // Es un a-video normal
+        currentVidEntity.setAttribute('src', `#${currentVidAsset.id}`);
     }
-
+    
     // Recarga y reproducción del video
     if (!currentVidAsset.dataset.loadedSrc || currentVidAsset.dataset.loadedSrc !== currentUrl) {
         currentVidAsset.src = currentUrl;
@@ -295,11 +300,17 @@ function rotateVideoManually() {
     const currentEntity = state.arEntities[currentIndex];
 
     // 1. Detener el elemento actual
-    if (currentEntity.tagName === 'A-VIDEO') { 
+    if (currentEntity.tagName === 'A-VIDEO' || currentEntity.tagName === 'A-PLANE') { 
         // Obtener el elemento <video> HTML a partir de la entidad A-Frame
         const videoAssetId = currentEntity.hasAttribute('src') 
             ? currentEntity.getAttribute('src').substring(1)
             : currentEntity.getAttribute('id').replace('ar-video-', 'Elem-'); 
+        // Si es a-plane, el ID estará en el material
+        if (currentEntity.tagName === 'A-PLANE' && currentEntity.hasAttribute('material')) {
+             const mat = currentEntity.getAttribute('material');
+             if (mat.src) videoAssetId = mat.src.substring(1);
+        }
+
         const currentVidAsset = document.querySelector(`#${videoAssetId}`);
         
         if (currentVidAsset) {
@@ -323,7 +334,7 @@ function rotateVideoManually() {
     const nextEntity = state.arEntities[nextIndex];
     
     // 4. Si el siguiente elemento es un video, comenzar la reproducción
-    if (nextEntity.tagName === 'A-VIDEO') {
+    if (nextEntity.tagName === 'A-VIDEO' || nextEntity.tagName === 'A-PLANE') {
         playCurrentVideo(activeTargetIndex);
     } else if (state.audioEntity && nextEntity === state.audioEntity) { 
         // 5. Si el siguiente elemento es el 3D con audio
@@ -336,7 +347,6 @@ function rotateVideoManually() {
 }
 
 // === LÓGICA DE TRACKING Y EVENTOS ===
-
 function setupTrackingEvents(targetIndex, targetEntity) {
     targetEntity.addEventListener("targetFound", () => {
         
@@ -361,7 +371,6 @@ function setupTrackingEvents(targetIndex, targetEntity) {
 
         // Mostrar botón SIGUIENTE
         const totalEntities = state.arEntities.length;
-        // 🟢 NOTA: Si el botón desapareció, es porque totalEntities <= 1 para el target activo.
         if (totalEntities > 1) {
             btnNextVideo.style.display = 'flex';
         } else {
@@ -369,7 +378,8 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         }
         
         // Si el elemento inicial (índice 0) es un video, reproducir.
-        const initialContentIsVideo = state.arEntities[0] && state.arEntities[0].tagName === 'A-VIDEO';
+        const initialContentIsVideo = state.arEntities[0] && 
+            (state.arEntities[0].tagName === 'A-VIDEO' || state.arEntities[0].tagName === 'A-PLANE');
         
         if (initialContentIsVideo) {
             playCurrentVideo(targetIndex);
@@ -377,10 +387,9 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             showVideo(targetIndex, 0); 
         }
         
-        // 🚨 CRÍTICO: Manejo del Audio 3D Asíncrono
+        // Manejo del Audio 3D Asíncrono
         if (state.audioEntity && state.currentVideoIndex === 0) {
             
-             // 1. Añadir listener para el caso de que el componente 'sound' aún no esté cargado (la primera vez)
             state.audioEntity.addEventListener('componentinitialized', (evt) => {
                 if (evt.detail.name === 'sound') {
                     const soundComp = state.audioEntity.components.sound;
@@ -391,7 +400,6 @@ function setupTrackingEvents(targetIndex, targetEntity) {
                 }
             });
 
-            // 2. Ejecutar inmediatamente si el componente 'sound' ya existe (veces subsiguientes)
             const soundComp = state.audioEntity.components.sound;
             if (soundComp && typeof soundComp.setVolume === 'function' && !isGlobalAudioMuted) { 
                 soundComp.setVolume(1.0);
@@ -414,7 +422,6 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             vid.currentTime = 0;
             vid.onended = null; 
             
-            // Borrar el registro de la URL para forzar la recarga
             vid.dataset.loadedSrc = ""; 
             vid.src = "";
             vid.load();
