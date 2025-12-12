@@ -149,6 +149,7 @@ function initializeScene() {
                     audioAsset.setAttribute('src', contentData.audioSrc);
                     audioAsset.setAttribute('preload', 'auto');
                     audioAsset.setAttribute('loop', 'true');
+                    audioAsset.setAttribute('playsinline', 'true'); // Importante para iOS
                     audioAsset.setAttribute('crossorigin', 'anonymous');
                     assetsContainer.appendChild(audioAsset);
                     
@@ -249,6 +250,7 @@ function playCurrentVideo(targetIndex) {
     
     if (!currentVidAsset) return; 
 
+    // Pausa otros videos en todos los targets
     Object.values(videoRotationState).forEach(s => {
         Object.values(s.htmlVideos).forEach(v => {
             if (v !== currentVidAsset) {
@@ -372,39 +374,41 @@ function rotateVideoManually() {
     }
 }
 
-// === FUNCIÓN AUXILIAR PARA INICIAR AUDIO 3D ===
+// === FUNCIÓN AUXILIAR PARA INICIAR AUDIO 3D (CON REINTENTO) ===
 function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     
     if (isGlobalAudioMuted) return;
 
-    // 1. Obtener el componente 'sound'
     let soundComp = audioEntity.components.sound;
     
-    // Si el componente 'sound' no está listo inmediatamente, esperamos
+    // 1. Manejo inicial del componente (Si no existe, esperar 'componentinitialized')
     if (!soundComp) {
-        
-        // FIX ASÍNCRONO: Esperar a que el componente 'sound' se inicialice
         audioEntity.addEventListener('componentinitialized', function handler(evt) {
             if (evt.detail.name === 'sound') {
                 audioEntity.removeEventListener('componentinitialized', handler); 
-                startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted); // Llamada recursiva
+                startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted); 
             }
         });
-        
-        console.warn(`[Audio 3D] Esperando inicialización del componente 'sound' en Target ${targetIndex}.`);
+        console.warn(`[Audio 3D] Esperando inicialización inicial del componente 'sound' en Target ${targetIndex}.`);
         return;
     }
 
+    // 2. Comprobación de que los MÉTODOS están listos (el punto de fallo)
     const hasSoundMethods = typeof soundComp.setVolume === 'function' && 
                             typeof soundComp.playSound === 'function';
-    
+
     if (!hasSoundMethods) {
-        console.warn(`[Audio 3D] Componente 'sound' en Target ${targetIndex} detectado, pero sus métodos no están listos.`);
-        // No hacemos nada, esperamos la próxima llamada o el usuario interactúa.
-        return; 
+        // FIX: Reintentar después de un pequeño retardo (200ms)
+        console.warn(`[Audio 3D] Métodos no listos en Target ${targetIndex}. Reintentando en 200ms...`);
+        setTimeout(() => {
+            // Reintentar la ejecución de startAudio3D
+            startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted); 
+        }, 200); 
+        return;
     }
     
-    // 2. Componente 'sound' está listo. Procedemos a la reproducción.
+    // 3. Componente 'sound' y sus métodos están listos. Procedemos a la reproducción.
+    
     const soundSrc = soundComp.data.src;
     if (soundSrc && soundSrc.startsWith('#')) {
         const audioAssetId = soundSrc.substring(1);
@@ -420,9 +424,10 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
         }
     }
     
-    // 3. Iniciar el componente sound de A-Frame
+    // 4. Iniciar el componente sound de A-Frame
     soundComp.setVolume(1.0);
     soundComp.playSound();
+    console.log(`[Audio 3D] Audio 3D iniciado correctamente en Target ${targetIndex}.`); 
 }
 // ===============================================
 
@@ -532,10 +537,9 @@ function toggleAudio3D(audioEntity, targetIndex, targetMutedState) {
     
     let soundComp = audioEntity.components.sound;
     
-    // Si el componente no está listo, intentamos inicializarlo si se intenta desmutear
+    // Si el componente no está listo, se intenta inicializar (reintento)
     if (!soundComp) {
         if (!targetMutedState && activeTargetIndex === targetIndex) {
-            // Esperar a que el componente esté listo, luego llamar a la función de inicio.
              startAudio3D(audioEntity, targetIndex, targetMutedState); 
         } else {
             console.warn(`[Audio 3D] No se pudo mutear/desmutear el Target ${targetIndex}: Componente 'sound' no listo.`);
@@ -543,7 +547,7 @@ function toggleAudio3D(audioEntity, targetIndex, targetMutedState) {
         return;
     }
 
-    // AÑADIR VERIFICACIÓN DE FUNCIONES: Asegurar que los métodos existen en soundComp (FIX para TypeError)
+    // AÑADIR VERIFICACIÓN DE FUNCIONES: Asegurar que los métodos existen en soundComp 
     const hasSoundMethods = typeof soundComp.setVolume === 'function' && 
                             typeof soundComp.stopSound === 'function' && 
                             typeof soundComp.playSound === 'function';
@@ -554,7 +558,7 @@ function toggleAudio3D(audioEntity, targetIndex, targetMutedState) {
     }
 
 
-    // El componente está listo (o al menos su esqueleto)
+    // El componente está listo
     const soundSrc = soundComp.data.src;
     let audioAsset = null;
     if (soundSrc && soundSrc.startsWith('#')) {
@@ -668,11 +672,10 @@ function initializeUIListeners() {
             // Aplicar a videos HTML
             Object.values(state.htmlVideos).forEach(v => {
                 v.muted = targetMutedState; 
-                // Intentar reproducir si se desmutea para pasar la restricción de interacción del navegador
                 if (!targetMutedState && v.paused) v.play().catch(e => {}); 
             });
             
-            // Aplicar a Modelos 3D con audio (usa la nueva función)
+            // Aplicar a Modelos 3D con audio (usa la función de reintento)
             if (state.audioEntity) { 
                 toggleAudio3D(state.audioEntity, state.targetIndex, targetMutedState);
             }
