@@ -1,4 +1,4 @@
-// main.js (CÓDIGO FINAL: Carga Asíncrona y Control 3D)
+// main.js (CÓDIGO FINAL: Mapeo y Control Asíncrono de Elementos)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -30,17 +30,6 @@ function safeQuerySelector(selector, name) {
     }
     return el;
 }
-
-// 1. Inicializa los selectores de forma segura
-function initializeSelectors() {
-    sceneEl = safeQuerySelector('#scene-ar', 'Scene A-Frame');
-    controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
-    btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
-    btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
-    targetContainer = safeQuerySelector("#target-container", 'Target Container');
-    assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
-}
-
 
 // === COMPONENTE KEEP-ALIVE ===
 AFRAME.registerComponent('keep-alive', {
@@ -87,9 +76,10 @@ function initializeScene() {
         
         videoRotationState[targetIndex] = {
             currentVideoIndex: 0,
-            htmlVideos: [],
+            // 🚨 USAMOS MAPAS POR ID para evitar problemas de índice entre videos y 3D
+            htmlVideos: {}, 
+            videoURLs: {}, 
             arEntities: [], 
-            videoURLs: [], 
             numVideos: 0, 
             hasVideoContent: false,
             audioEntity: null,
@@ -122,8 +112,8 @@ function initializeScene() {
                 modelEntity.setAttribute('rotation', contentData.rotation || '0 0 0');
                 modelEntity.setAttribute('visible', index === 0); 
                 
-                // 🚨 CRUCIAL: Si es animado, agregar el componente, incluso si es estático (para consistencia)
                 if (contentData.animated) {
+                    // Aseguramos que el componente animation-mixer esté siempre presente si es animado
                     modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
                 }
 
@@ -168,11 +158,11 @@ function initializeScene() {
                 if (contentData.chromakey) {
                     videoEntity.setAttribute('material', 'shader: chromakey');
                     videoEntity.setAttribute('chromakey', 'color: #00ff00');
-                    // Para Chroma Key, el SRC de A-Frame es necesario para que el shader acceda al video asset
                     videoEntity.setAttribute('src', `#${contentData.id}`); 
                 } 
-                // 🚨 MODIFICACIÓN CLAVE: No establecer el SRC de A-Frame aquí para videos estándar.
-                // Esto previene errores de inicialización (cuadro negro/requestVideoFrameCallback).
+                
+                // 🚨 CRÍTICO: Guardar el SRC real en la entidad A-Frame para usarlo en playCurrentVideo
+                videoEntity.dataset.videoSrc = contentData.src; 
                 
                 videoEntity.setAttribute('width', contentData.width);
                 videoEntity.setAttribute('height', contentData.height);
@@ -180,16 +170,15 @@ function initializeScene() {
 
                 targetEntity.appendChild(videoEntity);
                 
-                videoRotationState[targetIndex].htmlVideos.push(videoAsset);
                 videoRotationState[targetIndex].arEntities.push(videoEntity);
-                videoRotationState[targetIndex].videoURLs.push(contentData.src); 
+                
+                // 🚨 USAR MAPA POR ID para acceder a los videos HTML sin problemas de índice
+                videoRotationState[targetIndex].htmlVideos[contentData.id] = videoAsset;
             }
         });
         
         videoRotationState[targetIndex].numVideos = videoCount;
-        
         targetContainer.appendChild(targetEntity);
-        
         setupTrackingEvents(targetIndex, targetEntity);
     });
 }
@@ -206,13 +195,29 @@ function showVideo(targetIndex, contentIndex) {
 
 function playCurrentVideo(targetIndex) {
     const state = videoRotationState[targetIndex];
-    const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
-    const currentUrl = state.videoURLs[state.currentVideoIndex]; 
-    const currentVidEntity = state.arEntities[state.currentVideoIndex]; 
+    const currentVideoIndex = state.currentVideoIndex; 
+    
+    const currentVidEntity = state.arEntities[currentVideoIndex];
+    
+    // Si no es una entidad de video, salimos
+    if (!currentVidEntity || currentVidEntity.tagName !== 'A-VIDEO') {
+        return; 
+    }
+
+    // 🚨 MODIFICADO: Mapeo correcto de assets usando el ID
+    // El SRC de A-Frame está en formato '#ID_ASSET'. Lo extraemos y buscamos el <video> HTML.
+    const videoAssetId = currentVidEntity.hasAttribute('src') 
+        ? currentVidEntity.getAttribute('src').substring(1) 
+        : currentVidEntity.getAttribute('id').replace('ar-video-', 'Elem-'); // Fallback basado en el ID del entity
+        
+    const currentVidAsset = document.querySelector(`#${videoAssetId}`); // El elemento <video>
+    const currentUrl = currentVidEntity.dataset.videoSrc; // El SRC real que guardamos antes
+    
+    if (!currentVidAsset) return; 
 
     // Pausa preventiva de todos los videos al cambiar de target
     Object.values(videoRotationState).forEach(s => {
-        s.htmlVideos.forEach(v => {
+        Object.values(s.htmlVideos).forEach(v => {
             if (v !== currentVidAsset) {
                 v.pause();
                 v.currentTime = 0;
@@ -220,15 +225,16 @@ function playCurrentVideo(targetIndex) {
         });
     });
 
-    showVideo(targetIndex, state.currentVideoIndex);
+    showVideo(targetIndex, currentVideoIndex);
 
-    // 🚨 CORRECCIÓN: Si el video no es Chroma, asegurar que la entidad A-Frame tenga su SRC
-    // (Esto es necesario si no se asignó en initializeScene)
-    if (!currentVidEntity.components.material || currentVidEntity.components.material.shader.name !== 'chromakey') {
+    // 🚨 CRÍTICO: Si el video NO es Chroma (es decir, el src de A-Frame estaba vacío), lo asignamos ahora
+    // Si la entidad A-Frame no tiene SRC o no usa chromakey, lo asignamos.
+    if (!currentVidEntity.hasAttribute('src') || 
+        (currentVidEntity.components.material && currentVidEntity.components.material.shader.name !== 'chromakey')) {
          currentVidEntity.setAttribute('src', `#${currentVidAsset.id}`);
     }
 
-    // Evita la recarga constante del SRC: RECARGA el video si no tiene un src registrado O si cambió.
+    // Recarga y reproducción del video
     if (!currentVidAsset.dataset.loadedSrc || currentVidAsset.dataset.loadedSrc !== currentUrl) {
         currentVidAsset.src = currentUrl;
         currentVidAsset.load(); 
@@ -236,7 +242,6 @@ function playCurrentVideo(targetIndex) {
     }
     
     currentVidAsset.muted = isGlobalAudioMuted; 
-    
     currentVidAsset.onended = null; 
     
     currentVidAsset.play().catch(error => {
@@ -244,7 +249,7 @@ function playCurrentVideo(targetIndex) {
     }); 
 }
 
-// LÓGICA DE BOTÓN SIGUIENTE (ROTACIÓN UNIFICADA: Video y 3D)
+// LÓGICA DE ROTACIÓN MANUAL (CORREGIDA LA LÓGICA DE LLAMADA A playCurrentVideo)
 function rotateVideoManually() {
     const state = videoRotationState[activeTargetIndex];
     
@@ -252,21 +257,27 @@ function rotateVideoManually() {
     
     if (activeTargetIndex === null || totalEntities <= 1) return;
     
-    // 1. Pausar el elemento actual SI era un video o detener audio 3D
     const currentIndex = state.currentVideoIndex;
+    const currentEntity = state.arEntities[currentIndex];
 
-    if (state.hasVideoContent && currentIndex < state.htmlVideos.length) { 
-        const currentVidAsset = state.htmlVideos[currentIndex];
+    // 1. Detener el elemento actual
+    if (currentEntity.tagName === 'A-VIDEO') { 
+        // 🚨 OBTENER EL ELEMENTO <video> HTML a partir de la entidad A-Frame
+        const videoAssetId = currentEntity.hasAttribute('src') 
+            ? currentEntity.getAttribute('src').substring(1)
+            : currentEntity.getAttribute('id').replace('ar-video-', 'Elem-'); 
+        const currentVidAsset = document.querySelector(`#${videoAssetId}`);
+        
         if (currentVidAsset) {
             currentVidAsset.pause();
             currentVidAsset.currentTime = 0;
             currentVidAsset.onended = null; 
         }
-    }
-    
-    // Detener audio 3D si estaba activo
-    if (state.audioEntity && state.audioEntity.components.sound && currentIndex === 0) {
-        state.audioEntity.components.sound.stopSound();
+    } else if (state.audioEntity && currentEntity === state.audioEntity) {
+        // Detener audio 3D si estaba activo
+        if (state.audioEntity.components.sound) {
+            state.audioEntity.components.sound.stopSound();
+        }
     }
     
     // 2. Determinar el siguiente índice
@@ -275,13 +286,13 @@ function rotateVideoManually() {
     // 3. Aplicar la visibilidad al siguiente elemento
     showVideo(activeTargetIndex, nextIndex);
     
+    const nextEntity = state.arEntities[nextIndex];
+    
     // 4. Si el siguiente elemento es un video, comenzar la reproducción
-    const nextContentIsVideo = state.arEntities[nextIndex] && state.arEntities[nextIndex].tagName === 'A-VIDEO';
-
-    if (nextContentIsVideo) {
+    if (nextEntity.tagName === 'A-VIDEO') {
         playCurrentVideo(activeTargetIndex);
-    } else if (state.audioEntity && nextIndex === 0) { 
-        // 5. Si el siguiente elemento es el 3D con audio (siempre en índice 0 en este JSON)
+    } else if (state.audioEntity && nextEntity === state.audioEntity) { 
+        // 5. Si el siguiente elemento es el 3D con audio
         // Intentar reproducir audio 3D
         const soundComp = state.audioEntity.components.sound;
         if (soundComp && !isGlobalAudioMuted) {
@@ -298,7 +309,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         
         // PAUSA EXHAUSTIVA AL ENCONTRAR UN MARCADOR
         Object.values(videoRotationState).forEach(s => {
-            s.htmlVideos.forEach(v => {
+            Object.values(s.htmlVideos).forEach(v => {
                 v.pause();
                 v.currentTime = 0;
                 if (s.targetIndex !== targetIndex) {
@@ -323,7 +334,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             btnNextVideo.style.display = 'none';
         }
         
-        // Si el elemento actual (índice 0, ya que se reseteó) es un video, reproducir.
+        // Si el elemento inicial (índice 0) es un video, reproducir.
         const initialContentIsVideo = state.arEntities[0] && state.arEntities[0].tagName === 'A-VIDEO';
         
         if (initialContentIsVideo) {
@@ -332,7 +343,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             showVideo(targetIndex, 0); 
         }
         
-        // 🚨 MODIFICACIÓN CLAVE: Manejo del Audio 3D Asíncrono
+        // 🚨 CRÍTICO: Manejo del Audio 3D Asíncrono
         if (state.audioEntity && state.currentVideoIndex === 0) {
             
              // 1. Añadir listener para el caso de que el componente 'sound' aún no esté cargado (la primera vez)
@@ -348,7 +359,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
 
             // 2. Ejecutar inmediatamente si el componente 'sound' ya existe (veces subsiguientes)
             const soundComp = state.audioEntity.components.sound;
-            if (soundComp && !isGlobalAudioMuted) { 
+            if (soundComp && typeof soundComp.setVolume === 'function' && !isGlobalAudioMuted) { 
                 soundComp.setVolume(1.0);
                 soundComp.playSound();
             }
@@ -364,15 +375,13 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         const state = videoRotationState[targetIndex];
         
         // PAUSA RIGUROSA: Detener y desligar videos
-        state.htmlVideos.forEach(vid => {
+        Object.values(state.htmlVideos).forEach(vid => {
             vid.pause();
             vid.currentTime = 0;
             vid.onended = null; 
             
             // Borrar el registro de la URL para forzar la recarga
             vid.dataset.loadedSrc = ""; 
-
-            // Cargar un SRC vacío para liberar el recurso de WebGL/Audio
             vid.src = "";
             vid.load();
         });
@@ -391,6 +400,8 @@ function setupTrackingEvents(targetIndex, targetEntity) {
 // === LÓGICA DE LA INTERFAZ DE USUARIO (UI) ===
 function initializeUIListeners() {
     
+    // ... (Lógica de Flash y Audio Global sin cambios relevantes) ...
+
     // Detección de Flash
     sceneEl.addEventListener("arReady", () => {
         
@@ -465,7 +476,7 @@ function initializeUIListeners() {
         Object.values(videoRotationState).forEach(state => {
             
             // Aplicar a videos HTML
-            state.htmlVideos.forEach(v => {
+            Object.values(state.htmlVideos).forEach(v => {
                 v.muted = targetMutedState; 
                 if (!targetMutedState && v.paused) v.play().catch(e => {}); 
             });
@@ -478,7 +489,7 @@ function initializeUIListeners() {
                     
                     if (!targetMutedState) { // Objetivo: SONIDO (Desmutear)
                         soundComp.setVolume(1.0); 
-                        if (activeTargetIndex === state.targetIndex && state.currentVideoIndex === 0) {
+                        if (activeTargetIndex === state.targetIndex) {
                             soundComp.playSound(); 
                         }
                     } else { // Objetivo: MUTE (Mutear)
