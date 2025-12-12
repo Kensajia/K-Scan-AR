@@ -1,4 +1,4 @@
-// main.js (PLANTILLA FINAL Y ROBUSSTA: Audio y Control de Estado Corregidos)
+// main.js (CÓDIGO FINAL Y COMPLETO)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -13,7 +13,7 @@ let assetsContainer;
 let videoRotationState = {}; 
 let config = null; 
 let activeTargetIndex = null;
-let isGlobalAudioMuted = true; // 🚨 NUEVA VARIABLE: El audio inicia MUTEADO por defecto
+let isGlobalAudioMuted = true; // El audio inicia MUTEADO por defecto (mejor para evitar bloqueos del navegador)
 
 // Función de utilidad para seleccionar elementos de forma segura
 function safeQuerySelector(selector, name) {
@@ -62,7 +62,7 @@ async function loadConfig() {
         }
         config = await response.json();
         
-        // 🚨 VERIFICACIÓN DE ESTRUCTURA Y LLAMADA A INICIALIZACIÓN
+        // VERIFICACIÓN DE ESTRUCTURA Y LLAMADA A INICIALIZACIÓN
         if (config && Array.isArray(config.Targets)) {
              initializeScene();
         } else {
@@ -84,7 +84,6 @@ function initializeScene() {
 
     Targets.forEach(target => {
         
-        // 🚨 NOMENCLATURA: Usamos 'elementos'
         const { targetIndex, elementos } = target;
         
         videoRotationState[targetIndex] = {
@@ -104,7 +103,6 @@ function initializeScene() {
 
         let videoCount = 0;
         
-        // 🚨 NOMENCLATURA: Iteramos sobre 'elementos'
         elementos.forEach((contentData, index) => {
             
             if (contentData.type === "3d") {
@@ -120,18 +118,15 @@ function initializeScene() {
                 modelEntity.setAttribute('id', `ar-model-${targetIndex}-${index}`);
                 modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
                 
-                // Aplicar propiedades 3D
                 modelEntity.setAttribute('position', contentData.position || '0 0 0');
                 modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
                 modelEntity.setAttribute('rotation', contentData.rotation || '0 0 0');
                 modelEntity.setAttribute('visible', index === 0); 
                 
-                // SOPORTE PARA ANIMACIÓN 3D
                 if (contentData.animated) {
                     modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
                 }
 
-                // SOPORTE PARA AUDIO 3D
                 if (contentData.audioSrc) {
                     const audioId = `${contentData.id}_audio`;
                     
@@ -140,7 +135,7 @@ function initializeScene() {
                     audioAsset.setAttribute('src', contentData.audioSrc);
                     assetsContainer.appendChild(audioAsset);
                     
-                    // 🚨 Volumen inicial 0.0 (muteado por defecto), se controla con el botón de UI
+                    // Volumen inicial 0.0 (muteado por defecto)
                     modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
                     videoRotationState[targetIndex].audioEntity = modelEntity;
@@ -163,14 +158,14 @@ function initializeScene() {
                 videoAsset.setAttribute('loop', 'true');
                 videoAsset.setAttribute('playsinline', 'true');
                 videoAsset.setAttribute('webkit-playsinline', 'true');
-                videoAsset.setAttribute('muted', 'muted'); // Muteado por defecto al inicio
+                videoAsset.setAttribute('muted', 'muted'); // Muteado por defecto
                 videoAsset.setAttribute('crossorigin', 'anonymous');
                 assetsContainer.appendChild(videoAsset);
                 
                 const videoEntity = document.createElement('a-video');
                 videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
                 
-                // LÓGICA DE CHROMA KEY AGREGADA
+                // LÓGICA DE CHROMA KEY
                 if (contentData.chromakey) {
                     videoEntity.setAttribute('material', 'shader: chromakey');
                     videoEntity.setAttribute('chromakey', 'color: #00ff00');
@@ -190,7 +185,6 @@ function initializeScene() {
             }
         });
         
-        // Contar videos reales solo si hay videos
         videoRotationState[targetIndex].numVideos = videoCount;
         
         targetContainer.appendChild(targetEntity);
@@ -203,7 +197,6 @@ function initializeScene() {
 
 function showVideo(targetIndex, contentIndex) {
     const state = videoRotationState[targetIndex];
-    // Aplica la visibilidad a la entidad A-Frame correspondiente (Video o 3D)
     state.arEntities.forEach((entityEl, i) => {
         entityEl.setAttribute('visible', i === contentIndex);
     });
@@ -234,10 +227,9 @@ function playCurrentVideo(targetIndex) {
         currentVidAsset.dataset.loadedSrc = currentUrl; 
     }
     
-    // 🚨 APLICAR EL ESTADO MUTEADO GLOBAL ANTES DE REPRODUCIR
+    // APLICAR EL ESTADO MUTEADO GLOBAL ANTES DE REPRODUCIR
     currentVidAsset.muted = isGlobalAudioMuted; 
     
-    // Deshabilitamos la rotación automática para que funcione el botón manual
     currentVidAsset.onended = null; 
     
     currentVidAsset.play().catch(error => {
@@ -249,19 +241,15 @@ function playCurrentVideo(targetIndex) {
 function rotateVideoManually() {
     const state = videoRotationState[activeTargetIndex];
     
-    // Contar todas las entidades (Videos y 3D) en el bloque
     const totalEntities = state.arEntities.length; 
     
-    // Si hay 1 o menos elementos, salir.
     if (activeTargetIndex === null || totalEntities <= 1) return;
     
     // 1. Pausar el elemento actual SI era un video
     const currentIndex = state.currentVideoIndex;
 
-    // Verificar si el índice actual está dentro del rango de videos cargados
     if (state.hasVideoContent && currentIndex < state.htmlVideos.length) { 
         const currentVidAsset = state.htmlVideos[currentIndex];
-        // Pausa y resetea SOLO si el elemento actual era un video
         if (currentVidAsset) {
             currentVidAsset.pause();
             currentVidAsset.currentTime = 0;
@@ -286,11 +274,16 @@ function rotateVideoManually() {
 function setupTrackingEvents(targetIndex, targetEntity) {
     targetEntity.addEventListener("targetFound", () => {
         
-        // 🚨 PAUSA EXHAUSTIVA AL ENCONTRAR UN MARCADOR (Evita audio residual)
+        // PAUSA EXHAUSTIVA AL ENCONTRAR UN MARCADOR (Evita audio residual de otros targets)
         Object.values(videoRotationState).forEach(s => {
             s.htmlVideos.forEach(v => {
                 v.pause();
                 v.currentTime = 0;
+                // Desligar el src si no es el target actual (para robustez)
+                if (s.targetIndex !== targetIndex) {
+                    v.src = "";
+                    v.load();
+                }
             });
             // Detener audio de modelos 3D
             const audioEntity = s.audioEntity;
@@ -302,7 +295,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         activeTargetIndex = targetIndex; 
         const state = videoRotationState[targetIndex];
 
-        // Mostrar botón SIGUIENTE si hay MÁS de UN elemento en total (Videos y 3D)
+        // Mostrar botón SIGUIENTE
         const totalEntities = state.arEntities.length;
         if (totalEntities > 1) {
             btnNextVideo.style.display = 'flex';
@@ -310,8 +303,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             btnNextVideo.style.display = 'none';
         }
         
-        // Iniciar reproducción o visibilidad del elemento actual (índice 0 por defecto)
-        // Se determina si el elemento inicial es un video para llamar a playCurrentVideo.
+        // Determinar si el elemento inicial es un video para llamar a playCurrentVideo
         const initialContentIsVideo = state.arEntities[0] && state.arEntities[0].tagName === 'A-VIDEO';
         
         if (initialContentIsVideo) {
@@ -320,8 +312,8 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             showVideo(targetIndex, 0); 
         }
         
-        // 🚨 Iniciar audio 3D si es el elemento visible y NO está globalmente muteado
-        if (state.audioEntity && state.audioEntity.components.sound) {
+        // Iniciar audio 3D si el elemento visible es el audio entity (el primer elemento, índice 0) y NO está globalmente muteado
+        if (state.audioEntity && state.audioEntity.components.sound && state.currentVideoIndex === 0) {
              if (!isGlobalAudioMuted) { 
                  state.audioEntity.components.sound.setVolume(1.0);
                  state.audioEntity.components.sound.playSound();
@@ -337,19 +329,22 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         
         const state = videoRotationState[targetIndex];
         
-        // Pausar y resetear videos
+        // PAUSA RIGUROSA: Detener y desligar videos (Evita audio residual)
         state.htmlVideos.forEach(vid => {
             vid.pause();
             vid.currentTime = 0;
             vid.onended = null; 
+            // SOLUCIÓN FINAL: Cargar un SRC vacío para liberar el recurso de WebGL/Audio
+            vid.src = "";
+            vid.load();
         });
         
-        // 🚨 Detener audio del modelo 3D
+        // Detener audio del modelo 3D
         if (state.audioEntity && state.audioEntity.components.sound) {
              state.audioEntity.components.sound.stopSound();
         }
         
-        // Ocultar todas las entidades (videos o 3D)
+        // Ocultar todas las entidades y resetear a índice 0
         state.arEntities.forEach(el => el.setAttribute('visible', false));
         showVideo(targetIndex, 0); 
     });
@@ -358,7 +353,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
 // === LÓGICA DE LA INTERFAZ DE USUARIO (UI) ===
 function initializeUIListeners() {
     
-    // Detección de Flash y lógica de UI
+    // Detección de Flash
     sceneEl.addEventListener("arReady", () => {
         
         const mindarComponent = sceneEl.components['mindar-image'];
@@ -395,6 +390,16 @@ function initializeUIListeners() {
             btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
             btnFlash.disabled = true;
         }
+        
+        // Inicializar el botón de audio al estado global Muteado por defecto
+        const btnAudio = safeQuerySelector("#btn-audio", 'Audio Button');
+        if (isGlobalAudioMuted) {
+             btnAudio.style.background = "var(--danger)";
+             btnAudio.innerHTML = "🔇 SILENCIO";
+        } else {
+             btnAudio.style.background = "var(--accent)";
+             btnAudio.innerHTML = "🔊 SONIDO";
+        }
     });
 
     // Lógica de click del botón de flash
@@ -413,7 +418,7 @@ function initializeUIListeners() {
         }
     });
 
-    // LÓGICA DE AUDIO GLOBAL (Fix: Guarda el estado global y lo aplica)
+    // LÓGICA DE AUDIO GLOBAL (Guarda el estado global y lo aplica)
     safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
         
         // 1. Invertimos el estado de muteo global antes de aplicarlo
@@ -426,7 +431,6 @@ function initializeUIListeners() {
             // 2a. Aplicar a videos HTML
             state.htmlVideos.forEach(v => {
                 v.muted = targetMutedState; 
-                // Si desmuteamos un video pausado, intentamos reproducirlo
                 if (!targetMutedState && v.paused) v.play().catch(e => {}); 
             });
             
@@ -438,8 +442,8 @@ function initializeUIListeners() {
                     
                     if (!targetMutedState) { // Objetivo: SONIDO (Desmutear)
                         soundComp.setVolume(1.0); 
-                        // Solo reproducir si este target está activo/encontrado
-                        if (activeTargetIndex === state.targetIndex) {
+                        // Solo reproducir si este target está activo y el audio 3D es el elemento visible
+                        if (activeTargetIndex === state.targetIndex && state.currentVideoIndex === 0) {
                             soundComp.playSound(); 
                         }
                     } else { // Objetivo: MUTE (Mutear)
