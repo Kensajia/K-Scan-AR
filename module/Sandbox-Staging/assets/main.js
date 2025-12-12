@@ -1,4 +1,4 @@
-// main.js (PLANTILLA FINAL Y CORREGIDA)
+// main.js (PLANTILLA FINAL Y CORREGIDA: Estructura de Inicialización)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -29,6 +29,18 @@ function safeQuerySelector(selector, name) {
     }
     return el;
 }
+
+// 1. Inicializa los selectores de forma segura
+function initializeSelectors() {
+    // 🚨 REGRESO A LA ESTRUCTURA ORIGINAL: Definir selectores globalmente AQUÍ.
+    sceneEl = safeQuerySelector('#scene-ar', 'Scene A-Frame');
+    controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
+    btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
+    btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
+    targetContainer = safeQuerySelector("#target-container", 'Target Container');
+    assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
+}
+
 
 // === COMPONENTE KEEP-ALIVE ===
 AFRAME.registerComponent('keep-alive', {
@@ -70,6 +82,7 @@ function initializeScene() {
     // Si llegamos aquí, sabemos que config.Targets es un array válido.
     const Targets = config.Targets;
     
+    // 🚨 assetsContainer ya debe estar definido por initializeSelectors()
     if (!assetsContainer.appendChild) return; 
 
     Targets.forEach(target => {
@@ -297,10 +310,14 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         }
         
         // Iniciar reproducción o visibilidad del primer elemento
-        // Si el elemento visible (index 0) es un video, se llama a playCurrentVideo. 
-        // Si es un 3D, showVideo se encarga de hacerlo visible.
         if (state.htmlVideos.length > 0) { // Si hay al menos un video en el target
-             playCurrentVideo(targetIndex);
+             // Checar si el elemento inicial es un video
+             const initialContentIsVideo = state.arEntities[0].tagName === 'A-VIDEO';
+             if (initialContentIsVideo) {
+                 playCurrentVideo(targetIndex);
+             } else {
+                 showVideo(targetIndex, 0); 
+             }
         } else {
              showVideo(targetIndex, 0); 
         }
@@ -340,17 +357,9 @@ function setupTrackingEvents(targetIndex, targetEntity) {
     });
 }
 
-// === INICIALIZACIÓN DE LA INTERFAZ DE USUARIO (UI) ===
-function initializeUI() {
+// === LÓGICA DE LA INTERFAZ DE USUARIO (UI) ===
+function initializeUIListeners() {
     
-    // 1. Inicializa los selectores de forma segura
-    sceneEl = safeQuerySelector('#scene-ar', 'Scene A-Frame');
-    controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
-    btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
-    btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
-    targetContainer = safeQuerySelector("#target-container", 'Target Container');
-    assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
-
     // Detección de Flash y lógica de UI
     sceneEl.addEventListener("arReady", () => {
         
@@ -466,10 +475,12 @@ function initializeUI() {
 
 // --- INICIO DEL CÓDIGO ---
 
-// 1. Inicializa la UI y Selectores (ahora dentro de initializeUI)
-// 2. Carga la configuración (crea los elementos de video y entidades AR)
-// 3. Inicializa los Listeners de la UI de forma segura después de que el DOM esté cargado.
+// 1. Inicializa los selectores inmediatamente
+initializeSelectors();
+
+// 2. Ejecutar la carga del JSON y la inicialización de la UI después de que el DOM esté cargado.
 document.addEventListener('DOMContentLoaded', () => {
-    initializeUI();
+    initializeUIListeners();
+    // loadConfig llama a initializeScene() internamente solo si el JSON es válido
     loadConfig(); 
 });
