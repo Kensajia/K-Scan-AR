@@ -410,36 +410,42 @@ function initializeUI() {
 
     // LÓGICA DE AUDIO GLOBAL (Mejorada para control unificado y desbloqueo inicial)
     safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
-        
-        // Basamos el estado en el texto del botón
-        const isCurrentlyMuted = this.innerHTML.includes("🔇"); 
+    
+    const isCurrentlyMuted = this.innerHTML.includes("🔇"); 
 
-        // 1. Alternar Mute/Unmute para todos los VIDEOS
-        Object.values(videoRotationState).forEach(state => {
-            state.htmlVideos.forEach(v => {
-                v.muted = isCurrentlyMuted; 
-                if (!v.muted && v.paused) v.play().catch(e => {}); 
-            });
+    // 1. Alternar Mute/Unmute para todos los VIDEOS
+    Object.values(videoRotationState).forEach(state => {
+        state.htmlVideos.forEach(v => {
+            v.muted = isCurrentlyMuted; 
+            if (!v.muted && v.paused) v.play().catch(e => {}); 
+        });
+        
+        // 2. Alternar Volumen para todos los MODELOS 3D con audio
+        if (state.audioEntity) { // Verificar si la entidad existe
+            const soundComp = state.audioEntity.components.sound;
             
-            // 2. Alternar Volumen para todos los MODELOS 3D con audio
-            if (state.audioEntity && state.audioEntity.components.sound) {
-                const soundComp = state.audioEntity.components.sound;
+            // 🚨 VERIFICACIÓN CRÍTICA: Solo operar si el componente SOUND tiene el método setVolume
+            if (soundComp && typeof soundComp.setVolume === 'function') {
                 
                 if (isCurrentlyMuted) { // Objetivo: SONIDO (Desmutear)
                     soundComp.setVolume(1.0); 
                     if (activeTargetIndex === state.targetIndex) {
-                        soundComp.playSound(); // Reproducir si el target está activo
+                        soundComp.playSound(); 
                     }
                 } else { // Objetivo: MUTE (Mutear)
                     soundComp.setVolume(0.0); 
+                    // No es necesario llamar stopSound, basta con poner el volumen a 0
                 }
+            } else {
+                 console.warn(`[Audio 3D] Componente 'sound' no inicializado completamente en Target ${state.targetIndex}.`);
             }
-        });
-
-        // 3. Actualizar la UI del botón
-        this.style.background = isCurrentlyMuted ? "var(--accent)" : "var(--danger)";
-        this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
+        }
     });
+
+    // 3. Actualizar la UI del botón
+    this.style.background = isCurrentlyMuted ? "var(--accent)" : "var(--danger)";
+    this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
+});
 
     // LÓGICA DE TOGGLE UI
     safeQuerySelector("#btn-toggle-ui", 'Toggle UI Button').addEventListener("click", () => {
@@ -471,3 +477,4 @@ loadConfig();
 
 // 3. Inicializa los Listeners de la UI de forma segura después de que el DOM esté cargado.
 document.addEventListener('DOMContentLoaded', initializeUI);
+
