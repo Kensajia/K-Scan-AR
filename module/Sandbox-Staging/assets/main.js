@@ -1,6 +1,6 @@
 // main.js (CÓDIGO FINAL: Fix de Chroma Key y Preparación para Audio 3D)
 
-const JSON_PATH = './assets/IndexSet2.json'; 
+const JSON_PATH = './assets/I22ndexSet2.json'; 
     
 let sceneEl;
 let controls;
@@ -543,3 +543,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
