@@ -69,12 +69,13 @@
                     "rotation": "0 0 0",
                     "animated": true,
                     "animationMixer": "clip: action; timeScale: 1.0",
-                    "audioSrc": "./assets/AA.mp3"
+                    "audioSrc": "https://cdn.me-qr.com/mp3/9427c33d-d302-424b-b20b-a2d1c578f1b4.mp3"
                 }
             ]
         }
     ]
 }
+
 
 
 
