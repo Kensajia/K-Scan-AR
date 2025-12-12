@@ -9,7 +9,7 @@
             "elementos": [
                 {
 
-                     "id": "Elem-0-2",
+                    "id": "Elem-0-0",
                     "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf",
                     "type": "3d", 
                     "position": "0 0 0.1", 
@@ -27,7 +27,7 @@
                 },
                 {
                     
-                    "id": "Elem-0-0",
+                    "id": "Elem-0-2",
                     "src": "https://cdn.pixabay.com/video/2025/10/05/308073_large.mp4",
                     "width": 1.5,
                     "height": 1.0,
@@ -77,4 +77,5 @@
         }
     ]
 }
+
 
