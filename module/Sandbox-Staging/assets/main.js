@@ -1,4 +1,4 @@
-// main.js (CÓDIGO FINAL: Fix de Selectores y Audio Autoplay)
+// main.js (CÓDIGO FINAL: Fix de Chroma Key y Preparación para Audio 3D)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -87,8 +87,8 @@ function initializeScene() {
         
         videoRotationState[targetIndex] = {
             currentVideoIndex: 0,
-            // 🚨 CAMBIO: Almacenaremos el ID del video HTML, NO el objeto directo.
-            htmlVideoIds: {}, 
+            // 🚨 USAMOS MAPAS POR ID para evitar problemas de índice entre videos y 3D
+            htmlVideos: {}, 
             arEntities: [], 
             numVideos: 0, 
             hasVideoContent: false,
@@ -127,34 +127,16 @@ function initializeScene() {
                 }
 
                 if (contentData.audioSrc) {
-                    // 🚨 CAMBIO: Video Oculto para Audio 3D
+                    const audioId = `${contentData.id}_audio`;
                     
-                    const audioVideoId = `${contentData.id}_audio_vid`;
-                    
-                    const audioAsset = document.createElement('video');
-                    audioAsset.setAttribute('id', audioVideoId);
-                    audioAsset.setAttribute('preload', 'auto'); // Usar 'auto' para carga inicial
-                    audioAsset.setAttribute('loop', 'true');
-                    audioAsset.setAttribute('playsinline', 'true');
-                    audioAsset.setAttribute('webkit-playsinline', 'true');
-                    audioAsset.setAttribute('muted', 'muted'); 
-                    audioAsset.setAttribute('crossorigin', 'anonymous');
+                    const audioAsset = document.createElement('a-asset-item');
+                    audioAsset.setAttribute('id', audioId);
                     audioAsset.setAttribute('src', contentData.audioSrc);
-                    audioAsset.style.display = 'none'; 
-                    
-                    // 🚨 FIX AUTOPLAY: Pausar inmediatamente después de configurar el SRC
-                    audioAsset.pause(); 
-                    audioAsset.currentTime = 0;
-                    
                     assetsContainer.appendChild(audioAsset);
                     
-                    // Apuntamos el componente 'sound' al ID del video HTML (el selector)
-                    modelEntity.setAttribute('sound', `src: #${audioVideoId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
+                    modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
                     videoRotationState[targetIndex].audioEntity = modelEntity;
-                    
-                    // Almacenamos el ID del asset, no el objeto.
-                    videoRotationState[targetIndex].htmlVideoIds[audioVideoId] = audioVideoId; 
                 }
 
                 targetEntity.appendChild(modelEntity);
@@ -167,7 +149,7 @@ function initializeScene() {
                 
                 videoCount++;
                 videoRotationState[targetIndex].hasVideoContent = true;
-                
+
                 const videoAsset = document.createElement('video');
                 videoAsset.setAttribute('id', contentData.id);
                 videoAsset.setAttribute('preload', 'none'); 
@@ -182,11 +164,14 @@ function initializeScene() {
                 videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
                 
                 if (contentData.chromakey) {
-                    const chromaColor = contentData.chromaColor || '#00ff00'; 
+                    const chromaColor = contentData.chromaColor || '#00ff00';
+                    // 🚨 FIX CRÍTICO: Usar la variable chromaColor del JSON
                     videoEntity.setAttribute('material', 'shader: chromakey');
-                    videoEntity.setAttribute('chromakey', `color: ${chromaColor}`);
+                    videoEntity.setAttribute('chromakey', `color: ${chromaColor}`); // <-- FIX
+                    videoEntity.setAttribute('src', `#${contentData.id}`); 
                 } 
                 
+                // 🚨 CRÍTICO: Guardar el SRC real en la entidad A-Frame para usarlo en playCurrentVideo
                 videoEntity.dataset.videoSrc = contentData.src; 
                 
                 videoEntity.setAttribute('width', contentData.width);
@@ -197,8 +182,8 @@ function initializeScene() {
                 
                 videoRotationState[targetIndex].arEntities.push(videoEntity);
                 
-                // Almacenamos el ID del asset
-                videoRotationState[targetIndex].htmlVideoIds[contentData.id] = contentData.id;
+                // 🚨 USAR MAPA POR ID para acceder a los videos HTML sin problemas de índice
+                videoRotationState[targetIndex].htmlVideos[contentData.id] = videoAsset;
             }
         });
         
@@ -224,26 +209,26 @@ function playCurrentVideo(targetIndex) {
     
     const currentVidEntity = state.arEntities[currentVideoIndex];
     
+    // Si no es una entidad de video, salimos
     if (!currentVidEntity || currentVidEntity.tagName !== 'A-VIDEO') {
         return; 
     }
 
+    // 🚨 Mapeo correcto de assets usando el ID
     const videoAssetId = currentVidEntity.hasAttribute('src') 
         ? currentVidEntity.getAttribute('src').substring(1) 
+        // Fallback: Si no tiene SRC, usamos una convención de ID para buscar el asset.
         : currentVidEntity.getAttribute('id').replace('ar-video-', 'Elem-'); 
         
-    // 🚨 FIX SELECTOR: Siempre usamos querySelector con el ID
-    const currentVidAsset = document.querySelector(`#${videoAssetId}`); 
-    const currentUrl = currentVidEntity.dataset.videoSrc; 
+    const currentVidAsset = document.querySelector(`#${videoAssetId}`); // El elemento <video>
+    const currentUrl = currentVidEntity.dataset.videoSrc; // El SRC real que guardamos antes
     
     if (!currentVidAsset) return; 
 
-    // Pausa preventiva de todos los videos (Usando IDs)
+    // Pausa preventiva de todos los videos al cambiar de target
     Object.values(videoRotationState).forEach(s => {
-        // 🚨 FIX SELECTOR: Iteramos sobre los IDs
-        Object.values(s.htmlVideoIds).forEach(id => {
-            const v = document.querySelector(`#${id}`);
-            if (v && v !== currentVidAsset) {
+        Object.values(s.htmlVideos).forEach(v => {
+            if (v !== currentVidAsset) {
                 v.pause();
                 v.currentTime = 0;
             }
@@ -252,8 +237,11 @@ function playCurrentVideo(targetIndex) {
 
     showVideo(targetIndex, currentVideoIndex);
 
-    // 🚨 FIX CHROMA: Forzar la asignación del SRC
-    currentVidEntity.setAttribute('src', `#${currentVidAsset.id}`);
+    // Si el video NO es Chroma o no tiene SRC, lo asignamos ahora.
+    if (!currentVidEntity.hasAttribute('src') || 
+        (currentVidEntity.components.material && currentVidEntity.components.material.shader.name !== 'chromakey')) {
+         currentVidEntity.setAttribute('src', `#${currentVidAsset.id}`);
+    }
 
     // Recarga y reproducción del video
     if (!currentVidAsset.dataset.loadedSrc || currentVidAsset.dataset.loadedSrc !== currentUrl) {
@@ -283,10 +271,10 @@ function rotateVideoManually() {
 
     // 1. Detener el elemento actual
     if (currentEntity.tagName === 'A-VIDEO') { 
+        // Obtener el elemento <video> HTML a partir de la entidad A-Frame
         const videoAssetId = currentEntity.hasAttribute('src') 
             ? currentEntity.getAttribute('src').substring(1)
             : currentEntity.getAttribute('id').replace('ar-video-', 'Elem-'); 
-        // 🚨 FIX SELECTOR: Siempre usamos querySelector con el ID
         const currentVidAsset = document.querySelector(`#${videoAssetId}`);
         
         if (currentVidAsset) {
@@ -295,15 +283,9 @@ function rotateVideoManually() {
             currentVidAsset.onended = null; 
         }
     } else if (state.audioEntity && currentEntity === state.audioEntity) {
-        // Detener audio 3D si estaba activo (Y su video subyacente)
-        const soundComp = state.audioEntity.components.sound;
-        if (soundComp) {
-            soundComp.stopSound();
-            const audioVidAsset = document.querySelector(soundComp.attrValue.src);
-            if(audioVidAsset) {
-                audioVidAsset.pause();
-                audioVidAsset.currentTime = 0;
-            }
+        // Detener audio 3D si estaba activo
+        if (state.audioEntity.components.sound) {
+            state.audioEntity.components.sound.stopSound();
         }
     }
     
@@ -320,17 +302,8 @@ function rotateVideoManually() {
         playCurrentVideo(activeTargetIndex);
     } else if (state.audioEntity && nextEntity === state.audioEntity) { 
         // 5. Si el siguiente elemento es el 3D con audio
-        
         const soundComp = state.audioEntity.components.sound;
         if (soundComp && !isGlobalAudioMuted) {
-             
-             // 🚨 CRÍTICO: Tocar el video HTML subyacente primero
-             const audioVidAsset = document.querySelector(soundComp.attrValue.src);
-             if (audioVidAsset) {
-                 audioVidAsset.muted = false; 
-                 audioVidAsset.play().catch(e => console.error("Fallo al reproducir video de audio", e));
-             }
-            
              soundComp.setVolume(1.0);
              soundComp.playSound();
         }
@@ -344,28 +317,17 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         
         // PAUSA EXHAUSTIVA AL ENCONTRAR UN MARCADOR
         Object.values(videoRotationState).forEach(s => {
-            // 🚨 FIX SELECTOR: Iteramos sobre los IDs
-            Object.values(s.htmlVideoIds).forEach(id => {
-                const v = document.querySelector(`#${id}`);
-                if (v) {
-                    v.pause();
-                    v.currentTime = 0;
-                    if (s.targetIndex !== targetIndex) {
-                        v.src = "";
-                        v.load();
-                    }
+            Object.values(s.htmlVideos).forEach(v => {
+                v.pause();
+                v.currentTime = 0;
+                if (s.targetIndex !== targetIndex) {
+                    v.src = "";
+                    v.load();
                 }
             });
-            
             const audioEntity = s.audioEntity;
             if (audioEntity && audioEntity.components.sound) {
                 audioEntity.components.sound.stopSound();
-                // Pausar el video de audio 3D
-                const audioVidAsset = document.querySelector(audioEntity.components.sound.attrValue.src);
-                if(audioVidAsset) {
-                    audioVidAsset.pause();
-                    audioVidAsset.currentTime = 0;
-                }
             }
         });
         
@@ -392,38 +354,23 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         // 🚨 CRÍTICO: Manejo del Audio 3D Asíncrono
         if (state.audioEntity && state.currentVideoIndex === 0) {
             
-            const soundComp = state.audioEntity.components.sound;
-            
-            // 1. Ejecutar inmediatamente si el componente 'sound' ya existe 
-            if (soundComp && typeof soundComp.setVolume === 'function' && !isGlobalAudioMuted) { 
-                
-                // 🚨 Tocar el video HTML subyacente
-                const audioVidAsset = document.querySelector(soundComp.attrValue.src);
-                if (audioVidAsset) {
-                    audioVidAsset.muted = false; 
-                    audioVidAsset.play().catch(e => console.error("Fallo al reproducir video de audio", e));
-                }
-                
-                soundComp.setVolume(1.0);
-                soundComp.playSound();
-            }
-            
-             // 2. Añadir listener para el caso de que el componente 'sound' aún no esté cargado
+             // 1. Añadir listener para el caso de que el componente 'sound' aún no esté cargado (la primera vez)
             state.audioEntity.addEventListener('componentinitialized', (evt) => {
                 if (evt.detail.name === 'sound') {
-                    const comp = state.audioEntity.components.sound;
-                    if (comp && !isGlobalAudioMuted) {
-                         // 🚨 Tocar el video HTML subyacente
-                        const audioVidAsset = document.querySelector(comp.attrValue.src);
-                        if (audioVidAsset) {
-                            audioVidAsset.muted = false; 
-                            audioVidAsset.play().catch(e => console.error("Fallo al reproducir video de audio", e));
-                        }
-                        comp.setVolume(1.0);
-                        comp.playSound();
+                    const soundComp = state.audioEntity.components.sound;
+                    if (soundComp && !isGlobalAudioMuted) {
+                        soundComp.setVolume(1.0);
+                        soundComp.playSound();
                     }
                 }
             });
+
+            // 2. Ejecutar inmediatamente si el componente 'sound' ya existe (veces subsiguientes)
+            const soundComp = state.audioEntity.components.sound;
+            if (soundComp && typeof soundComp.setVolume === 'function' && !isGlobalAudioMuted) { 
+                soundComp.setVolume(1.0);
+                soundComp.playSound();
+            }
         }
     });
 
@@ -435,18 +382,16 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         
         const state = videoRotationState[targetIndex];
         
-        // PAUSA RIGUROSA: Detener y desligar videos (incluidos los de audio)
-        // 🚨 FIX SELECTOR: Iteramos sobre los IDs
-        Object.values(state.htmlVideoIds).forEach(id => {
-            const v = document.querySelector(`#${id}`);
-            if (v) {
-                v.pause();
-                v.currentTime = 0;
-                v.onended = null; 
-                v.dataset.loadedSrc = ""; 
-                v.src = "";
-                v.load();
-            }
+        // PAUSA RIGUROSA: Detener y desligar videos
+        Object.values(state.htmlVideos).forEach(vid => {
+            vid.pause();
+            vid.currentTime = 0;
+            vid.onended = null; 
+            
+            // Borrar el registro de la URL para forzar la recarga
+            vid.dataset.loadedSrc = ""; 
+            vid.src = "";
+            vid.load();
         });
         
         // Detener audio del modelo 3D
@@ -465,8 +410,6 @@ function initializeUIListeners() {
     
     // Detección de Flash
     sceneEl.addEventListener("arReady", () => {
-        
-        // ... (El resto de initializeUIListeners es el mismo)
         
         const mindarComponent = sceneEl.components['mindar-image'];
         let track = null;
@@ -538,14 +481,10 @@ function initializeUIListeners() {
 
         Object.values(videoRotationState).forEach(state => {
             
-            // Aplicar a videos HTML (Incluye los videos ocultos usados para audio 3D)
-            Object.values(state.htmlVideoIds).forEach(id => {
-                const v = document.querySelector(`#${id}`);
-                if (v) {
-                    v.muted = targetMutedState; 
-                    // Intentar reproducir si se desmutea
-                    if (!targetMutedState && v.paused) v.play().catch(e => {}); 
-                }
+            // Aplicar a videos HTML
+            Object.values(state.htmlVideos).forEach(v => {
+                v.muted = targetMutedState; 
+                if (!targetMutedState && v.paused) v.play().catch(e => {}); 
             });
             
             // Aplicar a Modelos 3D con audio
@@ -563,6 +502,8 @@ function initializeUIListeners() {
                         soundComp.setVolume(0.0); 
                         soundComp.stopSound(); 
                     }
+                } else {
+                     console.warn(`[Audio 3D] Componente 'sound' no inicializado completamente en Target ${state.targetIndex}.`);
                 }
             }
         });
