@@ -23,7 +23,8 @@
                     "src": "https://files.catbox.moe/ob3b9g.mp4",
                     "width": 1.2,
                     "height": 0.9,
-                    "chromakey": true 
+                    "chromakey": true,
+                    "chromaColor": "#00dc47"
                 },
                 {
                     
@@ -31,7 +32,8 @@
                     "src": "https://files.catbox.moe/ob3b9g.mp4",
                     "width": 1.2,
                     "height": 0.9,
-                    "chromakey": false 
+                    "chromakey": false,
+                    "chromaColor": ""
                 },
                 {
                     
@@ -39,7 +41,8 @@
                     "src": "https://files.catbox.moe/jnqrf5.mp4",
                     "width": 1.5,
                     "height": 1.0,
-                    "chromakey": false
+                    "chromakey": false,
+                    "chromaColor": ""
                 },
                 {
                     
@@ -70,7 +73,8 @@
                     "src": "https://files.catbox.moe/mq8k1z.mp4",
                     "width": 1.0,
                     "height": 0.7,
-                    "chromakey": false
+                    "chromakey": false,
+                    "chromaColor": ""
                 }
             ]
         },
@@ -87,9 +91,10 @@
                     "rotation": "0 0 0",
                     "animated": true,
                     "animationMixer": "clip: *; timeScale: 1.0",
-                    "audioSrc": "https://files.catbox.moe/5h8wgv.ogg"
+                    "audioSrc": "https://files.catbox.moe/mq8k1z.mp4"
                 }
             ]
         }
     ]
 }
+
