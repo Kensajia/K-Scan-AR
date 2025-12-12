@@ -1,6 +1,6 @@
 // main.js (CÓDIGO FINAL CONSOLIDADO)
 
-const JSON_PATH = './assets/I22ndexSet2.json'; 
+const JSON_PATH = './assets/IndexSet2.json'; 
 
 let sceneEl;
 let controls;
@@ -583,4 +583,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
 
