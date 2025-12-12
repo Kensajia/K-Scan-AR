@@ -30,8 +30,8 @@
                     "id": "Elem-0-0",
                     "src": "https://cdn.pixabay.com/video/2025/10/05/308073_large.mp4",
                     "width": 1.5,
-                    "height": 1.0
-                    
+                    "height": 1.0,
+                    "chromakey": false
                 }
             ]
         },
@@ -53,7 +53,8 @@
                     "id": "Elem-1-1",
                     "src": "https://files.catbox.moe/mq8k1z.mp4",
                     "width": 1.0,
-                    "height": 0.7
+                    "height": 0.7,
+                    "chromakey": false
                 }
             ]
         },
@@ -76,3 +77,4 @@
         }
     ]
 }
+
