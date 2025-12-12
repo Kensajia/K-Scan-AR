@@ -71,12 +71,13 @@
                     "rotation": "0 0 0",
                     "animated": true,
                     "animationMixer": "clip: *; timeScale: 1.0",
-                    "audioSrc": "../../assets/Recur/AUDIO.ogg"
+                    "audioSrc": "https://files.catbox.moe/5h8wgv.ogg"
                 }
             ]
         }
     ]
 }
+
 
 
 
