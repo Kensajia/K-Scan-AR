@@ -1,4 +1,4 @@
-// main.js (CÓDIGO FINAL: FIX de Chroma Key usando a-plane y Material Explícito)
+// main.js (CÓDIGO FINAL CONSOLIDADO)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
 
@@ -178,7 +178,7 @@ function initializeScene() {
                 videoAsset.setAttribute('crossorigin', 'anonymous');
                 assetsContainer.appendChild(videoAsset);
                 
-                // 🟢 FIX 1: Usar a-plane para Chroma Key
+                // FIX 1: Usar a-plane para Chroma Key para asignar material explícito
                 const videoEntity = document.createElement(contentData.chromakey ? 'a-plane' : 'a-video');
                 videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
                 
@@ -187,8 +187,7 @@ function initializeScene() {
                     const chromaColor = contentData.chromaColor || '#00ff00';
                     const normalizedRgb = hexToNormalizedRgb(chromaColor); 
 
-                    // 🟢 FIX 2: Asignar material COMPLETO y explícito
-                    // Esto incluye el shader, el src (textura del video) y el color.
+                    // FIX 2: Asignar material COMPLETO y explícito (shader, src y color)
                     videoEntity.setAttribute('material', 
                         `shader: chromakey; 
                          src: #${contentData.id}; 
@@ -241,12 +240,16 @@ function playCurrentVideo(targetIndex) {
         return; 
     }
 
-    // Mapeo correcto de assets usando el ID
-    const videoAssetId = currentVidEntity.hasAttribute('src') 
-        ? currentVidEntity.getAttribute('src').substring(1) 
-        : currentVidEntity.getAttribute('id').replace('ar-video-', 'Elem-'); 
-        
-    const currentVidAsset = document.querySelector(`#${videoAssetId}`); // El elemento <video>
+    // Mapeo correcto de assets usando el ID (convención Elem-X-Y)
+    let videoAssetId = currentVidEntity.getAttribute('id').replace('ar-video-', 'Elem-');
+    
+    // Si es a-video normal y tiene src
+    if (currentVidEntity.tagName === 'A-VIDEO' && currentVidEntity.hasAttribute('src')) {
+        videoAssetId = currentVidEntity.getAttribute('src').substring(1);
+    }
+    // Si es a-plane ChromaKey, el ID ya está en el material/ID, usamos la convención.
+
+    const currentVidAsset = document.querySelector(`#${videoAssetId}`); // El elemento <video> HTML
     const currentUrl = currentVidEntity.dataset.videoSrc; // El SRC real que guardamos antes
     
     if (!currentVidAsset) return; 
@@ -263,13 +266,13 @@ function playCurrentVideo(targetIndex) {
 
     showVideo(targetIndex, currentVideoIndex);
 
-    // 🟢 FIX 3 (Asignación de material/src): Aseguramos la referencia de la textura
+    // FIX 3: Aseguramos la referencia de la textura en el material (Chroma) o en el src (Video Normal)
     if (currentVidEntity.tagName === 'A-PLANE' && currentVidEntity.hasAttribute('material')) {
-        // Es un ChromaKey (a-plane), actualizamos la referencia src del material
+        // ChromaKey (a-plane): actualizamos la referencia src del material
         const currentMaterial = currentVidEntity.getAttribute('material');
         currentVidEntity.setAttribute('material', {...currentMaterial, src: `#${currentVidAsset.id}`});
     } else {
-        // Es un a-video normal
+        // Video normal (a-video): asignamos el SRC
         currentVidEntity.setAttribute('src', `#${currentVidAsset.id}`);
     }
     
@@ -301,27 +304,30 @@ function rotateVideoManually() {
 
     // 1. Detener el elemento actual
     if (currentEntity.tagName === 'A-VIDEO' || currentEntity.tagName === 'A-PLANE') { 
-        // Obtener el elemento <video> HTML a partir de la entidad A-Frame
-        const videoAssetId = currentEntity.hasAttribute('src') 
-            ? currentEntity.getAttribute('src').substring(1)
-            : currentEntity.getAttribute('id').replace('ar-video-', 'Elem-'); 
-        // Si es a-plane, el ID estará en el material
-        if (currentEntity.tagName === 'A-PLANE' && currentEntity.hasAttribute('material')) {
-             const mat = currentEntity.getAttribute('material');
-             if (mat.src) videoAssetId = mat.src.substring(1);
+        
+        // 🟢 FIX 4 (CRÍTICO): Lógica robusta para obtener el ID del asset del video HTML (Corrige el TypeError)
+        let videoAssetId = currentEntity.getAttribute('id').replace('ar-video-', 'Elem-');
+        
+        if (currentEntity.tagName === 'A-VIDEO' && currentEntity.hasAttribute('src')) {
+            videoAssetId = currentEntity.getAttribute('src').substring(1);
         }
-
+        
         const currentVidAsset = document.querySelector(`#${videoAssetId}`);
         
         if (currentVidAsset) {
             currentVidAsset.pause();
             currentVidAsset.currentTime = 0;
             currentVidAsset.onended = null; 
+            
+            // Refuerzo: Limpiar la fuente
+            currentVidAsset.dataset.loadedSrc = ""; 
+            currentVidAsset.src = "";
+            currentVidAsset.load();
         }
     } else if (state.audioEntity && currentEntity === state.audioEntity) {
         // Detener audio 3D si estaba activo
-        if (state.audioEntity.components.sound) {
-            state.audioEntity.components.sound.stopSound();
+        if (currentEntity.components.sound) {
+            currentEntity.components.sound.stopSound();
         }
     }
     
@@ -355,6 +361,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             Object.values(s.htmlVideos).forEach(v => {
                 v.pause();
                 v.currentTime = 0;
+                // Si cambiamos de target, limpiamos el src del video
                 if (s.targetIndex !== targetIndex) {
                     v.src = "";
                     v.load();
