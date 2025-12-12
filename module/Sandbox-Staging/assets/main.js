@@ -1,4 +1,4 @@
-// main.js (PLANTILLA ÚNICA: Videos Estándar, Chroma, 3D Estático/Animado, Audio)
+// main.js (PLANTILLA FINAL Y CORREGIDA: Soporte de Contenido Unificado y Audio Fix)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -31,18 +31,7 @@ function safeQuerySelector(selector, name) {
     return el;
 }
 
-// 1. Inicializa los selectores de forma segura
-function initializeSelectors() {
-    sceneEl = safeQuerySelector('#scene-ar', 'Scene A-Frame');
-    controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
-    btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
-    btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
-    targetContainer = safeQuerySelector("#target-container", 'Target Container');
-    assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
-}
-
-
-// === COMPONENTE KEEP-ALIVE ===
+// === COMPONENTE KEEP-ALIVE (Necesario para mantener la escena AR activa en segundo plano) ===
 AFRAME.registerComponent('keep-alive', {
     tick: function () {
         const scene = this.el.sceneEl; 
@@ -75,7 +64,8 @@ function initializeScene() {
     if (!assetsContainer.appendChild) return; 
 
     Targets.forEach(target => {
-        const { targetIndex, videos } = target;
+        // 🚨 CAMBIO DE NOMENCLATURA: 'videos' ahora es 'elementos'
+        const { targetIndex, elementos } = target;
         
         videoRotationState[targetIndex] = {
             currentVideoIndex: 0,
@@ -84,7 +74,8 @@ function initializeScene() {
             videoURLs: [], 
             numVideos: 0, 
             hasVideoContent: false,
-            audioEntity: null
+            audioEntity: null,
+            targetIndex: targetIndex // 🚨 AGREGADO para rastreo en errores
         };
 
         const targetEntity = document.createElement('a-entity');
@@ -93,7 +84,8 @@ function initializeScene() {
 
         let videoCount = 0;
         
-        videos.forEach((contentData, index) => {
+        // 🚨 CAMBIO DE NOMENCLATURA: 'videos' ahora es 'elementos'
+        elementos.forEach((contentData, index) => {
             
             if (contentData.type === "3d") {
                 
@@ -129,7 +121,8 @@ function initializeScene() {
                     assetsContainer.appendChild(audioAsset);
                     
                     // Adjuntar el componente sound al modelo 3D
-                    modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); // 🚨 Volumen inicial 0.0
+                    // 🚨 Volumen inicial 0.0 (muteado por defecto), se controla con el botón de UI
+                    modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
                     videoRotationState[targetIndex].audioEntity = modelEntity;
                 }
@@ -151,7 +144,7 @@ function initializeScene() {
                 videoAsset.setAttribute('loop', 'true');
                 videoAsset.setAttribute('playsinline', 'true');
                 videoAsset.setAttribute('webkit-playsinline', 'true');
-                videoAsset.setAttribute('muted', 'muted'); 
+                videoAsset.setAttribute('muted', 'muted'); // Muteado por defecto
                 videoAsset.setAttribute('crossorigin', 'anonymous');
                 assetsContainer.appendChild(videoAsset);
                 
@@ -222,29 +215,15 @@ function playCurrentVideo(targetIndex) {
         currentVidAsset.dataset.loadedSrc = currentUrl; 
     }
     
-    // Lógica de bucle de video
-    if (state.numVideos > 1) {
-            currentVidAsset.onended = () => {
-            const isTracking = sceneEl.components['mindar-image'].data.trackedTargetIndex === targetIndex;
-            if (isTracking) {
-                const nextIndex = (state.currentVideoIndex + 1) % state.numVideos;
-                currentVidAsset.currentTime = 0; 
-                showVideo(targetIndex, nextIndex);
-                playCurrentVideo(targetIndex);
-            } else {
-                currentVidAsset.onended = null;
-            }
-        };
-    } else {
-        currentVidAsset.onended = null;
-    }
+    // Lógica de bucle de video (solo si hay más de un video, aunque ahora rotamos con el botón)
+    currentVidAsset.onended = null; // Deshabilitamos la rotación automática para que funcione el botón manual
     
     currentVidAsset.play().catch(error => {
         console.warn("Fallo al intentar reproducir video. Causa común: Autoplay bloqueado.", error);
     }); 
 }
 
-// LÓGICA DE BOTÓN SIGUIENTE (ROTACIÓN UNIFICADA)
+// LÓGICA DE BOTÓN SIGUIENTE (ROTACIÓN UNIFICADA: Video y 3D)
 function rotateVideoManually() {
     const state = videoRotationState[activeTargetIndex];
     
@@ -317,7 +296,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         
         // 🚨 Iniciar audio si es un modelo 3D con audio
         if (state.audioEntity && state.audioEntity.components.sound) {
-             // Aseguramos que solo suene si el volumen no fue seteado a 0.0 por el usuario
+             // Aseguramos que solo suene si el volumen no fue seteado a 0.0 por el usuario (o por defecto)
              if (state.audioEntity.components.sound.data.volume > 0.0) { 
                  state.audioEntity.components.sound.playSound();
              }
@@ -408,44 +387,43 @@ function initializeUI() {
         }
     });
 
-    // LÓGICA DE AUDIO GLOBAL (Mejorada para control unificado y desbloqueo inicial)
+    // LÓGICA DE AUDIO GLOBAL (Fix: Verifica la existencia de setVolume)
     safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
-    
-    const isCurrentlyMuted = this.innerHTML.includes("🔇"); 
-
-    // 1. Alternar Mute/Unmute para todos los VIDEOS
-    Object.values(videoRotationState).forEach(state => {
-        state.htmlVideos.forEach(v => {
-            v.muted = isCurrentlyMuted; 
-            if (!v.muted && v.paused) v.play().catch(e => {}); 
-        });
         
-        // 2. Alternar Volumen para todos los MODELOS 3D con audio
-        if (state.audioEntity) { // Verificar si la entidad existe
-            const soundComp = state.audioEntity.components.sound;
-            
-            // 🚨 VERIFICACIÓN CRÍTICA: Solo operar si el componente SOUND tiene el método setVolume
-            if (soundComp && typeof soundComp.setVolume === 'function') {
-                
-                if (isCurrentlyMuted) { // Objetivo: SONIDO (Desmutear)
-                    soundComp.setVolume(1.0); 
-                    if (activeTargetIndex === state.targetIndex) {
-                        soundComp.playSound(); 
-                    }
-                } else { // Objetivo: MUTE (Mutear)
-                    soundComp.setVolume(0.0); 
-                    // No es necesario llamar stopSound, basta con poner el volumen a 0
-                }
-            } else {
-                 console.warn(`[Audio 3D] Componente 'sound' no inicializado completamente en Target ${state.targetIndex}.`);
-            }
-        }
-    });
+        const isCurrentlyMuted = this.innerHTML.includes("🔇"); 
 
-    // 3. Actualizar la UI del botón
-    this.style.background = isCurrentlyMuted ? "var(--accent)" : "var(--danger)";
-    this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
-});
+        // 1. Alternar Mute/Unmute para todos los VIDEOS
+        Object.values(videoRotationState).forEach(state => {
+            state.htmlVideos.forEach(v => {
+                v.muted = isCurrentlyMuted; 
+                if (!v.muted && v.paused) v.play().catch(e => {}); 
+            });
+            
+            // 2. Alternar Volumen para todos los MODELOS 3D con audio
+            if (state.audioEntity) { 
+                const soundComp = state.audioEntity.components.sound;
+                
+                // 🚨 FIX CRÍTICO: Verificar si el componente SOUND tiene el método setVolume
+                if (soundComp && typeof soundComp.setVolume === 'function') {
+                    
+                    if (isCurrentlyMuted) { // Objetivo: SONIDO (Desmutear)
+                        soundComp.setVolume(1.0); 
+                        if (activeTargetIndex === state.targetIndex) {
+                            soundComp.playSound(); 
+                        }
+                    } else { // Objetivo: MUTE (Mutear)
+                        soundComp.setVolume(0.0); 
+                    }
+                } else {
+                     console.warn(`[Audio 3D] Componente 'sound' no inicializado completamente en Target ${state.targetIndex}.`);
+                }
+            }
+        });
+
+        // 3. Actualizar la UI del botón
+        this.style.background = isCurrentlyMuted ? "var(--accent)" : "var(--danger)";
+        this.innerHTML = isCurrentlyMuted ? "🔊 SONIDO" : "🔇 SILENCIO";
+    });
 
     // LÓGICA DE TOGGLE UI
     safeQuerySelector("#btn-toggle-ui", 'Toggle UI Button').addEventListener("click", () => {
@@ -477,4 +455,3 @@ loadConfig();
 
 // 3. Inicializa los Listeners de la UI de forma segura después de que el DOM esté cargado.
 document.addEventListener('DOMContentLoaded', initializeUI);
-
