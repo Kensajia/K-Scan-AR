@@ -1,6 +1,6 @@
 {
     "meta": {
-        "description": "Identificaor Sandbox-Staging - Intento solo videos"
+        "description": "Identificaor Sandbox-Staging"
     },
     
     "Targets": [
@@ -9,25 +9,28 @@
             "elementos": [
                 {
 
-                    "id": "Elem-0-0",
-                    "src": "https://video01.alibaba.com/vod-icbu/7c569251818fbca4/uVFlQMbCghZIYs1j9tq/dqhImLtm1WyMppwSJA6_278327433290_sd_hq.mp4",
-                    "width": 1.2,
-                    "height": 0.7
+                     "id": "Elem-0-2",
+                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf",
+                    "type": "3d", 
+                    "position": "0 0 0.1", 
+                    "scale": "0.25 0.25 0.25",
+                    "rotation": "0 45 0"
                     
                 },
                 {
                     
                     "id": "Elem-0-1",
                     "src": "https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4",
-                    "width": 1.0,
-                    "height": 0.6
+                    "width": 1.2,
+                    "height": 0.9,
+                    "chromakey": true 
                 },
                 {
                     
-                    "id": "Elem-0-2",
-                    "src": "https://files.catbox.moe/ob3b9g.mp4",
+                    "id": "Elem-0-0",
+                    "src": "https://cdn.pixabay.com/video/2025/10/05/308073_large.mp4",
                     "width": 1.5,
-                    "height": 0.8
+                    "height": 1.0
                     
                 }
             ]
@@ -38,16 +41,19 @@
                 {
                     
                     "id": "Elem-1-0",
-                    "src": "https://cdn.pixabay.com/video/2025/09/24/306155_large.mp4",
-                    "width": 1.0,
-                    "height": 0.5
+                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/bear/scene.gltf",
+                    "type": "3d",
+                    "position": "0 0 0.1", 
+                    "scale": "0.1 0.1 0.1",
+                    "animated": true,
+                    "animationMixer": "clip: *; timeScale: 1.0" 
                 },
                 {
                     
                     "id": "Elem-1-1",
-                    "src": "https://cdn.pixabay.com/video/2025/10/05/308073_large.mp4",
+                    "src": "https://files.catbox.moe/mq8k1z.mp4",
                     "width": 1.0,
-                    "height": 0.6
+                    "height": 0.7
                 }
             ]
         },
@@ -57,12 +63,16 @@
                 {
                     
                     "id": "Elem-2-0",
-                    "src": "https://files.catbox.moe/mq8k1z.mp4",
-                    "width": 1.0,
-                    "height": 0.6
+                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf",
+                    "type": "3d",
+                    "position": "0 0 0.1", 
+                    "scale": "0.25 0.25 0.25",
+                    "rotation": "0 0 0",
+                    "animated": true,
+                    "animationMixer": "clip: *; timeScale: 1.0",
+                    "audioSrc": "https://cdn.me-qr.com/mp3/9427c33d-d302-424b-b20b-a2d1c578f1b4.mp3"
                 }
             ]
         }
     ]
 }
-
