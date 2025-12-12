@@ -1,4 +1,4 @@
-// main.js (CÓDIGO FINAL: Fix de Chroma Key y Preparación para Audio 3D)
+// main.js (CÓDIGO FINAL: Estabilidad + Fix de Chroma Key y Audio 3D Posicional)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -129,9 +129,11 @@ function initializeScene() {
                 if (contentData.audioSrc) {
                     const audioId = `${contentData.id}_audio`;
                     
+                    // 🚨 FIX CRÍTICO 2: Cargar el audio como ArrayBuffer para el sonido posicional
                     const audioAsset = document.createElement('a-asset-item');
                     audioAsset.setAttribute('id', audioId);
                     audioAsset.setAttribute('src', contentData.audioSrc);
+                    audioAsset.setAttribute('response-type', 'arraybuffer'); // <--- FIX
                     assetsContainer.appendChild(audioAsset);
                     
                     modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
@@ -165,9 +167,9 @@ function initializeScene() {
                 
                 if (contentData.chromakey) {
                     const chromaColor = contentData.chromaColor || '#00ff00';
-                    // 🚨 FIX CRÍTICO: Usar la variable chromaColor del JSON
+                    // 🚨 FIX 1: Usar el color del JSON para el chromakey
                     videoEntity.setAttribute('material', 'shader: chromakey');
-                    videoEntity.setAttribute('chromakey', `color: ${chromaColor}`); // <-- FIX <-- Esto usa tu color del JSON
+                    videoEntity.setAttribute('chromakey', `color: ${chromaColor}`); // <--- FIX
                     videoEntity.setAttribute('src', `#${contentData.id}`); 
                 } 
                 
@@ -543,6 +545,3 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
-
-
-
