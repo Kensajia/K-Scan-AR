@@ -67,6 +67,97 @@ AFRAME.registerComponent('keep-alive', {
     }
 });
 
+
+// === NUEVO COMPONENTE: ROTACIÓN TÁCTIL SIMPLE (SOLO ROTACIÓN X/Y) ===
+AFRAME.registerComponent('touch-rotation', {
+    init: function () {
+        this.touchStart = { x: 0, y: 0 };
+        this.touchMove = { x: 0, y: 0 };
+        this.isTouched = false;
+        
+        // Guardar la rotación inicial del modelo si la tiene
+        this.currentRotation = this.el.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
+
+        this.handleStart = this.handleStart.bind(this);
+        this.handleMove = this.handleMove.bind(this);
+        this.handleEnd = this.handleEnd.bind(this);
+
+        // Escuchar los eventos táctiles en el lienzo de la escena para capturarlos sin conflicto.
+        const canvas = this.el.sceneEl.canvas;
+        if (canvas) {
+            canvas.addEventListener('touchstart', this.handleStart);
+            canvas.addEventListener('touchmove', this.handleMove);
+            canvas.addEventListener('touchend', this.handleEnd);
+        }
+    },
+
+    handleStart: function (evt) {
+        // Solo si un dedo toca la pantalla
+        if (evt.touches.length === 1) {
+            this.isTouched = true;
+            this.touchStart.x = evt.touches[0].pageX;
+            this.touchStart.y = evt.touches[0].pageY;
+            // Detener la propagación para evitar que otros elementos UI o controles AR procesen el gesto.
+            evt.stopPropagation(); 
+        } else {
+            this.isTouched = false; // Ignorar gestos de zoom/traslación
+        }
+    },
+
+    handleMove: function (evt) {
+        // Solo procesar si fue un gesto de un solo dedo y estamos en modo touch
+        if (!this.isTouched || evt.touches.length !== 1) return;
+
+        this.touchMove.x = evt.touches[0].pageX;
+        this.touchMove.y = evt.touches[0].pageY;
+
+        // Calcular el cambio de posición del dedo
+        const dx = this.touchMove.x - this.touchStart.x;
+        const dy = this.touchMove.y - this.touchStart.y;
+        
+        // Sensibilidad (ajuste este valor, 0.2 es un buen punto de partida)
+        const sensibility = 0.2; 
+
+        // Rotación Y (Giro horizontal) -> Afectado por dx
+        const dTheta = dx * sensibility; 
+        
+        // Rotación X (Giro vertical) -> Afectado por dy
+        const dPhi = dy * sensibility; 
+        
+        // Aplicar la rotación acumulada
+        this.currentRotation.y += dTheta;
+        this.currentRotation.x += dPhi;
+        
+        // Opcional: limitar la rotación X (para que no gire completamente al revés)
+        // this.currentRotation.x = Math.max(-90, Math.min(90, this.currentRotation.x));
+        
+        this.el.setAttribute('rotation', this.currentRotation);
+
+        // Actualizar el punto de inicio para el siguiente frame
+        this.touchStart.x = this.touchMove.x;
+        this.touchStart.y = this.touchMove.y;
+
+        evt.stopPropagation(); 
+        evt.preventDefault(); // Evitar el scroll si estamos rotando
+    },
+
+    handleEnd: function () {
+        this.isTouched = false;
+    },
+
+    remove: function() {
+        // Limpieza de event listeners al eliminar el componente
+        const canvas = this.el.sceneEl.canvas;
+        if (canvas) {
+            canvas.removeEventListener('touchstart', this.handleStart);
+            canvas.removeEventListener('touchmove', this.handleMove);
+            canvas.removeEventListener('touchend', this.handleEnd);
+        }
+    }
+});
+// ===============================================
+
+
 // === FUNCIONES DE INICIALIZACIÓN Y CARGA ===
 
 async function loadConfig() {
@@ -131,12 +222,11 @@ function initializeScene() {
                 const modelEntity = document.createElement('a-entity');
                 modelEntity.setAttribute('id', `ar-model-${targetIndex}-${index}`);
                 
-                // 1. Carga del modelo (Mantenida, no reemplazada)
+                // 1. Carga del modelo 3D (DEJAR ESTA LÍNEA)
                 modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
                 
-                // 2. Control Táctil (Rotación, Escala y Traslación con gestos)
-                // Esto reemplaza el 'touch-controls-experimental' anterior.
-                modelEntity.setAttribute('gltf-model-touch-controls', ''); 
+                // 2. Control Táctil (APLICANDO EL COMPONENTE PERSONALIZADO)
+                modelEntity.setAttribute('touch-rotation', ''); 
                 
                 modelEntity.setAttribute('position', contentData.position || '0 0 0');
                 modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
@@ -690,4 +780,3 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
-
