@@ -130,10 +130,13 @@ function initializeScene() {
                 
                 const modelEntity = document.createElement('a-entity');
                 modelEntity.setAttribute('id', `ar-model-${targetIndex}-${index}`);
+                
+                // 1. Carga del modelo (Mantenida, no reemplazada)
                 modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
                 
-                // === ROTACIÓN TÁCTIL AÑADIDA AQUÍ ===
-                modelEntity.setAttribute('touch-controls-experimental', 'mode: rotation; rotationSpeed: 0.5'); 
+                // 2. Control Táctil (Rotación, Escala y Traslación con gestos)
+                // Esto reemplaza el 'touch-controls-experimental' anterior.
+                modelEntity.setAttribute('gltf-model-touch-controls', ''); 
                 
                 modelEntity.setAttribute('position', contentData.position || '0 0 0');
                 modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
@@ -687,3 +690,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
