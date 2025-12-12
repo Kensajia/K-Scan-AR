@@ -1,4 +1,4 @@
-// main.js (CÓDIGO FINAL: Ciclo de Vida del Video Corregido)
+// main.js (CÓDIGO FINAL: Carga Asíncrona y Control 3D)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -122,6 +122,7 @@ function initializeScene() {
                 modelEntity.setAttribute('rotation', contentData.rotation || '0 0 0');
                 modelEntity.setAttribute('visible', index === 0); 
                 
+                // 🚨 CRUCIAL: Si es animado, agregar el componente, incluso si es estático (para consistencia)
                 if (contentData.animated) {
                     modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
                 }
@@ -134,6 +135,7 @@ function initializeScene() {
                     audioAsset.setAttribute('src', contentData.audioSrc);
                     assetsContainer.appendChild(audioAsset);
                     
+                    // Volumen inicial 0.0 (muteado por defecto)
                     modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
                     videoRotationState[targetIndex].audioEntity = modelEntity;
@@ -166,9 +168,11 @@ function initializeScene() {
                 if (contentData.chromakey) {
                     videoEntity.setAttribute('material', 'shader: chromakey');
                     videoEntity.setAttribute('chromakey', 'color: #00ff00');
-                } else {
-                    videoEntity.setAttribute('src', `#${contentData.id}`);
-                }
+                    // Para Chroma Key, el SRC de A-Frame es necesario para que el shader acceda al video asset
+                    videoEntity.setAttribute('src', `#${contentData.id}`); 
+                } 
+                // 🚨 MODIFICACIÓN CLAVE: No establecer el SRC de A-Frame aquí para videos estándar.
+                // Esto previene errores de inicialización (cuadro negro/requestVideoFrameCallback).
                 
                 videoEntity.setAttribute('width', contentData.width);
                 videoEntity.setAttribute('height', contentData.height);
@@ -204,6 +208,7 @@ function playCurrentVideo(targetIndex) {
     const state = videoRotationState[targetIndex];
     const currentVidAsset = state.htmlVideos[state.currentVideoIndex];
     const currentUrl = state.videoURLs[state.currentVideoIndex]; 
+    const currentVidEntity = state.arEntities[state.currentVideoIndex]; 
 
     // Pausa preventiva de todos los videos al cambiar de target
     Object.values(videoRotationState).forEach(s => {
@@ -217,14 +222,19 @@ function playCurrentVideo(targetIndex) {
 
     showVideo(targetIndex, state.currentVideoIndex);
 
-    // 🚨 CORRECCIÓN CLAVE: RECARGA el video si no tiene un src registrado O si cambió.
+    // 🚨 CORRECCIÓN: Si el video no es Chroma, asegurar que la entidad A-Frame tenga su SRC
+    // (Esto es necesario si no se asignó en initializeScene)
+    if (!currentVidEntity.components.material || currentVidEntity.components.material.shader.name !== 'chromakey') {
+         currentVidEntity.setAttribute('src', `#${currentVidAsset.id}`);
+    }
+
+    // Evita la recarga constante del SRC: RECARGA el video si no tiene un src registrado O si cambió.
     if (!currentVidAsset.dataset.loadedSrc || currentVidAsset.dataset.loadedSrc !== currentUrl) {
         currentVidAsset.src = currentUrl;
         currentVidAsset.load(); 
         currentVidAsset.dataset.loadedSrc = currentUrl; 
     }
     
-    // APLICAR EL ESTADO MUTEADO GLOBAL ANTES DE REPRODUCIR
     currentVidAsset.muted = isGlobalAudioMuted; 
     
     currentVidAsset.onended = null; 
@@ -242,7 +252,7 @@ function rotateVideoManually() {
     
     if (activeTargetIndex === null || totalEntities <= 1) return;
     
-    // 1. Pausar el elemento actual SI era un video
+    // 1. Pausar el elemento actual SI era un video o detener audio 3D
     const currentIndex = state.currentVideoIndex;
 
     if (state.hasVideoContent && currentIndex < state.htmlVideos.length) { 
@@ -254,6 +264,11 @@ function rotateVideoManually() {
         }
     }
     
+    // Detener audio 3D si estaba activo
+    if (state.audioEntity && state.audioEntity.components.sound && currentIndex === 0) {
+        state.audioEntity.components.sound.stopSound();
+    }
+    
     // 2. Determinar el siguiente índice
     const nextIndex = (currentIndex + 1) % totalEntities;
     
@@ -261,9 +276,19 @@ function rotateVideoManually() {
     showVideo(activeTargetIndex, nextIndex);
     
     // 4. Si el siguiente elemento es un video, comenzar la reproducción
-    if (state.hasVideoContent && nextIndex < state.htmlVideos.length) {
+    const nextContentIsVideo = state.arEntities[nextIndex] && state.arEntities[nextIndex].tagName === 'A-VIDEO';
+
+    if (nextContentIsVideo) {
         playCurrentVideo(activeTargetIndex);
-    } 
+    } else if (state.audioEntity && nextIndex === 0) { 
+        // 5. Si el siguiente elemento es el 3D con audio (siempre en índice 0 en este JSON)
+        // Intentar reproducir audio 3D
+        const soundComp = state.audioEntity.components.sound;
+        if (soundComp && !isGlobalAudioMuted) {
+             soundComp.setVolume(1.0);
+             soundComp.playSound();
+        }
+    }
 }
 
 // === LÓGICA DE TRACKING Y EVENTOS ===
@@ -271,18 +296,16 @@ function rotateVideoManually() {
 function setupTrackingEvents(targetIndex, targetEntity) {
     targetEntity.addEventListener("targetFound", () => {
         
-        // PAUSA EXHAUSTIVA AL ENCONTRAR UN MARCADOR (Evita audio residual de otros targets)
+        // PAUSA EXHAUSTIVA AL ENCONTRAR UN MARCADOR
         Object.values(videoRotationState).forEach(s => {
             s.htmlVideos.forEach(v => {
                 v.pause();
                 v.currentTime = 0;
-                // Desligar el src si no es el target actual (para robustez)
                 if (s.targetIndex !== targetIndex) {
                     v.src = "";
                     v.load();
                 }
             });
-            // Detener audio de modelos 3D
             const audioEntity = s.audioEntity;
             if (audioEntity && audioEntity.components.sound) {
                 audioEntity.components.sound.stopSound();
@@ -300,7 +323,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             btnNextVideo.style.display = 'none';
         }
         
-        // Determinar si el elemento inicial es un video para llamar a playCurrentVideo
+        // Si el elemento actual (índice 0, ya que se reseteó) es un video, reproducir.
         const initialContentIsVideo = state.arEntities[0] && state.arEntities[0].tagName === 'A-VIDEO';
         
         if (initialContentIsVideo) {
@@ -309,12 +332,26 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             showVideo(targetIndex, 0); 
         }
         
-        // Iniciar audio 3D si el elemento visible es el audio entity (el primer elemento, índice 0) y NO está globalmente muteado
-        if (state.audioEntity && state.audioEntity.components.sound && state.currentVideoIndex === 0) {
-             if (!isGlobalAudioMuted) { 
-                 state.audioEntity.components.sound.setVolume(1.0);
-                 state.audioEntity.components.sound.playSound();
-             }
+        // 🚨 MODIFICACIÓN CLAVE: Manejo del Audio 3D Asíncrono
+        if (state.audioEntity && state.currentVideoIndex === 0) {
+            
+             // 1. Añadir listener para el caso de que el componente 'sound' aún no esté cargado (la primera vez)
+            state.audioEntity.addEventListener('componentinitialized', (evt) => {
+                if (evt.detail.name === 'sound') {
+                    const soundComp = state.audioEntity.components.sound;
+                    if (soundComp && !isGlobalAudioMuted) {
+                        soundComp.setVolume(1.0);
+                        soundComp.playSound();
+                    }
+                }
+            });
+
+            // 2. Ejecutar inmediatamente si el componente 'sound' ya existe (veces subsiguientes)
+            const soundComp = state.audioEntity.components.sound;
+            if (soundComp && !isGlobalAudioMuted) { 
+                soundComp.setVolume(1.0);
+                soundComp.playSound();
+            }
         }
     });
 
@@ -332,7 +369,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             vid.currentTime = 0;
             vid.onended = null; 
             
-            // 🚨 CORRECCIÓN CLAVE: Borrar el registro de la URL para forzar la recarga
+            // Borrar el registro de la URL para forzar la recarga
             vid.dataset.loadedSrc = ""; 
 
             // Cargar un SRC vacío para liberar el recurso de WebGL/Audio
@@ -422,20 +459,18 @@ function initializeUIListeners() {
     // LÓGICA DE AUDIO GLOBAL (Guarda el estado global y lo aplica)
     safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
         
-        // 1. Invertimos el estado de muteo global antes de aplicarlo
         isGlobalAudioMuted = !isGlobalAudioMuted; 
         const targetMutedState = isGlobalAudioMuted; 
 
-        // 2. Aplicar el estado a todos los contenidos
         Object.values(videoRotationState).forEach(state => {
             
-            // 2a. Aplicar a videos HTML
+            // Aplicar a videos HTML
             state.htmlVideos.forEach(v => {
                 v.muted = targetMutedState; 
                 if (!targetMutedState && v.paused) v.play().catch(e => {}); 
             });
             
-            // 2b. Aplicar a Modelos 3D con audio
+            // Aplicar a Modelos 3D con audio
             if (state.audioEntity) { 
                 const soundComp = state.audioEntity.components.sound;
                 
@@ -443,7 +478,6 @@ function initializeUIListeners() {
                     
                     if (!targetMutedState) { // Objetivo: SONIDO (Desmutear)
                         soundComp.setVolume(1.0); 
-                        // Solo reproducir si este target está activo y el audio 3D es el elemento visible
                         if (activeTargetIndex === state.targetIndex && state.currentVideoIndex === 0) {
                             soundComp.playSound(); 
                         }
@@ -490,6 +524,5 @@ initializeSelectors();
 // 2. Ejecutar la carga del JSON y la inicialización de la UI después de que el DOM esté cargado.
 document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
-    // loadConfig llama a initializeScene() internamente solo si el JSON es válido
     loadConfig(); 
 });
