@@ -31,7 +31,7 @@ function safeQuerySelector(selector, name) {
     return el;
 }
 
-// 1. Inicializa los selectores de forma segura (FUNCIÓN QUE FALTABA O ESTABA FUERA DE ÁMBITO)
+// 1. Inicializa los selectores de forma segura
 function initializeSelectors() {
     sceneEl = safeQuerySelector('#scene-ar', 'Scene A-Frame');
     controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
@@ -533,7 +533,7 @@ function initializeUIListeners() {
 
 // --- INICIO DEL CÓDIGO ---
 
-// 1. Inicializa los selectores inmediatamente (ESTO FUE EL PUNTO DE FALLO ANTERIOR)
+// 1. Inicializa los selectores inmediatamente
 initializeSelectors();
 
 // 2. Ejecutar la carga del JSON y la inicialización de la UI después de que el DOM esté cargado.
