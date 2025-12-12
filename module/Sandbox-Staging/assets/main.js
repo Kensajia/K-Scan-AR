@@ -156,8 +156,6 @@ function initializeScene() {
                     assetsContainer.appendChild(audioAsset);
                     
                     // 2. Componente 'sound' de A-Frame (SOLO para la posicionalidad 3D)
-                    // NOTA: Usamos 'volume: 0.0' y 'autoplay: false' para que A-Frame no intente
-                    // reproducir audio inmediatamente, confiando en el asset HTML.
                     modelEntity.setAttribute('sound', `src: #; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
                     // 3. Almacenar ambas referencias en el estado
@@ -326,13 +324,16 @@ function rotateVideoManually() {
         const soundComp = currentEntity.components.sound;
         const audioAsset = state.audioAsset; 
         
-        if (audioAsset) { // Detener el elemento HTML real primero
+        if (audioAsset) { 
             audioAsset.pause();
             audioAsset.currentTime = 0;
         }
-        if (soundComp && typeof soundComp.stopSound === 'function') { 
+        // CORRECCIÓN: Verificar setVolume antes de usar soundComp
+        if (soundComp && typeof soundComp.setVolume === 'function') { 
             soundComp.setVolume(0.0);
-            soundComp.stopSound(); 
+            if (typeof soundComp.stopSound === 'function') { 
+                soundComp.stopSound(); 
+            }
         }
     }
     
@@ -417,13 +418,12 @@ function setupTrackingEvents(targetIndex, targetEntity) {
                 v.pause();
                 v.currentTime = 0;
                 if (s.targetIndex !== targetIndex) {
-                    // Evitar cargar innecesariamente videos de otros targets
                     v.src = "";
                     v.load();
                 }
             });
             
-            // Pausar audio 3D
+            // Pausar audio 3D (CORRECCIÓN APLICADA AQUÍ)
             const audioEntity = s.audioEntity;
             const audioAsset = s.audioAsset; 
             
@@ -431,11 +431,14 @@ function setupTrackingEvents(targetIndex, targetEntity) {
                 audioAsset.pause();
                 audioAsset.currentTime = 0;
             }
-            if (audioEntity && audioEntity.components.sound) {
+            if (audioEntity) { 
                 const soundComp = audioEntity.components.sound;
-                if (typeof soundComp.stopSound === 'function') { 
+                // SOLO si el componente está listo, lo controlamos
+                if (soundComp && typeof soundComp.setVolume === 'function') {
                     soundComp.setVolume(0.0);
-                    soundComp.stopSound(); 
+                    if (typeof soundComp.stopSound === 'function') { 
+                        soundComp.stopSound(); 
+                    }
                 }
             }
         });
@@ -443,7 +446,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         activeTargetIndex = targetIndex; 
         const state = videoRotationState[targetIndex];
 
-        // Mostrar botón SIGUIENTE
+        // Mostrar botón SIGUIENTE (Si hay más de 1 elemento en el array 'elementos')
         const totalEntities = state.arEntities.length;
         if (totalEntities > 1) {
             btnNextVideo.style.display = 'flex';
@@ -458,7 +461,6 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         if (initialContentIsVideo) {
             playCurrentVideo(targetIndex);
         } else {
-            // Asegura que el modelo 3D (si no es video) se muestre primero
             showVideo(targetIndex, 0); 
         }
         
@@ -487,7 +489,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             vid.load();
         });
         
-        // Detener audio del modelo 3D
+        // Detener audio del modelo 3D (CORRECCIÓN APLICADA AQUÍ)
         const audioEntity = state.audioEntity;
         const audioAsset = state.audioAsset; 
         
@@ -495,11 +497,14 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             audioAsset.pause();
             audioAsset.currentTime = 0;
         }
-        if (audioEntity && audioEntity.components.sound) {
+        if (audioEntity) {
             const soundComp = audioEntity.components.sound;
-            if (typeof soundComp.stopSound === 'function') { 
+            // SOLO si el componente está listo, lo controlamos
+            if (soundComp && typeof soundComp.setVolume === 'function') {
                 soundComp.setVolume(0.0);
-                soundComp.stopSound(); 
+                if (typeof soundComp.stopSound === 'function') { 
+                    soundComp.stopSound(); 
+                }
             }
         }
         
