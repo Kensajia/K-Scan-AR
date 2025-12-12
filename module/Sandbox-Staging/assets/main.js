@@ -1,4 +1,4 @@
-// main.js (CÓDIGO FINAL Y COMPLETO)
+// main.js (CÓDIGO FINAL: Ciclo de Vida del Video Corregido)
 
 const JSON_PATH = './assets/IndexSet2.json'; 
     
@@ -13,7 +13,7 @@ let assetsContainer;
 let videoRotationState = {}; 
 let config = null; 
 let activeTargetIndex = null;
-let isGlobalAudioMuted = true; // El audio inicia MUTEADO por defecto (mejor para evitar bloqueos del navegador)
+let isGlobalAudioMuted = true; 
 
 // Función de utilidad para seleccionar elementos de forma segura
 function safeQuerySelector(selector, name) {
@@ -62,7 +62,6 @@ async function loadConfig() {
         }
         config = await response.json();
         
-        // VERIFICACIÓN DE ESTRUCTURA Y LLAMADA A INICIALIZACIÓN
         if (config && Array.isArray(config.Targets)) {
              initializeScene();
         } else {
@@ -135,7 +134,6 @@ function initializeScene() {
                     audioAsset.setAttribute('src', contentData.audioSrc);
                     assetsContainer.appendChild(audioAsset);
                     
-                    // Volumen inicial 0.0 (muteado por defecto)
                     modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
                     videoRotationState[targetIndex].audioEntity = modelEntity;
@@ -158,14 +156,13 @@ function initializeScene() {
                 videoAsset.setAttribute('loop', 'true');
                 videoAsset.setAttribute('playsinline', 'true');
                 videoAsset.setAttribute('webkit-playsinline', 'true');
-                videoAsset.setAttribute('muted', 'muted'); // Muteado por defecto
+                videoAsset.setAttribute('muted', 'muted'); 
                 videoAsset.setAttribute('crossorigin', 'anonymous');
                 assetsContainer.appendChild(videoAsset);
                 
                 const videoEntity = document.createElement('a-video');
                 videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
                 
-                // LÓGICA DE CHROMA KEY
                 if (contentData.chromakey) {
                     videoEntity.setAttribute('material', 'shader: chromakey');
                     videoEntity.setAttribute('chromakey', 'color: #00ff00');
@@ -220,8 +217,8 @@ function playCurrentVideo(targetIndex) {
 
     showVideo(targetIndex, state.currentVideoIndex);
 
-    // Evita la recarga constante del SRC
-    if (currentVidAsset.dataset.loadedSrc !== currentUrl) {
+    // 🚨 CORRECCIÓN CLAVE: RECARGA el video si no tiene un src registrado O si cambió.
+    if (!currentVidAsset.dataset.loadedSrc || currentVidAsset.dataset.loadedSrc !== currentUrl) {
         currentVidAsset.src = currentUrl;
         currentVidAsset.load(); 
         currentVidAsset.dataset.loadedSrc = currentUrl; 
@@ -329,12 +326,16 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         
         const state = videoRotationState[targetIndex];
         
-        // PAUSA RIGUROSA: Detener y desligar videos (Evita audio residual)
+        // PAUSA RIGUROSA: Detener y desligar videos
         state.htmlVideos.forEach(vid => {
             vid.pause();
             vid.currentTime = 0;
             vid.onended = null; 
-            // SOLUCIÓN FINAL: Cargar un SRC vacío para liberar el recurso de WebGL/Audio
+            
+            // 🚨 CORRECCIÓN CLAVE: Borrar el registro de la URL para forzar la recarga
+            vid.dataset.loadedSrc = ""; 
+
+            // Cargar un SRC vacío para liberar el recurso de WebGL/Audio
             vid.src = "";
             vid.load();
         });
@@ -423,7 +424,7 @@ function initializeUIListeners() {
         
         // 1. Invertimos el estado de muteo global antes de aplicarlo
         isGlobalAudioMuted = !isGlobalAudioMuted; 
-        const targetMutedState = isGlobalAudioMuted; // El estado deseado después del click
+        const targetMutedState = isGlobalAudioMuted; 
 
         // 2. Aplicar el estado a todos los contenidos
         Object.values(videoRotationState).forEach(state => {
@@ -448,7 +449,7 @@ function initializeUIListeners() {
                         }
                     } else { // Objetivo: MUTE (Mutear)
                         soundComp.setVolume(0.0); 
-                        soundComp.stopSound(); // Detener si se mutea
+                        soundComp.stopSound(); 
                     }
                 } else {
                      console.warn(`[Audio 3D] Componente 'sound' no inicializado completamente en Target ${state.targetIndex}.`);
