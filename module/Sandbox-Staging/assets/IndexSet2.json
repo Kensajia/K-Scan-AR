@@ -20,7 +20,7 @@
                 {
                     
                     "id": "Elem-0-1",
-                    "src": "https://cdn.pixabay.com/video/2023/07/09/170831-844035571_large.mp4",
+                    "src": "https://files.catbox.moe/2ysumf.mp4",
                     "width": 1.2,
                     "height": 0.9,
                     "chromakey": true 
@@ -28,7 +28,7 @@
                 {
                     
                     "id": "Elem-0-2",
-                    "src": "https://cdn.pixabay.com/video/2025/10/05/308073_large.mp4",
+                    "src": "https://files.catbox.moe/jnqrf5.mp4",
                     "width": 1.5,
                     "height": 1.0,
                     "chromakey": false
@@ -71,11 +71,12 @@
                     "rotation": "0 0 0",
                     "animated": true,
                     "animationMixer": "clip: *; timeScale: 1.0",
-                    "audioSrc": "https://cdn.me-qr.com/mp3/9427c33d-d302-424b-b20b-a2d1c578f1b4.mp3"
+                    "audioSrc": "https://files.catbox.moe/1jk9yo.mp3"
                 }
             ]
         }
     ]
 }
+
 
 
