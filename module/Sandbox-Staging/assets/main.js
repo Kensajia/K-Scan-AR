@@ -1,5 +1,3 @@
-// main.js (CÓDIGO FINAL ESTABILIZADO: FIX Asíncrono del Audio 3D)
-
 const JSON_PATH = './assets/IndexSet2.json'; 
 
 let sceneEl;
@@ -145,7 +143,7 @@ function initializeScene() {
                 if (contentData.audioSrc) {
                     const audioId = `${contentData.id}_audio`;
                     
-                    // FIX AUDIO 3D: Usar un elemento <audio> HTML para archivos .mp4/.mov
+                    // FIX AUDIO 3D: Usar un elemento <audio> HTML para archivos
                     const audioAsset = document.createElement('audio');
                     audioAsset.setAttribute('id', audioId);
                     audioAsset.setAttribute('src', contentData.audioSrc);
@@ -380,15 +378,14 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     // Si el componente 'sound' no está listo inmediatamente, esperamos
     if (!soundComp) {
         
-        // 🟢 FIX ASÍNCRONO: Esperar a que el componente 'sound' se inicialice
+        // FIX ASÍNCRONO: Esperar a que el componente 'sound' se inicialice
         audioEntity.addEventListener('componentinitialized', function handler(evt) {
             if (evt.detail.name === 'sound') {
-                audioEntity.removeEventListener('componentinitialized', handler); // Ejecutar una sola vez
-                startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted); // Llamada recursiva (segura)
+                audioEntity.removeEventListener('componentinitialized', handler); 
+                startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted); // Llamada recursiva
             }
         });
         
-        // No podemos proceder aún.
         console.warn(`[Audio 3D] Esperando inicialización del componente 'sound' en Target ${targetIndex}.`);
         return;
     }
@@ -405,6 +402,7 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
             audioAsset.play().catch(error => {
                 console.warn("Fallo al intentar reproducir audio 3D (Autoplay bloqueado).", error);
             });
+            console.log(`[Audio 3D] Iniciando reproducción del asset HTML: #${audioAssetId}`); 
         }
     }
     
@@ -422,9 +420,15 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         
         // PAUSA EXHAUSTIVA AL ENCONTRAR UN MARCADOR
         Object.values(videoRotationState).forEach(s => {
-            // Pausar/Limpiar todos los videos/audios al cambiar de target
-            // ... (Lógica de pausa idéntica a la anterior, omitida para concisión) ...
-            
+            // Pausar/Limpiar videos HTML
+            Object.values(s.htmlVideos).forEach(v => {
+                v.pause();
+                v.currentTime = 0;
+                if (s.targetIndex !== targetIndex) {
+                    v.src = "";
+                    v.load();
+                }
+            });
             // Pausar audio 3D
             const audioEntity = s.audioEntity;
             if (audioEntity && audioEntity.components.sound) {
@@ -454,7 +458,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             btnNextVideo.style.display = 'none';
         }
         
-        // Si el elemento inicial (índice 0) es un video, reproducir.
+        // Reproducir el contenido inicial
         const initialContentIsVideo = state.arEntities[0] && 
             (state.arEntities[0].tagName === 'A-VIDEO' || state.arEntities[0].tagName === 'A-PLANE');
         
@@ -464,7 +468,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             showVideo(targetIndex, 0); 
         }
         
-        // 🟢 NUEVA LÓGICA DE MANEJO DEL AUDIO 3D (llama a la función auxiliar)
+        // Manejo del Audio 3D Asíncrono
         if (state.audioEntity && state.currentVideoIndex === 0) {
             startAudio3D(state.audioEntity, targetIndex, isGlobalAudioMuted);
         }
@@ -511,12 +515,89 @@ function setupTrackingEvents(targetIndex, targetEntity) {
     });
 }
 
+// 🟢 FUNCIÓN AUXILIAR PARA CONTROL DE AUDIO 3D EN BOTÓN GLOBAL
+function toggleAudio3D(audioEntity, targetIndex, targetMutedState) {
+    
+    let soundComp = audioEntity.components.sound;
+    
+    // Si el componente no está listo, intentamos inicializarlo si se intenta desmutear
+    if (!soundComp) {
+        if (!targetMutedState && activeTargetIndex === targetIndex) {
+            // Esperar a que el componente esté listo, luego llamar a la función de inicio.
+             startAudio3D(audioEntity, targetIndex, targetMutedState); 
+        } else {
+            console.warn(`[Audio 3D] No se pudo mutear/desmutear el Target ${targetIndex}: Componente 'sound' no listo.`);
+        }
+        return;
+    }
+
+    // El componente está listo
+    const soundSrc = soundComp.data.src;
+    let audioAsset = null;
+    if (soundSrc && soundSrc.startsWith('#')) {
+        const audioAssetId = soundSrc.substring(1);
+        audioAsset = document.querySelector(`#${audioAssetId}`);
+    }
+    
+    if (!targetMutedState) { // Objetivo: SONIDO (Desmutear)
+        soundComp.setVolume(1.0); 
+        if (activeTargetIndex === targetIndex) {
+            soundComp.playSound(); 
+        }
+        if (audioAsset) {
+            audioAsset.muted = false;
+            if (audioAsset.paused) audioAsset.play().catch(e => {});
+        }
+    } else { // Objetivo: MUTE (Mutear)
+        soundComp.setVolume(0.0); 
+        soundComp.stopSound(); 
+        if (audioAsset) {
+            audioAsset.muted = true;
+            audioAsset.pause(); // También pausar el asset HTML subyacente
+        }
+    }
+}
+
 // === LÓGICA DE LA INTERFAZ DE USUARIO (UI) ===
 function initializeUIListeners() {
     
     // Detección de Flash
     sceneEl.addEventListener("arReady", () => {
-        // ... (Lógica de Flash idéntica a la anterior, omitida para concisión) ...
+        
+        const mindarComponent = sceneEl.components['mindar-image'];
+        let track = null;
+        let flashAvailable = false;
+
+        if (mindarComponent && mindarComponent.stream) {
+            try {
+                 track = mindarComponent.stream.getVideoTracks()[0]; 
+            } catch (e) {
+                 console.warn("No se pudo obtener el track de video del stream:", e);
+            }
+        }
+        
+        if (track) {
+            trackRef.track = track;
+            
+            try {
+                flashAvailable = track.getCapabilities().torch || false;
+            } catch (e) {
+                console.warn("El dispositivo no soporta la capacidad 'torch' (flash).", e);
+            }
+
+            if (flashAvailable) {
+                btnFlash.style.display = "flex"; 
+                btnFlash.innerHTML = "⚡ FLASH OFF"; 
+                btnFlash.disabled = false;
+            } else {
+                btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
+                btnFlash.disabled = true;
+            }
+        } else {
+            console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado e invisible.");
+            btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
+            btnFlash.disabled = true;
+        }
         
         // Inicializar el botón de audio
         const btnAudio = safeQuerySelector("#btn-audio", 'Audio Button');
@@ -531,7 +612,18 @@ function initializeUIListeners() {
 
     // Lógica de click del botón de flash
     btnFlash.addEventListener("click", function() {
-        // ... (Lógica de Flash idéntica a la anterior, omitida para concisión) ...
+        if (trackRef.track && !this.disabled) {
+            const settings = trackRef.track.getSettings();
+            const isCurrentlyOn = settings.torch || false;
+
+            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
+                this.classList.toggle("active", !isCurrentlyOn);
+                this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
+            }).catch(error => {
+                console.error("Error al intentar aplicar la restricción del flash:", error);
+                alert("No se pudo controlar el flash en este dispositivo.");
+            });
+        }
     });
 
     // LÓGICA DE AUDIO GLOBAL (Guarda el estado global y lo aplica)
@@ -548,44 +640,9 @@ function initializeUIListeners() {
                 if (!targetMutedState && v.paused) v.play().catch(e => {}); 
             });
             
-            // Aplicar a Modelos 3D con audio
+            // Aplicar a Modelos 3D con audio (usa la nueva función)
             if (state.audioEntity) { 
-                const soundComp = state.audioEntity.components.sound;
-                
-                const soundSrc = soundComp ? soundComp.data.src : null;
-                let audioAsset = null;
-                if (soundSrc && soundSrc.startsWith('#')) {
-                    const audioAssetId = soundSrc.substring(1);
-                    audioAsset = document.querySelector(`#${audioAssetId}`);
-                }
-                
-                if (soundComp && typeof soundComp.setVolume === 'function') {
-                    
-                    if (!targetMutedState) { // Objetivo: SONIDO (Desmutear)
-                        soundComp.setVolume(1.0); 
-                        if (activeTargetIndex === state.targetIndex) {
-                            soundComp.playSound(); 
-                        }
-                        if (audioAsset) {
-                            audioAsset.muted = false;
-                            if (audioAsset.paused) audioAsset.play().catch(e => {});
-                        }
-                    } else { // Objetivo: MUTE (Mutear)
-                        soundComp.setVolume(0.0); 
-                        soundComp.stopSound(); 
-                        if (audioAsset) {
-                            audioAsset.muted = true;
-                        }
-                    }
-                } else {
-                     // Llama a startAudio3D si se intenta desmutear, manejará la inicialización.
-                     if (!targetMutedState && activeTargetIndex === state.targetIndex) {
-                         startAudio3D(state.audioEntity, state.targetIndex, false);
-                     } else if (targetMutedState && activeTargetIndex === state.targetIndex) {
-                         // Si el componente no está inicializado, no hay nada que mutear.
-                         console.warn(`[Audio 3D] No se pudo mutear/desmutear el Target ${state.targetIndex}: Componente 'sound' no listo.`);
-                     }
-                }
+                toggleAudio3D(state.audioEntity, state.targetIndex, targetMutedState);
             }
         });
 
