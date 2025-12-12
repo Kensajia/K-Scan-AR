@@ -26,7 +26,7 @@
                 {
                     
                     "id": "Elem-0-2",
-                    "src": "./assets/Logo.glb",
+                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf",
                     "type": "3d", 
                     "position": "0 0 0.1", 
                     "scale": "0.25 0.25 0.25",
@@ -62,7 +62,7 @@
                 {
                     
                     "id": "Elem-2-0",
-                    "src": "./assets/scene.gltf",
+                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf",
                     "type": "3d",
                     "position": "0 0 0.1", 
                     "scale": "0.25 0.25 0.25",
@@ -75,6 +75,7 @@
         }
     ]
 }
+
 
 
 
