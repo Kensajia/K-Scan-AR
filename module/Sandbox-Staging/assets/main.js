@@ -355,7 +355,7 @@ function rotateVideoManually() {
     }
 }
 
-// === FUNCIÓN AUXILIAR PARA INICIAR AUDIO 3D (DESACOPLADO Y SÓLIDO) ===
+// === FUNCIÓN AUXILIAR PARA INICIAR AUDIO 3D (VERSION FINAL ACTIVA) ===
 function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     
     if (isGlobalAudioMuted) return;
@@ -368,40 +368,53 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
         console.error(`[Audio 3D] ERROR: Elemento <audio> HTML no encontrado para Target ${targetIndex}.`);
         return;
     }
-
-    // 1. Manejar la inicialización asíncrona del componente 'sound'
-    if (!soundComp || typeof soundComp.setVolume !== 'function') {
-        console.warn(`[Audio 3D] Esperando inicialización del componente 'sound' en Target ${targetIndex}.`);
-        audioEntity.addEventListener('componentinitialized', function handler(evt) {
-            if (evt.detail.name === 'sound') {
-                audioEntity.removeEventListener('componentinitialized', handler);
-                console.log(`[Audio 3D] Componente 'sound' listo para Target ${targetIndex}. Reintentando inicio.`);
-                // Reintentar la llamada después de que el componente esté listo
-                startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted); 
-            }
-        });
-        return;
+    
+    // 1. Reanudar el Web Audio Context si está suspendido (debe haber ocurrido un clic de usuario)
+    const soundSystem = sceneEl.components.sound;
+    if (soundSystem && soundSystem.context && soundSystem.context.state !== 'running') {
+        soundSystem.initContext(); // Esto intenta reanudar el contexto
+        console.log(`[Audio 3D] Web Audio Context reanudado/iniciado.`);
     }
-    
-    // 2. Componente 'sound' está listo. Habilitamos la posicionalidad.
-    
-    // Desmutear y reproducir el asset HTML (fuente real de sonido)
+
+    // 2. Intentar Reproducir el Asset HTML (Esto es el desbloqueo del audio)
     audioAsset.muted = false;
     audioAsset.load();
 
     audioAsset.play().then(() => {
         console.log(`[Audio 3D] Asset HTML de audio #${audioAsset.id} reproduciéndose. Conectando 3D.`);
         
-        // Habilitar el sonido 3D de A-Frame
-        soundComp.setVolume(1.0);
-        soundComp.playSound(); 
+        // 3. Conectar el componente A-Frame si ya está listo
+        if (soundComp && typeof soundComp.setVolume === 'function') {
+             soundComp.setVolume(1.0);
+             soundComp.playSound(); 
+        } else {
+             // Si el componente 'sound' AÚN no está listo (muy rápido), esperamos.
+             // En lugar de bucle, esperamos a que A-Frame lo inicialice,
+             // ya que audioAsset.play() ya inició el flujo de datos.
+             console.warn(`[Audio 3D] Componente 'sound' no listo, el audio HTML está reproduciéndose. El 3D se conectará en el siguiente tick.`);
+             
+             // Agregamos un listener de una sola vez para capturar la inicialización.
+             audioEntity.addEventListener('componentinitialized', function handler(evt) {
+                 if (evt.detail.name === 'sound') {
+                     audioEntity.removeEventListener('componentinitialized', handler);
+                     const newSoundComp = audioEntity.components.sound;
+                     if (newSoundComp) {
+                         newSoundComp.setVolume(1.0);
+                         newSoundComp.playSound();
+                         console.log(`[Audio 3D] Componente 'sound' conectado con éxito por evento.`);
+                     }
+                 }
+             }, { once: true });
+        }
 
     }).catch(error => {
-        console.warn(`[Audio 3D] Fallo al iniciar reproducción del asset HTML #${audioAsset.id}. Posiblemente Autoplay bloqueado.`, error);
+        console.warn(`[Audio 3D] Fallo al iniciar reproducción del asset HTML #${audioAsset.id}. (Posiblemente Autoplay bloqueado o URL incorrecta) - `, error);
         
-        // Aún si falla la reproducción inicial, forzamos el volumen en A-Frame 
-        // para que esté listo si el audio se activa luego.
-        soundComp.setVolume(1.0); 
+        // Aún si falla la reproducción inicial, si el componente está listo, 
+        // establecemos el volumen en A-Frame para que esté operativo tan pronto como el audio se active.
+        if (soundComp && typeof soundComp.setVolume === 'function') { 
+            soundComp.setVolume(1.0); 
+        }
     });
     
     console.log(`[Audio 3D] Lógica de Audio 3D iniciada en Target ${targetIndex}.`); 
@@ -610,10 +623,8 @@ function initializeUIListeners() {
                     audioAsset.muted = targetMutedState;
                     if (!targetMutedState && activeTargetIndex === state.targetIndex) {
                         // Si se desmutea, intentar reproducir el asset HTML
-                        audioAsset.load(); 
-                        audioAsset.play().catch(e => {
-                            console.warn(`[Audio 3D] Fallo al reproducir asset HTML al desmutear (Autoplay): ${e}`);
-                        });
+                        // startAudio3D se encarga de reanudar el Web Audio Context y hacer play
+                        startAudio3D(state.audioEntity, state.targetIndex, false);
                     } else if (targetMutedState) {
                         audioAsset.pause(); // Pausar el asset HTML subyacente al mutear
                     }
@@ -634,7 +645,7 @@ function initializeUIListeners() {
                     }
                 } else if (!targetMutedState && activeTargetIndex === state.targetIndex) {
                     // Si el componente no está listo y se intenta DESMUTEAR en el target activo:
-                    // Forzar la inicialización. Esto llamará a startAudio3D, que tiene la lógica de espera.
+                    // Forzar la inicialización.
                     console.warn(`[Audio 3D] Componente 'sound' no listo, forzando inicialización al desmutear.`);
                     startAudio3D(state.audioEntity, state.targetIndex, false);
                 }
