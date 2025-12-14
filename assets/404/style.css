@@ -7,26 +7,29 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    /* Quitamos el centrado flex para usar el centrado absoluto en .container */
     min-height: 100vh;
     margin: 0;
     text-align: center;
     overflow: hidden; 
     
-    /* TRANSICIÓN CLAVE: Transición suave del color de fondo y el gradiente */
     transition: background-image 2s ease, background-color 2s ease, color var(--transition-speed); 
     background-attachment: fixed;
-    background-color: #1A237E; /* Fallback color */
+    background-color: #1A237E; 
 }
 
 .container {
     padding: 20px;
     max-width: 500px;
-    /* AHORA TIENE EL Z-INDEX MÁS ALTO */
+    
+    /* SOLUCIÓN AL APILAMIENTO: Posicionamiento absoluto y Z-index alto */
+    position: absolute; 
+    top: 50%;           
+    left: 50%;          
+    transform: translate(-50%, -50%); 
+    
     z-index: 100; 
-    position: relative;
+    text-align: center;
 }
 
 h1 {
@@ -87,14 +90,11 @@ h1 {
 /* ======================================= */
 #time-indicator {
     position: fixed; 
-    /* El Z-index debe ser menor que el del contenedor (.container) */
-    z-index: 9; 
+    z-index: 9; /* Menor que 100 */
     
-    /* Posición horizontal para el sol (centrado) */
     left: 50%;
-    margin-left: -35px; /* Centrado para un ancho de 70px */
+    margin-left: -35px; 
     
-    /* TRANSICIÓN CLAVE para el movimiento JS, lo hace suave */
     transition: background-color 0.5s, transform 0.5s linear; 
     
     display: none; 
@@ -109,11 +109,11 @@ h1 {
 }
 
 .theme-dawn #time-indicator {
-    background-color: #FFEB3B; /* Sol al amanecer */
+    background-color: #FFEB3B; 
 }
 
 .theme-dusk #time-indicator {
-    background-color: #FF9800; /* Sol al atardecer */
+    background-color: #FF9800; 
 }
 
 /* B. Luna en la Noche (Posición Fija) */
@@ -131,7 +131,6 @@ h1 {
     top: 5%; 
     display: block !important; 
 }
-
 
 /* C. Animación para el DÍA: Nube Flotante (usa animación CSS fija) */
 @keyframes float {
