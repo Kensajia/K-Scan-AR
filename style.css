@@ -13,8 +13,12 @@ body {
     min-height: 100vh;
     margin: 0;
     text-align: center;
-    transition: background-color var(--transition-speed), color var(--transition-speed);
     overflow: hidden; 
+    
+    /* TRANSICIÓN CLAVE: Transición suave del color de fondo y el gradiente */
+    transition: background-image 2s ease, background-color 2s ease, color var(--transition-speed); 
+    background-attachment: fixed;
+    background-color: #1A237E; /* Fallback color */
 }
 
 .container {
@@ -41,32 +45,27 @@ h1 {
 }
 
 /* ======================================= */
-/* 2. Temas de Color (Aplicados por JS) */
+/* 2. Temas de Color (Texto y Botón) */
+/* NOTA: El fondo es gestionado por JS con un gradiente dinámico */
 /* ======================================= */
 
-/* --- Tema Noche (19:30 a 05:00) --- */
 .theme-night {
-    background-color: #1A237E; /* Azul oscuro profundo */
-    color: #E3F2FD; /* Azul claro para el texto */
+    color: #E3F2FD; 
 }
 .theme-night .home-button {
     background-color: #3F51B5;
     color: #fff;
 }
 
-/* --- Tema Día (07:00 a 17:00) --- */
 .theme-day {
-    background-color: #B3E5FC; /* Azul cielo claro */
-    color: #212121; /* Texto oscuro */
+    color: #212121; 
 }
 .theme-day .home-button {
     background-color: #03A9F4;
     color: #fff;
 }
 
-/* --- Tema Atardecer (17:00 a 19:30) --- */
 .theme-dusk {
-    background-color: #FF5722; /* Tonos naranjas cálidos */
     color: #FFFDE7;
 }
 .theme-dusk .home-button {
@@ -74,51 +73,98 @@ h1 {
     color: #fff;
 }
 
-
-/* ======================================= */
-/* 3. Animaciones Específicas */
-/* ======================================= */
-
-/* A. Animación para el DÍA: Nube Flotante */
-@keyframes float {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(calc(100vw + 150px)); } 
+.theme-dawn {
+    color: #FFFDE7;
+}
+.theme-dawn .home-button {
+    background-color: #FF7043;
+    color: #fff;
 }
 
-.theme-day #time-indicator {
-    position: absolute; 
-    width: 120px;
-    height: 40px;
-    background: #ffffff; 
-    border-radius: 40px;
-    box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
-    left: -150px; 
-    top: 20%; 
-    z-index: 9; 
-    animation: float 45s linear infinite; 
-    display: block; 
+
+/* ======================================= */
+/* 3. Estilos del Indicador de Tiempo (Sol/Luna/Nube) */
+/* ======================================= */
+#time-indicator {
+    position: fixed; 
+    z-index: 9;
+    
+    /* Posición horizontal para el sol (centrado) */
+    left: 50%;
+    margin-left: -35px; /* Centrado para un ancho de 70px */
+    
+    /* TRANSICIÓN CLAVE para el movimiento JS, lo hace suave */
+    transition: background-color 0.5s, transform 0.5s linear; 
+    
+    /* Por defecto, invisibilidad */
+    display: none; 
 }
 
-/* B. Animación para la NOCHE: Luna (Posición Corregida) */
+/* A. Sol durante Amanecer y Atardecer */
+.theme-dawn #time-indicator,
+.theme-dusk #time-indicator {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+}
+
+.theme-dawn #time-indicator {
+    background-color: #FFEB3B; /* Sol al amanecer */
+}
+
+.theme-dusk #time-indicator {
+    background-color: #FF9800; /* Sol al atardecer */
+}
+
+/* B. Luna en la Noche (Posición Fija) */
 .theme-night #time-indicator {
-    position: absolute;
+    /* Sobreescribe la posición horizontal para la luna */
+    left: auto;
+    right: 10%;
+    margin-left: 0;
+    
+    /* Ajustes visuales de la luna */
     width: 60px;
     height: 60px;
     background-color: #FFFDE7; 
     border-radius: 50%;
     box-shadow: 10px 10px 0 #1A237E; 
     
-    /* AJUSTE CLAVE: Subimos la luna al 5% del borde superior */
+    /* Posición vertical fija en noche */
     top: 5%; 
-    right: 10%; 
-    z-index: 9;
-    
-    /* Aseguramos la visibilidad en todos los viewports */
     display: block !important; 
 }
 
 
-/* C. Estrellas Parpadeantes (Generadas por JS) */
+/* C. Animación para el DÍA: Nube Flotante (usa animación CSS fija) */
+@keyframes float {
+    0% { transform: translateX(calc(-150px)); }
+    100% { transform: translateX(calc(100vw + 150px)); }
+}
+
+.theme-day #time-indicator {
+    /* Restaura la posición inicial para la nube */
+    position: absolute; 
+    left: -150px; 
+    top: 20%; 
+    margin-left: 0;
+    
+    /* Estilo de la nube */
+    width: 120px;
+    height: 40px;
+    background: #ffffff; 
+    border-radius: 40px;
+    box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
+    
+    /* Aplicar animación de flotación */
+    animation: float 45s linear infinite; 
+    display: block; 
+    
+    /* Asegurar que el transform JS no interfiera con la animación CSS */
+    transform: none !important; 
+}
+
+/* D. Estrellas Parpadeantes (Generadas por JS) */
 @keyframes twinkle {
     0%, 100% { opacity: 0.8; }
     50% { opacity: 0.1; }
