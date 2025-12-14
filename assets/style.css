@@ -1,174 +1,158 @@
-/* ======================================= */
-/* 1. Estilos Base y Transiciones */
-/* ======================================= */
+/* ===============================================================
+    VARIABLES BASE
+================================================================ */
 :root {
-    --transition-speed: 1s;
+    --accent: #007bff;
+    --danger: #dc3545;
 }
 
+/* ===============================================================
+    ESTILO BASE
+================================================================ */
 body {
-    font-family: 'Arial', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    text-align: center;
-    overflow: hidden; 
-    
-    /* TRANSICIÓN CLAVE: Transición suave del color de fondo y el gradiente */
-    transition: background-image 2s ease, background-color 2s ease, color var(--transition-speed); 
-    background-attachment: fixed;
-    background-color: #1A237E; /* Fallback color */
+    font-family: sans-serif;
+    display: flex; justify-content: center; align-items: center;
+    height: 100vh; margin: 0; flex-direction: column;
+    transition: 0.3s;
 }
 
 .container {
-    padding: 20px;
-    max-width: 500px;
-    /* AHORA TIENE EL Z-INDEX MÁS ALTO */
-    z-index: 100; 
-    position: relative;
+    padding: 40px; border-radius: 10px; text-align: center;
+    width: 90%; max-width: 400px; transition: 0.3s;
 }
 
-h1 {
-    font-size: 6em;
-    margin: 0 0 10px 0;
-    letter-spacing: 5px;
-}
+/* ===============================================================
+    TEMA CLARO
+================================================================ */
+.light-theme { background: #f4f4f4; color: #333; }
+.light-theme .container { background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+.light-theme button { background: var(--accent); color: white; }
 
-.home-button {
-    padding: 10px 20px;
-    border: none;
+/* ===============================================================
+    TEMA OSCURO
+================================================================ */
+.dark-theme { background: #1a1a1a; color: #f4f4f4; }
+.dark-theme .container { background: #2c2c2c; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+.dark-theme button { color: white; border: 1px solid #666; background: #3c3c3c; }
+.dark-theme #access-button, 
+.dark-theme .access-btn { background: var(--accent); border: none; }
+.dark-theme .delete-btn { background: var(--danger); border: none; }
+.dark-theme input { background: #3c3c3c; color: white; border: 1px solid #4a4a4a; }
+.dark-theme .logo { background: white; padding: 12px; border-radius: 15px; filter: drop-shadow(0 0 5px white); }
+
+
+  
+    
+/* ===============================================================
+    🔵 PALLETAS PERSONALIZADAS (DESACTIVADAS)
+    PARA ACTIVAR UNA, SOLO BORRA EL "/*" Y "*/"
+================================================================ */
+
+/* ---------- PALETA 1 ---------- */
+.palette1-theme { background: #f2ebe9; color: #4a3b36; }
+.palette1-theme .container { background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+.palette1-theme button { background: #9c6644; color: white; }
+/* */
+
+/* ---------- PALETA 2 ---------- */
+.palette2-theme { background: #001219; color: #e9d8a6; }
+.palette2-theme .container { background: #0a9396; }
+.palette2-theme button { background: #94d2bd; }
+/* */
+
+/* ---------- PALETA 3 ---------- */
+.palette3-theme { background: #002b36; color: #eee8d5; }
+.palette3-theme .container { background: #073642; }
+.palette3-theme button { background: #b58900; color: #002b36; }
+/* */
+
+/* ---------- PALETA 4 ---------- */
+.palette4-theme { background: #22223b; color: #f2e9e4; }
+.palette4-theme .container { background: #4a4e69; }
+.palette4-theme button { background: #9a8c98; }
+/* */
+
+/* ---------- PALETA 5 ---------- */
+.palette5-theme { background: #ffe6e6; color: #663333; }
+.palette5-theme .container { background: white; }
+.palette5-theme button { background: #ff9999; }
+/* */
+
+/* ===============================================================
+    ELEMENTOS COMUNES
+================================================================ */
+label { display: block; text-align: left; margin-top: 10px; font-weight: bold; }
+input { padding: 10px; margin: 5px 0 15px; border-radius: 5px; width: calc(100% - 20px); font-size: 16px; border: 1px solid #ccc; }
+button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 5px; }
+#error-message { color: red; margin-top: 10px; display: none; }
+.logo { margin-bottom: 20px; max-width: 150px; }
+
+/* ===============================================================
+    SELECTOR DE TEMA
+================================================================ */
+.theme-selector { position: fixed; bottom: 15px; right: 15px; text-align: center; }
+.theme-selector select { display: none; }
+.theme-circles { display: flex; gap: 12px; margin-top: 8px; }
+.circle { width: 22px; height: 22px; border-radius: 50%; cursor: pointer; transition: 0.2s; border: 1px solid #aaa; }
+.circle:hover, .circle.active { transform: scale(1.3); box-shadow: 0 0 8px white; }
+
+/* Círculos visibles */
+.circle[data-value="auto"] { background: linear-gradient(135deg, #000 50%, #fff 50%); }
+.circle[data-value="light"] { background: #fff; }
+.circle[data-value="dark"] { background: #000; }
+
+/* PARA ACTIVAR PALETAS, DESCOMENTA ESTOS: */
+/*
+.circle[data-value="palette1"] { background: #9c6644; }
+.circle[data-value="palette2"] { background: #0a9396; }
+.circle[data-value="palette3"] { background: #b58900; }
+.circle[data-value="palette4"] { background: #4a4e69; }
+.circle[data-value="palette5"] { background: #ff9999; }
+*/
+
+
+/* ===============================================================
+    USUARIOS GUARDADOS — ESTILO ORIGINAL RESTAURADO
+================================================================ */
+.project-selection-item {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
     border-radius: 5px;
-    font-size: 1.1em;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: background-color 0.3s, transform 0.3s;
+    text-align: left;
+    /*background: white;
+    color: black;*/
 }
 
-/* ======================================= */
-/* 2. Temas de Color (Texto y Botón) */
-/* ======================================= */
-
-.theme-night {
-    color: #E3F2FD; 
-}
-.theme-night .home-button {
-    background-color: #3F51B5;
-    color: #fff;
-}
-
-.theme-day {
-    color: #212121; 
-}
-.theme-day .home-button {
-    background-color: #03A9F4;
-    color: #fff;
-}
-
-.theme-dusk {
-    color: #FFFDE7;
-}
-.theme-dusk .home-button {
-    background-color: #FF9800;
-    color: #fff;
-}
-
-.theme-dawn {
-    color: #FFFDE7;
-}
-.theme-dawn .home-button {
-    background-color: #FF7043;
-    color: #fff;
+.selection-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
 }
 
 
-/* ======================================= */
-/* 3. Estilos del Indicador de Tiempo (Sol/Luna/Nube) */
-/* ======================================= */
-#time-indicator {
-    position: fixed; 
-    /* El Z-index debe ser menor que el del contenedor (.container) */
-    z-index: 9; 
-    
-    /* Posición horizontal para el sol (centrado) */
+/* ===============================================================
+    TOOLTIP MODERNO EN LOS CÍRCULOS DE TEMA
+================================================================ */
+
+.circle::after {
+    content: attr(data-title);
+    position: absolute;
+    top: -32px;
     left: 50%;
-    margin-left: -35px; /* Centrado para un ancho de 70px */
-    
-    /* TRANSICIÓN CLAVE para el movimiento JS, lo hace suave */
-    transition: background-color 0.5s, transform 0.5s linear; 
-    
-    display: none; 
+    transform: translateX(-50%);
+    padding: 4px 9px;
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    transition: opacity 0.25s ease;
 }
 
-/* A. Sol durante Amanecer y Atardecer */
-.theme-dawn #time-indicator,
-.theme-dusk #time-indicator {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-}
-
-.theme-dawn #time-indicator {
-    background-color: #FFEB3B; /* Sol al amanecer */
-}
-
-.theme-dusk #time-indicator {
-    background-color: #FF9800; /* Sol al atardecer */
-}
-
-/* B. Luna en la Noche (Posición Fija) */
-.theme-night #time-indicator {
-    left: auto;
-    right: 10%;
-    margin-left: 0;
-    
-    width: 60px;
-    height: 60px;
-    background-color: #FFFDE7; 
-    border-radius: 50%;
-    box-shadow: 10px 10px 0 #1A237E; 
-    
-    top: 5%; 
-    display: block !important; 
-}
-
-
-/* C. Animación para el DÍA: Nube Flotante (usa animación CSS fija) */
-@keyframes float {
-    0% { transform: translateX(calc(-150px)); }
-    100% { transform: translateX(calc(100vw + 150px)); }
-}
-
-.theme-day #time-indicator {
-    position: absolute; 
-    left: -150px; 
-    top: 20%; 
-    margin-left: 0;
-    
-    width: 120px;
-    height: 40px;
-    background: #ffffff; 
-    border-radius: 40px;
-    box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
-    
-    animation: float 45s linear infinite; 
-    display: block; 
-    
-    transform: none !important; 
-}
-
-/* D. Estrellas Parpadeantes (Generadas por JS) */
-@keyframes twinkle {
-    0%, 100% { opacity: 0.8; }
-    50% { opacity: 0.1; }
-}
-
-.star {
-    position: fixed;
-    width: 2px;
-    height: 2px;
-    background-color: #FFF8E1; 
-    border-radius: 50%;
-    z-index: 5; 
-    animation: twinkle 4s ease-in-out infinite alternate;
+.circle.show-tooltip::after {
+    opacity: 1;
 }
