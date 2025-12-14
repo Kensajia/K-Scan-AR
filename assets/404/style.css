@@ -24,7 +24,8 @@ body {
 .container {
     padding: 20px;
     max-width: 500px;
-    z-index: 10;
+    /* AHORA TIENE EL Z-INDEX MÁS ALTO */
+    z-index: 100; 
     position: relative;
 }
 
@@ -46,7 +47,6 @@ h1 {
 
 /* ======================================= */
 /* 2. Temas de Color (Texto y Botón) */
-/* NOTA: El fondo es gestionado por JS con un gradiente dinámico */
 /* ======================================= */
 
 .theme-night {
@@ -87,7 +87,8 @@ h1 {
 /* ======================================= */
 #time-indicator {
     position: fixed; 
-    z-index: 9;
+    /* El Z-index debe ser menor que el del contenedor (.container) */
+    z-index: 9; 
     
     /* Posición horizontal para el sol (centrado) */
     left: 50%;
@@ -96,7 +97,6 @@ h1 {
     /* TRANSICIÓN CLAVE para el movimiento JS, lo hace suave */
     transition: background-color 0.5s, transform 0.5s linear; 
     
-    /* Por defecto, invisibilidad */
     display: none; 
 }
 
@@ -118,19 +118,16 @@ h1 {
 
 /* B. Luna en la Noche (Posición Fija) */
 .theme-night #time-indicator {
-    /* Sobreescribe la posición horizontal para la luna */
     left: auto;
     right: 10%;
     margin-left: 0;
     
-    /* Ajustes visuales de la luna */
     width: 60px;
     height: 60px;
     background-color: #FFFDE7; 
     border-radius: 50%;
     box-shadow: 10px 10px 0 #1A237E; 
     
-    /* Posición vertical fija en noche */
     top: 5%; 
     display: block !important; 
 }
@@ -143,24 +140,20 @@ h1 {
 }
 
 .theme-day #time-indicator {
-    /* Restaura la posición inicial para la nube */
     position: absolute; 
     left: -150px; 
     top: 20%; 
     margin-left: 0;
     
-    /* Estilo de la nube */
     width: 120px;
     height: 40px;
     background: #ffffff; 
     border-radius: 40px;
     box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
     
-    /* Aplicar animación de flotación */
     animation: float 45s linear infinite; 
     display: block; 
     
-    /* Asegurar que el transform JS no interfiera con la animación CSS */
     transform: none !important; 
 }
 
