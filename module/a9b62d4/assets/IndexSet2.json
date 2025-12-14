@@ -1,68 +1,56 @@
 {
- 
     "meta": {
         "description": "a9b62d4"
     },
- 
     "Targets": [
- 		{
- 
+        {
             "targetIndex": 0,
             "elementos": [
-         {
- 
+                {
                     "id": "Elem-0-0",
                     "src": "https://files.catbox.moe/2ysumf.mp4",
                     "width": 1,
                     "height": 1.5,
                     "chromakey": false,
                     "chromaColor": ""
- 
-                } 
-    ]
-},		{
- 
+                }
+            ]
+        },
+        {
             "targetIndex": 1,
             "elementos": [
-         {
- 
+                {
                     "id": "Elem-1-0",
                     "src": "https://files.catbox.moe/0zm4jf.mp4",
                     "width": 1,
                     "height": 1.5,
                     "chromakey": false,
                     "chromaColor": ""
- 
-                },                {
- 
+                },
+                {
                     "id": "Elem-1-1",
-                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/bear/scene.gltf",
-                    "type": "3d", 
-                    "position": "0 0 0.1", 
+                    "src": "https://files.catbox.moe/d3d691.glb",
+                    "type": "3d",
+                    "position": "0 0 0.1",
                     "scale": "0.25 0.25 0.25",
-                    "rotation": "0 45 0"
+                    "rotation": "0 45 0",
                     "animated": false,
-                    "animationMixer": "clip: *; timeScale: 1.0" 
- 
-                } 
-    ]
-},		{
- 
+                    "animationMixer": "clip: *; timeScale: 1.0"
+                }
+            ]
+        },
+        {
             "targetIndex": 2,
             "elementos": [
-         {
- 
+                {
                     "id": "Elem-2-0",
                     "src": "https://files.catbox.moe/bucqj6.mp4",
                     "width": 1.5,
                     "height": 1.01,
                     "chromakey": false,
                     "chromaColor": ""
- 
-                } 
+                }
+            ]
+        }
     ]
-} 
-    ]
- 
 }
-
