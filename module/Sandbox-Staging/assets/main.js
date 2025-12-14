@@ -674,20 +674,29 @@ function initializeUIListeners() {
     });
 
     // Lógica de click del botón de flash
-    btnFlash.addEventListener("click", function() {
-        if (trackRef.track && !this.disabled) {
-            const settings = trackRef.track.getSettings();
-            const isCurrentlyOn = settings.torch || false;
+    btnFlash.addEventListener("click", function() {
+        if (trackRef.track && !this.disabled) {
+            // Obtener el estado actual del track ANTES de cambiar
+            const settings = trackRef.track.getSettings();
+            const isCurrentlyOn = settings.torch || false;
 
-            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
-                this.classList.toggle("active", !isCurrentlyOn);
-                this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
-            }).catch(error => {
-                console.error("Error al intentar aplicar la restricción del flash:", error);
-                alert("No se pudo controlar el flash en este dispositivo.");
-            });
-        }
-    });
+            // Aplicar la restricción. 'torch' requiere 'advanced'
+            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
+                // Usamos !isCurrentlyOn para el nuevo estado
+                this.classList.toggle("active", !isCurrentlyOn);
+                this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
+                // Opcional: Re-verificar si la restricción fue aplicada (puede ser lento)
+                // const newSettings = trackRef.track.getSettings();
+                // const isNowOn = newSettings.torch || false;
+                // this.classList.toggle("active", isNowOn);
+                // this.innerHTML = isNowOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
+            }).catch(error => {
+                console.error("Error al intentar aplicar la restricción del flash:", error);
+                alert("No se pudo controlar el flash en este dispositivo.");
+            });
+        }
+    });
+
 
     // LÓGICA DE AUDIO GLOBAL (Mejorada para manejar la asincronía)
     safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
@@ -780,3 +789,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
