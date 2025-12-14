@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let themeClass;
 
     // --- Lógica del Ciclo Día-Noche con precisión de minutos ---
-    // Usamos valores decimales para los límites de tiempo
+    // Usamos valores decimales para los límites de tiempo 
 
     if (timeDecimal >= 5.0 && timeDecimal < 7.0) {
         // Amanecer: 05:00 a 06:59:59
