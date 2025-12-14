@@ -10,11 +10,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
     } else if (currentHour >= 7 && currentHour < 17) {
         // Día: 7 AM - 5 PM
         themeClass = 'theme-day'; 
-    } else if (currentHour >= 17 && currentHour < 20) {
-        // Atardecer: 5 PM - 8 PM
+    } else if (currentHour >= 17 && currentHour < 19) {
+        // Atardecer: 5 PM - 7 PM
         themeClass = 'theme-dusk'; 
     } else {
-        // Noche: 8 PM - 5 AM (y el resto de la madrugada)
+        // Noche: 7 PM - 5 AM (y el resto de la madrugada)
         themeClass = 'theme-night'; 
     }
 
