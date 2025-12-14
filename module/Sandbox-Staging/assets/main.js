@@ -1,48 +1,52 @@
 const JSON_PATH = './assets/IndexSet2.json'; 
 
-// Variables globales esenciales
 let sceneEl;
 let controls;
-// Referencia para el track de video, crucial para el flash
-let trackRef = { track: null }; 
+let trackRef = { track: null };
 let btnFlash;
 let btnNextVideo;
 let targetContainer;
 let assetsContainer;
 
-let videoRotationState = {}; // Almacena el estado de rotación de videos por target
-let config = null; // Almacena el JSON de configuración
-let activeTargetIndex = null; // Índice del target actualmente detectado
-let isGlobalAudioMuted = true; // Estado global del audio
+let videoRotationState = {}; 
+let config = null; 
+let activeTargetIndex = null;
+let isGlobalAudioMuted = true; 
 
-// =======================================================
-// === FUNCIONES DE UTILIDAD ===
-// =======================================================
-
-// Conversión de color para Chroma Key
+// === FUNCIÓN DE CONVERSIÓN DE COLOR PARA CHROMA KEY ===
 function hexToNormalizedRgb(hex) {
     if (!hex || hex.length !== 7 || hex[0] !== '#') return '0 1 0'; 
+    
     const r = parseInt(hex.substring(1, 3), 16);
     const g = parseInt(hex.substring(3, 5), 16);
     const b = parseInt(hex.substring(5, 7), 16);
+
     const r_norm = (r / 255).toFixed(3);
     const g_norm = (g / 255).toFixed(3);
     const b_norm = (b / 255).toFixed(3);
+
     return `${r_norm} ${g_norm} ${b_norm}`;
 }
+// =======================================================
+
 
 // Función de utilidad para seleccionar elementos de forma segura
 function safeQuerySelector(selector, name) {
     const el = document.querySelector(selector);
     if (!el) {
         console.error(`ERROR FATAL: El elemento UI '${name}' con selector '${selector}' no se encontró.`);
-        // Devuelve un objeto simulado para evitar fallos
-        return { addEventListener: () => {}, style: { display: 'none' }, innerHTML: `[FALTA ${name}]`, disabled: true, classList: { toggle: () => {} } };
+        return { 
+            addEventListener: () => {}, 
+            style: { display: 'none' }, 
+            innerHTML: `[FALTA ${name}]`,
+            disabled: true,
+            classList: { toggle: () => {} }
+        };
     }
     return el;
 }
 
-// Inicializa los selectores de forma segura
+// 1. Inicializa los selectores de forma segura
 function initializeSelectors() {
     sceneEl = safeQuerySelector('#scene-ar', 'Scene A-Frame');
     controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
@@ -52,11 +56,8 @@ function initializeSelectors() {
     assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
 }
 
-// =======================================================
-// === COMPONENTES DE A-FRAME ===
-// =======================================================
 
-// Componente para mantener el renderizado activo
+// === COMPONENTE KEEP-ALIVE ===
 AFRAME.registerComponent('keep-alive', {
     tick: function () {
         const scene = this.el.sceneEl; 
@@ -66,505 +67,716 @@ AFRAME.registerComponent('keep-alive', {
     }
 });
 
-// Componente para la rotación táctil de objetos 3D
+
+// === NUEVO COMPONENTE: ROTACIÓN TÁCTIL SIMPLE (SOLO ROTACIÓN X/Y) ===
 AFRAME.registerComponent('touch-rotation', {
     init: function () {
-        this.start = { x: 0, y: 0 };
-        this.dragging = false;
-        this.rotationY = 0;
-        this.el.sceneEl.addEventListener('touchstart', this.handleStart.bind(this));
-        this.el.sceneEl.addEventListener('touchmove', this.handleMove.bind(this));
-        this.el.sceneEl.addEventListener('touchend', this.handleEnd.bind(this));
+        this.touchStart = { x: 0, y: 0 };
+        this.touchMove = { x: 0, y: 0 };
+        this.isTouched = false;
+        
+        // Guardar la rotación inicial del modelo si la tiene
+        this.currentRotation = this.el.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
+
+        this.handleStart = this.handleStart.bind(this);
+        this.handleMove = this.handleMove.bind(this);
+        this.handleEnd = this.handleEnd.bind(this);
+
+        // Escuchar los eventos táctiles en el lienzo de la escena para capturarlos sin conflicto.
+        const canvas = this.el.sceneEl.canvas;
+        if (canvas) {
+            canvas.addEventListener('touchstart', this.handleStart);
+            canvas.addEventListener('touchmove', this.handleMove);
+            canvas.addEventListener('touchend', this.handleEnd);
+        }
     },
 
     handleStart: function (evt) {
+        // Solo si un dedo toca la pantalla
         if (evt.touches.length === 1) {
-            this.dragging = true;
-            this.start.x = evt.touches[0].clientX;
-            this.rotationY = this.el.getAttribute('rotation').y;
+            this.isTouched = true;
+            this.touchStart.x = evt.touches[0].pageX;
+            this.touchStart.y = evt.touches[0].pageY;
+            // Detener la propagación para evitar que otros elementos UI o controles AR procesen el gesto.
+            evt.stopPropagation(); 
+        } else {
+            this.isTouched = false; // Ignorar gestos de zoom/traslación
         }
     },
 
     handleMove: function (evt) {
-        if (!this.dragging || evt.touches.length !== 1) return;
-        const deltaX = evt.touches[0].clientX - this.start.x;
-        // Sensibilidad de rotación
-        this.el.setAttribute('rotation', `0 ${this.rotationY + deltaX * 0.2} 0`);
+        // Solo procesar si fue un gesto de un solo dedo y estamos en modo touch
+        if (!this.isTouched || evt.touches.length !== 1) return;
+
+        this.touchMove.x = evt.touches[0].pageX;
+        this.touchMove.y = evt.touches[0].pageY;
+
+        // Calcular el cambio de posición del dedo
+        const dx = this.touchMove.x - this.touchStart.x;
+        const dy = this.touchMove.y - this.touchStart.y;
+        
+        // Sensibilidad (ajuste este valor, 0.2 es un buen punto de partida)
+        const sensibility = 0.2; 
+
+        // Rotación Y (Giro horizontal) -> Afectado por dx
+        const dTheta = dx * sensibility; 
+        
+        // Rotación X (Giro vertical) -> Afectado por dy
+        const dPhi = dy * sensibility; 
+        
+        // Aplicar la rotación acumulada
+        this.currentRotation.y += dTheta;
+        this.currentRotation.x += dPhi;
+        
+        // Opcional: limitar la rotación X (para que no gire completamente al revés)
+        // this.currentRotation.x = Math.max(-90, Math.min(90, this.currentRotation.x));
+        
+        this.el.setAttribute('rotation', this.currentRotation);
+
+        // Actualizar el punto de inicio para el siguiente frame
+        this.touchStart.x = this.touchMove.x;
+        this.touchStart.y = this.touchMove.y;
+
+        evt.stopPropagation(); 
+        evt.preventDefault(); // Evitar el scroll si estamos rotando
     },
 
     handleEnd: function () {
-        this.dragging = false;
+        this.isTouched = false;
     },
 
     remove: function() {
-        this.el.sceneEl.removeEventListener('touchstart', this.handleStart);
-        this.el.sceneEl.removeEventListener('touchmove', this.handleMove);
-        this.el.sceneEl.removeEventListener('touchend', this.handleEnd);
+        // Limpieza de event listeners al eliminar el componente
+        const canvas = this.el.sceneEl.canvas;
+        if (canvas) {
+            canvas.removeEventListener('touchstart', this.handleStart);
+            canvas.removeEventListener('touchmove', this.handleMove);
+            canvas.removeEventListener('touchend', this.handleEnd);
+        }
     }
 });
+// ===============================================
 
-// === CORRECCIÓN CLAVE 1: Componente Doble Toque (Pantalla Completa) ===
-AFRAME.registerComponent('video-double-tap-toggle', {
-    init: function () {
-        this.lastTap = 0;
-        this.isDetached = false;
-        
-        // Inicialización de valores de respaldo
-        this.originalPosition = this.el.getAttribute('position') || { x: 0, y: 0, z: 0 };
-        this.originalScale = this.el.getAttribute('scale') || { x: 1, y: 1, z: 1 };
-        this.originalRotation = this.el.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
-        
-        // Obtener el ID del asset de video HTML
-        let videoAssetId = '';
-        if (this.el.tagName === 'A-VIDEO' || this.el.tagName === 'A-PLANE') {
-            const srcAttr = this.el.getAttribute('src');
-            const matAttr = this.el.getAttribute('material');
-            // Busca la fuente en 'src' o en 'material.src'
-            const src = srcAttr && srcAttr.startsWith('#') ? srcAttr : (matAttr && matAttr.src && matAttr.src.startsWith('#') ? matAttr.src : null);
-            if (src) {
-                videoAssetId = src.substring(1);
-            }
-        }
-        this.videoAsset = document.querySelector(`#${videoAssetId}`);
 
-        this.handleTap = this.handleTap.bind(this);
-        this.el.addEventListener('click', this.handleTap); // Usamos 'click' para la detección de A-Frame
-    },
+// === FUNCIONES DE INICIALIZACIÓN Y CARGA ===
 
-    handleTap: function (evt) {
-        if (!this.el.getAttribute('visible')) return;
-        
-        evt.stopPropagation(); 
-        
-        const now = Date.now();
-        const DOUBLE_TAP_TIMEOUT = 300; 
-
-        if (now - this.lastTap < DOUBLE_TAP_TIMEOUT) {
-            this.toggleDetachedState();
-            this.lastTap = 0; 
-        } else {
-            this.lastTap = now;
-        }
-    },
-
-    toggleDetachedState: function () {
-        const videoEl = this.el; 
-        const targetParent = videoEl.parentNode;
-        
-        const mindarTargetComponent = targetParent.components['mindar-image-target'];
-
-        if (activeTargetIndex === null || !targetParent || !mindarTargetComponent) return; 
-
-        this.isDetached = !this.isDetached;
-
-        if (this.isDetached) {
-            // DESANCLAR (PANTALLA COMPLETA)
-            
-            this.originalPosition = videoEl.getAttribute('position');
-            this.originalScale = videoEl.getAttribute('scale');
-            this.originalRotation = videoEl.getAttribute('rotation');
-            
-            videoEl.setAttribute('position', '0 0 -1.5'); 
-            videoEl.setAttribute('scale', '2 2 1'); 
-            videoEl.setAttribute('rotation', '0 0 0'); 
-            
-            // Pausar el seguimiento del marcador (lo mantiene fijo)
-            mindarTargetComponent.pause(); 
-
-            if(btnNextVideo) btnNextVideo.style.display = 'none';
-
-            if (this.videoAsset) {
-                this.videoAsset.muted = false; 
-                if (this.videoAsset.paused) {
-                    this.videoAsset.play().catch(e => console.warn("Fallo al reanudar video en desanclaje:", e));
-                }
-            }
-
-        } else {
-            // REANCLAR
-            
-            videoEl.setAttribute('position', this.originalPosition);
-            videoEl.setAttribute('scale', this.originalScale);
-            videoEl.setAttribute('rotation', this.originalRotation);
-            
-            // Reanudar el seguimiento del marcador
-            mindarTargetComponent.play();
-            
-            const state = videoRotationState[activeTargetIndex];
-            if (state && state.arEntities.length > 1) {
-                if(btnNextVideo) btnNextVideo.style.display = 'flex';
-            }
-
-            if (this.videoAsset) {
-                this.videoAsset.muted = isGlobalAudioMuted;
-                if (isGlobalAudioMuted) {
-                    this.videoAsset.pause();
-                }
-            }
-        }
-    },
-
-    remove: function() {
-        this.el.removeEventListener('click', this.handleTap);
-    }
-});
-
-// =======================================================
-// === LÓGICA DE ESCENA, AR Y CONTENIDO ===
-// =======================================================
-
-// Muestra la entidad de video correcta según el índice de rotación
-function showVideo(targetIndex, contentIndex) {
-    const state = videoRotationState[targetIndex];
-    if (!state) return;
-
-    // Ocultar todas las entidades
-    state.arEntities.forEach(entity => entity.setAttribute('visible', false));
-
-    // Mostrar solo la entidad activa
-    const activeEntity = state.arEntities[contentIndex];
-    if (activeEntity) {
-        activeEntity.setAttribute('visible', true);
-        playCurrentVideo(targetIndex);
-    }
-}
-
-// Controla la reproducción y el mute de los videos
-function playCurrentVideo(targetIndex) {
-    const state = videoRotationState[targetIndex];
-    if (!state || !state.videoAssets) return;
-    
-    // El índice activo es el que se está mostrando
-    const contentIndex = state.activeIndex; 
-    const activeVideo = state.videoAssets[contentIndex];
-
-    if (activeVideo) {
-        activeVideo.currentTime = 0; // Reiniciar
-        activeVideo.muted = isGlobalAudioMuted;
-        
-        if (!isGlobalAudioMuted) {
-            activeVideo.play().catch(e => console.error("Error al reproducir video:", e));
-        } else {
-            activeVideo.pause();
-        }
-    }
-}
-
-// Lógica del botón de rotación manual
-function rotateVideoManually() {
-    if (activeTargetIndex !== null) {
-        const state = videoRotationState[activeTargetIndex];
-        if (state && state.arEntities.length > 1) {
-            state.activeIndex = (state.activeIndex + 1) % state.arEntities.length;
-            showVideo(activeTargetIndex, state.activeIndex);
-        }
-    }
-}
-
-// Inicia la reproducción del audio 3D (Si aplica)
-function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
-    const audioEl = audioEntity.components.sound.pool.children[0].srcEl; 
-    if (!audioEl) return;
-
-    if (isGlobalAudioMuted) {
-        audioEl.pause();
-        audioEl.muted = true;
-    } else {
-        audioEl.muted = false;
-        audioEl.play().catch(e => console.error("Error al reproducir audio:", e));
-    }
-}
-
-// Configura los eventos de seguimiento (Found/Lost)
-function setupTrackingEvents(targetIndex, targetEntity) {
-    targetEntity.addEventListener('targetFound', () => {
-        activeTargetIndex = targetIndex;
-        const state = videoRotationState[targetIndex];
-
-        // Mostrar u ocultar el botón de rotación si hay más de un video
-        btnNextVideo.style.display = (state && state.arEntities.length > 1) ? 'flex' : 'none';
-
-        // Asegurar que el video actual se reproduzca/mutee correctamente
-        showVideo(targetIndex, state.activeIndex);
-    });
-
-    targetEntity.addEventListener('targetLost', () => {
-        if (activeTargetIndex === targetIndex) {
-            activeTargetIndex = null;
-            btnNextVideo.style.display = 'none';
-
-            // Pausar todos los videos y audios de este target
-            const state = videoRotationState[targetIndex];
-            state.videoAssets.forEach(v => {
-                v.pause();
-                v.currentTime = 0;
-            });
-            if (state.audioEntities) {
-                state.audioEntities.forEach(a => {
-                    const audioEl = a.components.sound.pool.children[0].srcEl;
-                    if (audioEl) audioEl.pause();
-                });
-            }
-        }
-    });
-}
-
-// Carga la configuración JSON y construye la escena AR
 async function loadConfig() {
     try {
         const response = await fetch(JSON_PATH);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Error HTTP: ${response.status}`);
         }
         config = await response.json();
-        initializeScene();
+        
+        if (config && Array.isArray(config.Targets)) {
+             initializeScene();
+        } else {
+             throw new Error("La estructura JSON es inválida: falta el array 'Targets'.");
+        }
+        
     } catch (error) {
-        console.error("Fallo al cargar la configuración JSON:", error);
-        alert("Error al cargar la configuración de la experiencia AR.");
+        console.error("Error al cargar la configuración JSON. Revisada la ruta y sintaxis.", error);
+        alert("No se pudo cargar la configuración de videos. Revisa la ruta JSON y su contenido.");
     }
 }
 
-// Construcción dinámica de la escena A-Frame
+// LÓGICA DE CREACIÓN DE ENTIDADES (SOPORTE 3D, CHROMA Y VIDEO)
 function initializeScene() {
-    if (!config || !config.targets) return;
+    
+    const Targets = config.Targets;
+    
+    if (!assetsContainer.appendChild) return; 
 
-    config.targets.forEach((targetData, targetIndex) => {
+    Targets.forEach(target => {
         
-        // Inicializar el estado de rotación para este target
+        const { targetIndex, elementos } = target;
+        
         videoRotationState[targetIndex] = {
-            activeIndex: 0,
-            arEntities: [],
-            videoAssets: [],
-            audioEntities: []
+            currentVideoIndex: 0,
+            htmlVideos: {}, 
+            arEntities: [], 
+            numVideos: 0, 
+            hasVideoContent: false,
+            audioEntity: null,
+            audioAsset: null, 
+            targetIndex: targetIndex 
         };
 
-        const state = videoRotationState[targetIndex];
-
-        // 1. Crear a-entity (Target Container)
         const targetEntity = document.createElement('a-entity');
+        targetEntity.setAttribute('id', `target-${targetIndex}`);
         targetEntity.setAttribute('mindar-image-target', `targetIndex: ${targetIndex}`);
 
-        targetData.contents.forEach((content, contentIndex) => {
+        let videoCount = 0;
+        
+        elementos.forEach((contentData, index) => {
             
-            // 2. Crear Asset de Video (si es un video)
-            if (content.type === 'video' || content.type === 'chroma-video') {
-                const videoId = `video-${targetIndex}-${contentIndex}`;
+            if (contentData.type === "3d") {
                 
-                const videoAsset = document.createElement('video');
-                videoAsset.setAttribute('id', videoId);
-                videoAsset.setAttribute('src', content.src);
-                videoAsset.setAttribute('preload', 'auto');
-                videoAsset.setAttribute('loop', content.loop !== false); // Por defecto loop: true
-                videoAsset.setAttribute('crossorigin', 'anonymous');
-                videoAsset.setAttribute('playsinline', true);
-                videoAsset.setAttribute('muted', true);
+                // === LÓGICA DE MODELOS 3D (GLTF/GLB) ===
                 
-                assetsContainer.appendChild(videoAsset);
-                state.videoAssets.push(videoAsset);
-
-                // 3. Crear Entidad AR (a-plane o a-video)
-                const arEntity = document.createElement('a-plane');
+                const modelAsset = document.createElement('a-asset-item');
+                modelAsset.setAttribute('id', contentData.id);
+                modelAsset.setAttribute('src', contentData.src);
+                assetsContainer.appendChild(modelAsset);
                 
-                arEntity.setAttribute('position', content.position || '0 0 0');
-                arEntity.setAttribute('scale', content.scale || '1 1 1');
-                arEntity.setAttribute('rotation', content.rotation || '0 0 0');
+                const modelEntity = document.createElement('a-entity');
+                modelEntity.setAttribute('id', `ar-model-${targetIndex}-${index}`);
                 
-                // Configurar material (chroma key o normal)
-                if (content.type === 'chroma-video' && content.chromaColor) {
-                    const normalizedColor = hexToNormalizedRgb(content.chromaColor);
-                    arEntity.setAttribute('material', `shader: chromakey; src: #${videoId}; color: ${normalizedColor};`);
-                } else {
-                    arEntity.setAttribute('material', `src: #${videoId};`);
+                // 1. Carga del modelo 3D (DEJAR ESTA LÍNEA)
+                modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
+                
+                // 2. Control Táctil (APLICANDO EL COMPONENTE PERSONALIZADO)
+                modelEntity.setAttribute('touch-rotation', ''); 
+                
+                modelEntity.setAttribute('position', contentData.position || '0 0 0');
+                modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
+                modelEntity.setAttribute('rotation', contentData.rotation || '0 0 0');
+                modelEntity.setAttribute('visible', index === 0); 
+                
+                if (contentData.animated) {
+                    modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
                 }
 
-                // Agregar componentes interactivos
-                arEntity.setAttribute('touch-rotation', '');
-                arEntity.setAttribute('video-double-tap-toggle', ''); // Implementación de doble toque
-                arEntity.setAttribute('visible', contentIndex === 0); // Solo la primera es visible inicialmente
+                if (contentData.audioSrc) {
+                    const audioId = `${contentData.id}_audio`;
+                    
+                    // 1. Crear el elemento <audio> HTML (La fuente real de audio)
+                    const audioAsset = document.createElement('audio');
+                    audioAsset.setAttribute('id', audioId);
+                    audioAsset.setAttribute('src', contentData.audioSrc);
+                    audioAsset.setAttribute('preload', 'auto');
+                    audioAsset.setAttribute('loop', 'true');
+                    audioAsset.setAttribute('playsinline', 'true');
+                    audioAsset.setAttribute('muted', 'muted'); 
+                    audioAsset.setAttribute('crossorigin', 'anonymous');
+                    assetsContainer.appendChild(audioAsset);
+                    
+                    // 2. Componente 'sound' de A-Frame (SOLO para la posicionalidad 3D)
+                    modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
+                    
+                    // 3. Almacenar ambas referencias en el estado
+                    videoRotationState[targetIndex].audioEntity = modelEntity;
+                    videoRotationState[targetIndex].audioAsset = audioAsset;
+                }
 
-                targetEntity.appendChild(arEntity);
-                state.arEntities.push(arEntity);
-            } 
-            // 4. Crear Asset de Audio 3D (si es un audio)
-            else if (content.type === 'audio') {
-                const audioId = `audio-${targetIndex}-${contentIndex}`;
-                
-                const audioAsset = document.createElement('audio');
-                audioAsset.setAttribute('id', audioId);
-                audioAsset.setAttribute('src', content.src);
-                audioAsset.setAttribute('preload', 'auto');
-                audioAsset.setAttribute('loop', content.loop !== false);
-                audioAsset.setAttribute('crossorigin', 'anonymous');
-                
-                assetsContainer.appendChild(audioAsset);
+                targetEntity.appendChild(modelEntity);
+                videoRotationState[targetIndex].arEntities.push(modelEntity);
 
-                // Crear Entidad de Audio (sound component)
-                const audioEntity = document.createElement('a-entity');
-                audioEntity.setAttribute('position', content.position || '0 0 0');
-                audioEntity.setAttribute('sound', `src: #${audioId}; volume: 1; loop: ${content.loop !== false}; rolloffFactor: 1; distanceModel: inverse;`);
+
+            } else {
                 
-                targetEntity.appendChild(audioEntity);
-                state.audioEntities.push(audioEntity);
+                // === LÓGICA DE VIDEOS (Estándar o Chroma) ===
+                
+                videoCount++;
+                videoRotationState[targetIndex].hasVideoContent = true;
+
+                const videoAsset = document.createElement('video');
+                videoAsset.setAttribute('id', contentData.id);
+                videoAsset.setAttribute('preload', 'none'); 
+                videoAsset.setAttribute('loop', 'true');
+                videoAsset.setAttribute('playsinline', 'true');
+                videoAsset.setAttribute('webkit-playsinline', 'true');
+                videoAsset.setAttribute('muted', 'muted'); 
+                videoAsset.setAttribute('crossorigin', 'anonymous');
+                assetsContainer.appendChild(videoAsset);
+                
+                // FIX CHROMA: Usar a-plane para Chroma Key
+                const videoEntity = document.createElement(contentData.chromakey ? 'a-plane' : 'a-video');
+                videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
+                
+                if (contentData.chromakey) {
+                    
+                    const chromaColor = contentData.chromaColor || '#00ff00';
+                    const normalizedRgb = hexToNormalizedRgb(chromaColor); 
+
+                    // FIX CHROMA: Asignar material COMPLETO y explícito
+                    videoEntity.setAttribute('material', 
+                        `shader: chromakey; 
+                         src: #${contentData.id}; 
+                         color: ${normalizedRgb}`); 
+                    
+                } else {
+                    videoEntity.setAttribute('src', `#${contentData.id}`); 
+                } 
+                
+                videoEntity.dataset.videoSrc = contentData.src; 
+                
+                videoEntity.setAttribute('width', contentData.width);
+                videoEntity.setAttribute('height', contentData.height);
+                videoEntity.setAttribute('visible', index === 0); 
+
+                targetEntity.appendChild(videoEntity);
+                
+                videoRotationState[targetIndex].arEntities.push(videoEntity);
+                
+                videoRotationState[targetIndex].htmlVideos[contentData.id] = videoAsset;
             }
-            // Puedes expandir con más tipos (modelos 3D, imágenes...)
         });
-
-        // 5. Configurar eventos de seguimiento
-        setupTrackingEvents(targetIndex, targetEntity);
+        
+        videoRotationState[targetIndex].numVideos = videoCount;
         targetContainer.appendChild(targetEntity);
+        setupTrackingEvents(targetIndex, targetEntity);
+    });
+}
+
+// === LÓGICA DE ROTACIÓN Y VIDEO ===
+
+function showVideo(targetIndex, contentIndex) {
+    const state = videoRotationState[targetIndex];
+    state.arEntities.forEach((entityEl, i) => {
+        entityEl.setAttribute('visible', i === contentIndex);
+    });
+    state.currentVideoIndex = contentIndex;
+}
+
+function playCurrentVideo(targetIndex) {
+    const state = videoRotationState[targetIndex];
+    const currentVideoIndex = state.currentVideoIndex; 
+    
+    const currentVidEntity = state.arEntities[currentVideoIndex];
+    
+    if (!currentVidEntity || (currentVidEntity.tagName !== 'A-VIDEO' && currentVidEntity.tagName !== 'A-PLANE')) {
+        return; 
+    }
+
+    let videoAssetId = currentVidEntity.getAttribute('id').replace('ar-video-', 'Elem-');
+    
+    if (currentVidEntity.tagName === 'A-VIDEO' && currentVidEntity.hasAttribute('src')) {
+        videoAssetId = currentVidEntity.getAttribute('src').substring(1);
+    }
+
+    const currentVidAsset = document.querySelector(`#${videoAssetId}`); 
+    const currentUrl = currentVidEntity.dataset.videoSrc; 
+    
+    if (!currentVidAsset) return; 
+
+    // Pausa otros videos en todos los targets
+    Object.values(videoRotationState).forEach(s => {
+        Object.values(s.htmlVideos).forEach(v => {
+            if (v !== currentVidAsset) {
+                v.pause();
+                v.currentTime = 0;
+            }
+        });
     });
 
-    // Reproducir los videos inicialmente si no hay audio global mudo
-    if (!isGlobalAudioMuted) {
-        Object.keys(videoRotationState).forEach(targetIndex => {
-            playCurrentVideo(parseInt(targetIndex));
-        });
+    showVideo(targetIndex, currentVideoIndex);
+
+    if (currentVidEntity.tagName === 'A-PLANE' && currentVidEntity.hasAttribute('material')) {
+        const currentMaterial = currentVidEntity.getAttribute('material');
+        currentVidEntity.setAttribute('material', {...currentMaterial, src: `#${currentVidAsset.id}`});
+    } else {
+        currentVidEntity.setAttribute('src', `#${currentVidAsset.id}`);
+    }
+    
+    if (!currentVidAsset.dataset.loadedSrc || currentVidAsset.dataset.loadedSrc !== currentUrl) {
+        currentVidAsset.src = currentUrl;
+        currentVidAsset.load(); 
+        currentVidAsset.dataset.loadedSrc = currentUrl; 
+    }
+    
+    currentVidAsset.muted = isGlobalAudioMuted; 
+    currentVidAsset.onended = null; 
+    
+    currentVidAsset.play().catch(error => {
+        console.warn("Fallo al intentar reproducir video. Causa común: Autoplay bloqueado.", error);
+    }); 
+}
+
+// LÓGICA DE ROTACIÓN MANUAL
+function rotateVideoManually() {
+    const state = videoRotationState[activeTargetIndex];
+    
+    const totalEntities = state.arEntities.length; 
+    
+    if (activeTargetIndex === null || totalEntities <= 1) return;
+    
+    const currentIndex = state.currentVideoIndex;
+    const currentEntity = state.arEntities[currentIndex];
+
+    // 1. Detener el elemento actual
+    if (currentEntity.tagName === 'A-VIDEO' || currentEntity.tagName === 'A-PLANE') { 
+        
+        let videoAssetId = currentEntity.getAttribute('id').replace('ar-video-', 'Elem-');
+        
+        if (currentEntity.tagName === 'A-VIDEO' && currentEntity.hasAttribute('src')) {
+            videoAssetId = currentEntity.getAttribute('src').substring(1);
+        }
+        
+        const currentVidAsset = document.querySelector(`#${videoAssetId}`);
+        
+        if (currentVidAsset) {
+            currentVidAsset.pause();
+            currentVidAsset.currentTime = 0;
+            currentVidAsset.onended = null; 
+            
+            // Limpiar la fuente del video para liberar recursos
+            currentVidAsset.dataset.loadedSrc = ""; 
+            currentVidAsset.src = "";
+            currentVidAsset.load();
+        }
+    } else if (state.audioEntity && currentEntity === state.audioEntity) {
+        // 🚨 Detener audio 3D (Elemento 3D con audio)
+        const soundComp = currentEntity.components.sound;
+        const audioAsset = state.audioAsset; 
+        
+        if (audioAsset) { 
+            audioAsset.pause();
+            audioAsset.currentTime = 0;
+        }
+        // Verificar setVolume antes de usar soundComp
+        if (soundComp && typeof soundComp.setVolume === 'function') { 
+            soundComp.setVolume(0.0);
+            if (typeof soundComp.stopSound === 'function') { 
+                soundComp.stopSound(); 
+            }
+        }
+    }
+    
+    // 2. Determinar el siguiente índice
+    const nextIndex = (currentIndex + 1) % totalEntities;
+    
+    // 3. Aplicar la visibilidad al siguiente elemento
+    showVideo(activeTargetIndex, nextIndex);
+    
+    const nextEntity = state.arEntities[nextIndex];
+    
+    // 4. Si el siguiente elemento es un video, comenzar la reproducción
+    if (nextEntity.tagName === 'A-VIDEO' || nextEntity.tagName === 'A-PLANE') {
+        playCurrentVideo(activeTargetIndex);
+    } else if (state.audioEntity && nextEntity === state.audioEntity) { 
+        // 5. Si el siguiente elemento es el 3D con audio
+        startAudio3D(state.audioEntity, activeTargetIndex, isGlobalAudioMuted);
     }
 }
 
-// =======================================================
-// === LÓGICA DE INTERFAZ DE USUARIO (UI) ===
-// =======================================================
+// === FUNCIÓN AUXILIAR PARA INICIAR AUDIO 3D (VERSION FINAL ACTIVA) ===
+function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
+    
+    if (isGlobalAudioMuted) return;
 
-// === CORRECCIÓN CLAVE 2: Lógica de Inicialización de UI (FLASH) ===
-function initializeUIListeners() {
-    
-    // Espera a que la realidad aumentada esté lista para obtener el stream
-    sceneEl.addEventListener("arReady", () => {
-        
-        const mindarComponent = sceneEl.components['mindar-image'];
-        let track = null;
-        let flashAvailable = false;
+    const state = videoRotationState[targetIndex];
+    let soundComp = audioEntity.components.sound;
+    const audioAsset = state.audioAsset; // Referencia al <audio> HTML
 
-        // 1. OBTENER el track de video de la cámara (Método más confiable con MindAR)
-        if (mindarComponent && mindarComponent.getCameraStream) {
-            const stream = mindarComponent.getCameraStream();
-            if (stream) {
-                // El track de video es el primero en la lista
-                track = stream.getVideoTracks()[0]; 
+    if (!audioAsset) {
+        console.error(`[Audio 3D] ERROR: Elemento <audio> HTML no encontrado para Target ${targetIndex}.`);
+        return;
+    }
+    
+    // 1. Reanudar el Web Audio Context si está suspendido (debe haber ocurrido un clic de usuario)
+    const soundSystem = sceneEl.components.sound;
+    if (soundSystem && soundSystem.context && soundSystem.context.state !== 'running') {
+        // Inicializa o reanuda el AudioContext de A-Frame
+        soundSystem.initContext(); 
+        console.log(`[Audio 3D] Web Audio Context reanudado/iniciado.`);
+    }
+
+    // 2. Intentar Reproducir el Asset HTML (Esto es el desbloqueo del audio)
+    audioAsset.muted = false;
+    audioAsset.load();
+
+    audioAsset.play().then(() => {
+        console.log(`[Audio 3D] Asset HTML de audio #${audioAsset.id} reproduciéndose. Conectando 3D.`);
+        
+        // 3. Conectar el componente A-Frame si ya está listo
+        if (soundComp && typeof soundComp.setVolume === 'function') {
+             soundComp.setVolume(1.0);
+             soundComp.playSound(); 
+        } else {
+             // Si el componente 'sound' AÚN no está listo, esperamos al evento.
+             console.warn(`[Audio 3D] Componente 'sound' no listo, el audio HTML está reproduciéndose. El 3D se conectará cuando el componente se inicialice.`);
+             
+             // Agregamos un listener de una sola vez para capturar la inicialización.
+             audioEntity.addEventListener('componentinitialized', function handler(evt) {
+                 if (evt.detail.name === 'sound') {
+                     audioEntity.removeEventListener('componentinitialized', handler);
+                     const newSoundComp = audioEntity.components.sound;
+                     if (newSoundComp) {
+                         newSoundComp.setVolume(1.0);
+                         newSoundComp.playSound();
+                         console.log(`[Audio 3D] Componente 'sound' conectado con éxito por evento.`);
+                     }
+                 }
+             }, { once: true });
+        }
+
+    }).catch(error => {
+        console.warn(`[Audio 3D] Fallo al iniciar reproducción del asset HTML #${audioAsset.id}. (Posiblemente Autoplay bloqueado o URL incorrecta) - `, error);
+        
+        // Si falla el play, al menos aseguramos que el componente 3D tenga volumen 1.0.
+        if (soundComp && typeof soundComp.setVolume === 'function') { 
+            soundComp.setVolume(1.0); 
+        }
+    });
+    
+    console.log(`[Audio 3D] Lógica de Audio 3D iniciada en Target ${targetIndex}.`); 
+}
+// ===============================================
+
+// === LÓGICA DE TRACKING Y EVENTOS ===
+function setupTrackingEvents(targetIndex, targetEntity) {
+    targetEntity.addEventListener("targetFound", () => {
+        
+        // PAUSA EXHAUSTIVA AL ENCONTRAR UN MARCADOR
+        Object.values(videoRotationState).forEach(s => {
+            // Pausar/Limpiar videos HTML
+            Object.values(s.htmlVideos).forEach(v => {
+                v.pause();
+                v.currentTime = 0;
+                if (s.targetIndex !== targetIndex) {
+                    v.src = "";
+                    v.load();
+                }
+            });
+            
+            // Pausar audio 3D
+            const audioEntity = s.audioEntity;
+            const audioAsset = s.audioAsset; 
+            
+            if (audioAsset) {
+                audioAsset.pause();
+                audioAsset.currentTime = 0;
+            }
+            if (audioEntity) { 
+                const soundComp = audioEntity.components.sound;
+                // SOLO si el componente está listo, lo controlamos
+                if (soundComp && typeof soundComp.setVolume === 'function') {
+                    soundComp.setVolume(0.0);
+                    if (typeof soundComp.stopSound === 'function') { 
+                        soundComp.stopSound(); 
+                    }
+                }
+            }
+        });
+        
+        activeTargetIndex = targetIndex; 
+        const state = videoRotationState[targetIndex];
+
+        // Mostrar botón SIGUIENTE (Si hay más de 1 elemento en el array 'elementos')
+        const totalEntities = state.arEntities.length;
+        if (totalEntities > 1) {
+            btnNextVideo.style.display = 'flex';
+        } else {
+            btnNextVideo.style.display = 'none';
+        }
+        
+        // === LÓGICA DE INICIO DEL CONTENIDO ACTUAL (Índice 0) ===
+        const initialContentIsVideo = state.arEntities[0] && 
+            (state.arEntities[0].tagName === 'A-VIDEO' || state.arEntities[0].tagName === 'A-PLANE');
+        
+        if (initialContentIsVideo) {
+            playCurrentVideo(targetIndex);
+        } else {
+            showVideo(targetIndex, 0); 
+        }
+        
+        // Iniciar Audio 3D si el elemento actual es el modelo 3D
+        if (state.audioEntity && state.currentVideoIndex === 0) {
+            startAudio3D(state.audioEntity, targetIndex, isGlobalAudioMuted);
+        }
+    });
+
+    targetEntity.addEventListener("targetLost", () => {
+        if (activeTargetIndex === targetIndex) {
+            activeTargetIndex = null;
+            btnNextVideo.style.display = 'none';
+        }
+        
+        const state = videoRotationState[targetIndex];
+        
+        // PAUSA RIGUROSA: Detener y desligar videos
+        Object.values(state.htmlVideos).forEach(vid => {
+            vid.pause();
+            vid.currentTime = 0;
+            vid.onended = null; 
+            
+            vid.dataset.loadedSrc = ""; 
+            vid.src = "";
+            vid.load();
+        });
+        
+        // Detener audio del modelo 3D
+        const audioEntity = state.audioEntity;
+        const audioAsset = state.audioAsset; 
+        
+        if (audioAsset) {
+            audioAsset.pause();
+            audioAsset.currentTime = 0;
+        }
+        if (audioEntity) {
+            const soundComp = audioEntity.components.sound;
+            // SOLO si el componente está listo, lo controlamos
+            if (soundComp && typeof soundComp.setVolume === 'function') {
+                soundComp.setVolume(0.0);
+                if (typeof soundComp.stopSound === 'function') { 
+                    soundComp.stopSound(); 
+                }
             }
         }
-        
-        if (track) {
-            trackRef.track = track;
-            
-            // 2. Comprobar la capacidad 'torch'
-            try {
-                flashAvailable = track.getCapabilities().torch || false;
-            } catch (e) {
-                console.warn("El dispositivo no soporta la capacidad 'torch' (flash).", e);
-            }
+        
+        // Ocultar todas las entidades y resetear a índice 0
+        state.arEntities.forEach(el => el.setAttribute('visible', false));
+        showVideo(targetIndex, 0); 
+    });
+}
 
-            if (flashAvailable) {
-                btnFlash.style.display = "flex"; 
-                btnFlash.innerHTML = "⚡ FLASH OFF"; 
-                btnFlash.disabled = false;
-            } else {
-                btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
-                btnFlash.disabled = true;
-                btnFlash.style.display = "none";
-            }
-        } else {
-            console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado e invisible.");
-            btnFlash.disabled = true;
-            btnFlash.style.display = "none";
-        }
-        
+// === LÓGICA DE LA INTERFAZ DE USUARIO (UI) ===
+function initializeUIListeners() {
+    
+    // Detección de Flash
+    sceneEl.addEventListener("arReady", () => {
+        
+        const mindarComponent = sceneEl.components['mindar-image'];
+        let track = null;
+        let flashAvailable = false;
+
+        if (mindarComponent && mindarComponent.stream) {
+            try {
+                 track = mindarComponent.stream.getVideoTracks()[0]; 
+            } catch (e) {
+                 console.warn("No se pudo obtener el track de video del stream:", e);
+            }
+        }
+        
+        if (track) {
+            trackRef.track = track;
+            
+            try {
+                flashAvailable = track.getCapabilities().torch || false;
+            } catch (e) {
+                console.warn("El dispositivo no soporta la capacidad 'torch' (flash).", e);
+            }
+
+            if (flashAvailable) {
+                btnFlash.style.display = "flex"; 
+                btnFlash.innerHTML = "⚡ FLASH OFF"; 
+                btnFlash.disabled = false;
+            } else {
+                btnFlash.innerHTML = "❌ FLASH NO SOPORTADO";
+                btnFlash.disabled = true;
+            }
+        } else {
+            console.warn("⚠️ No se pudo obtener el Track de video. Flash deshabilitado e invisible.");
+            btnFlash.innerHTML = "❌ FLASH NO DISPONIBLE"; 
+            btnFlash.disabled = true;
+        }
+        
         // Inicializar el botón de audio
         const btnAudio = safeQuerySelector("#btn-audio", 'Audio Button');
         if (isGlobalAudioMuted) {
-            btnAudio.style.background = "var(--danger)";
-            btnAudio.innerHTML = "🔇 SILENCIO";
+             btnAudio.style.background = "var(--danger)";
+             btnAudio.innerHTML = "🔇 SILENCIO";
         } else {
-            btnAudio.style.background = "var(--accent)";
-            btnAudio.innerHTML = "🔊 SONIDO";
+             btnAudio.style.background = "var(--accent)";
+             btnAudio.innerHTML = "🔊 SONIDO";
         }
-    });
-    // ------------------------------------------------------------------
-
-    // Lógica de click del botón de flash
-    btnFlash.addEventListener("click", function() {
-        if (trackRef.track && !this.disabled) {
-            const settings = trackRef.track.getSettings();
-            const isCurrentlyOn = settings.torch || false; 
-
-            // Alternar el estado del flash
-            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
-                this.classList.toggle("active", !isCurrentlyOn);
-                this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
-            }).catch(error => {
-                console.error("Error al intentar aplicar la restricción del flash:", error);
-                alert("No se pudo controlar el flash en este dispositivo.");
-            });
-        }
-    });
-
-    // LÓGICA DE AUDIO GLOBAL
-    safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
-        isGlobalAudioMuted = !isGlobalAudioMuted;
-        this.style.background = isGlobalAudioMuted ? "var(--danger)" : "var(--accent)";
-        this.innerHTML = isGlobalAudioMuted ? "🔇 SILENCIO" : "🔊 SONIDO";
-
-        // Iterar sobre todos los videos y audios para aplicar el nuevo estado
-        Object.keys(videoRotationState).forEach(targetIndex => {
-            const state = videoRotationState[targetIndex];
-            
-            // Videos
-            if (state.videoAssets && state.videoAssets.length > 0) {
-                const activeVideo = state.videoAssets[state.activeIndex];
-                if (activeVideo) {
-                    activeVideo.muted = isGlobalAudioMuted;
-                    if (!isGlobalAudioMuted) {
-                        // Solo reproducir si el target está visible
-                        if (activeTargetIndex === parseInt(targetIndex)) {
-                            activeVideo.play().catch(e => console.error("Fallo al reanudar video:", e));
-                        }
-                    } else {
-                        activeVideo.pause();
-                    }
-                }
-            }
-
-            // Audios 3D
-            if (state.audioEntities) {
-                state.audioEntities.forEach(audioEntity => {
-                    if (activeTargetIndex === parseInt(targetIndex)) {
-                        startAudio3D(audioEntity, parseInt(targetIndex), isGlobalAudioMuted);
-                    }
-                });
-            }
-        });
     });
 
-    // LÓGICA DE TOGGLE UI
-    safeQuerySelector("#btn-toggle-ui", 'Toggle UI Button').addEventListener("click", () => {
-        controls.classList.toggle("hidden");
-    });
+    // Lógica de click del botón de flash
+    btnFlash.addEventListener("click", function() {
+        if (trackRef.track && !this.disabled) {
+            const settings = trackRef.track.getSettings();
+            const isCurrentlyOn = settings.torch || false;
 
-    // Botón de Rotación Manual
-    btnNextVideo.addEventListener("click", rotateVideoManually);
+            trackRef.track.applyConstraints({ advanced: [{ torch: !isCurrentlyOn }] }).then(() => {
+                this.classList.toggle("active", !isCurrentlyOn);
+                this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
+            }).catch(error => {
+                console.error("Error al intentar aplicar la restricción del flash:", error);
+                alert("No se pudo controlar el flash en este dispositivo.");
+            });
+        }
+    });
 
-    // Botón de Calidad
-    safeQuerySelector("#btn-hd", 'HD Button').addEventListener("click", function() {
-        // Lógica para cambiar la calidad (Ejemplo: cambiar atributo del renderizador)
-        const currentRenderer = sceneEl.getAttribute('renderer');
-        const newQuality = currentRenderer.antialias === true ? false : true; 
+    // LÓGICA DE AUDIO GLOBAL (Mejorada para manejar la asincronía)
+    safeQuerySelector("#btn-audio", 'Audio Button').addEventListener("click", function() {
         
-        sceneEl.setAttribute('renderer', `preserveDrawingBuffer: true; antialias: ${newQuality}; colorManagement: true`);
-        this.innerHTML = newQuality ? "📺 CALIDAD: HD" : "📺 CALIDAD: BAJA";
+        isGlobalAudioMuted = !isGlobalAudioMuted; 
+        const targetMutedState = isGlobalAudioMuted; 
+
+        Object.values(videoRotationState).forEach(state => {
+            
+            // --- LÓGICA DE VIDEOS ---
+            Object.values(state.htmlVideos).forEach(v => {
+                v.muted = targetMutedState; 
+                if (!targetMutedState && activeTargetIndex === state.targetIndex && v.paused) {
+                    v.play().catch(e => {
+                        console.warn(`[Video] Fallo al intentar reanudar video al desmutear: ${e}`);
+                    }); 
+                }
+            });
+            
+            // --- LÓGICA DE AUDIO 3D (MODELOS) ---
+            if (state.audioEntity) { 
+                
+                const audioAsset = state.audioAsset; // Referencia al <audio> HTML
+                
+                if (audioAsset) {
+                    audioAsset.muted = targetMutedState;
+                    if (!targetMutedState && activeTargetIndex === state.targetIndex) {
+                        // Si se desmutea, intentar reproducir el asset HTML
+                        // startAudio3D se encarga de reanudar el Web Audio Context y hacer play
+                        startAudio3D(state.audioEntity, state.targetIndex, false);
+                    } else if (targetMutedState) {
+                        audioAsset.pause(); // Pausar el asset HTML subyacente al mutear
+                    }
+                }
+
+                const soundComp = state.audioEntity.components.sound;
+
+                if (soundComp && typeof soundComp.setVolume === 'function') {
+                    
+                    if (!targetMutedState) { // Objetivo: SONIDO (Desmutear)
+                        soundComp.setVolume(1.0); 
+                        if (activeTargetIndex === state.targetIndex) {
+                            soundComp.playSound(); // Activar el nodo Panner 3D
+                        }
+                    } else { // Objetivo: MUTE (Mutear)
+                        soundComp.setVolume(0.0); 
+                        soundComp.stopSound(); 
+                    }
+                } else if (!targetMutedState && activeTargetIndex === state.targetIndex) {
+                    // Si el componente no está listo y se intenta DESMUTEAR en el target activo:
+                    // Forzar la inicialización, que se maneja dentro de startAudio3D.
+                    console.warn(`[Audio 3D] Componente 'sound' no listo, forzando inicialización al desmutear.`);
+                    startAudio3D(state.audioEntity, state.targetIndex, false);
+                }
+            }
+        });
+
+        // 3. Actualizar la UI del botón
+        this.style.background = targetMutedState ? "var(--danger)" : "var(--accent)";
+        this.innerHTML = targetMutedState ? "🔇 SILENCIO" : "🔊 SONIDO";
+    });
+
+    // LÓGICA DE TOGGLE UI
+    safeQuerySelector("#btn-toggle-ui", 'Toggle UI Button').addEventListener("click", () => {
+        controls.classList.toggle("hidden");
+    });
+
+    // Botón de Rotación Manual
+    btnNextVideo.addEventListener("click", rotateVideoManually);
+
+    // Botón de Calidad
+    safeQuerySelector("#btn-hd", 'HD Button').addEventListener("click", function() {
+        const isSD = this.innerHTML.includes("SD");
+        this.innerHTML = isSD ? "📺 CALIDAD: HD" : "📺 CALIDAD: SD";
+        
+        const antialiasValue = isSD ? 'true' : 'false';
+        
+        sceneEl.setAttribute('renderer', `preserveDrawingBuffer: true; antialias: ${antialiasValue}; colorManagement: true`);
     });
 }
 
 
-// =======================================================
-// === PUNTO DE ENTRADA PRINCIPAL ===
-// =======================================================
+// --- INICIO DEL CÓDIGO ---
 
 // 1. Inicializa los selectores inmediatamente
 initializeSelectors();
 
 // 2. Ejecutar la carga del JSON y la inicialización de la UI después de que el DOM esté cargado.
 document.addEventListener('DOMContentLoaded', () => {
-    initializeUIListeners();
-    loadConfig(); 
+    initializeUIListeners();
+    loadConfig(); 
 });
