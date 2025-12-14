@@ -15,7 +15,7 @@ body {
     text-align: center;
     /* Aplicar la transición al fondo y color del texto */
     transition: background-color var(--transition-speed), color var(--transition-speed);
-    overflow: hidden; /* Importante para que las nubes/estrellas no creen barras de desplazamiento */
+    overflow: hidden; /* Evita barras de desplazamiento por elementos animados */
 }
 
 .container {
@@ -49,7 +49,7 @@ h1 {
 /* 2. Temas de Color (Aplicados por JS) */
 /* ======================================= */
 
-/* --- Tema Noche --- */
+/* --- Tema Noche (19:30 a 05:00) --- */
 .theme-night {
     background-color: #1A237E; /* Azul oscuro profundo */
     color: #E3F2FD; /* Azul claro para el texto */
@@ -58,11 +58,8 @@ h1 {
     background-color: #3F51B5;
     color: #fff;
 }
-.theme-night .home-button:hover {
-    background-color: #5C6BC0;
-}
 
-/* --- Tema Día --- */
+/* --- Tema Día (07:00 a 17:00) --- */
 .theme-day {
     background-color: #B3E5FC; /* Azul cielo claro */
     color: #212121; /* Texto oscuro */
@@ -71,11 +68,8 @@ h1 {
     background-color: #03A9F4;
     color: #fff;
 }
-.theme-day .home-button:hover {
-    background-color: #29B6F6;
-}
 
-/* --- Tema Atardecer --- */
+/* --- Tema Atardecer (17:00 a 19:30) --- */
 .theme-dusk {
     background-color: #FF5722; /* Tonos naranjas cálidos */
     color: #FFFDE7;
@@ -83,9 +77,6 @@ h1 {
 .theme-dusk .home-button {
     background-color: #FF9800;
     color: #fff;
-}
-.theme-dusk .home-button:hover {
-    background-color: #FFB74D;
 }
 
 
@@ -96,24 +87,41 @@ h1 {
 /* A. Animación para el DÍA: Nube Flotante */
 @keyframes float {
     0% { transform: translateX(0); }
-    100% { transform: translateX(calc(100vw + 150px)); } /* Mueve la nube fuera de la pantalla */
+    100% { transform: translateX(calc(100vw + 150px)); } 
 }
 
-/* Estilo para el elemento de la nube */
 .theme-day #time-indicator {
-    position: absolute;
+    position: absolute; 
     width: 120px;
     height: 40px;
-    background: #ffffff;
+    background: #ffffff; 
     border-radius: 40px;
-    box-shadow: 10px 10px 0 rgba(0,0,0,0.1);
+    box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
     left: -150px; /* Inicia fuera de pantalla */
-    top: 20%;
+    top: 20%; 
+    z-index: 9; 
     animation: float 45s linear infinite; /* Animación de movimiento */
+    display: block; 
 }
 
-/* B. Animación para la NOCHE: Estrellas Parpadeantes (Generadas por JS) */
 
+/* B. Animación para la NOCHE: Luna */
+.theme-night #time-indicator {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background-color: #FFFDE7; /* Color de luna */
+    border-radius: 50%;
+    /* Efecto de media luna simple */
+    box-shadow: 10px 10px 0 #1A237E; 
+    top: 15%;
+    right: 15%;
+    z-index: 9;
+    display: block;
+}
+
+
+/* C. Estrellas Parpadeantes (Generadas por JS) */
 @keyframes twinkle {
     0%, 100% { opacity: 0.8; }
     50% { opacity: 0.1; }
@@ -123,8 +131,8 @@ h1 {
     position: fixed;
     width: 2px;
     height: 2px;
-    background-color: #FFF8E1; /* Blanco hueso */
+    background-color: #FFF8E1; 
     border-radius: 50%;
-    z-index: 5;
+    z-index: 5; /* Detrás del texto pero delante del fondo */
     animation: twinkle 4s ease-in-out infinite alternate;
 }
