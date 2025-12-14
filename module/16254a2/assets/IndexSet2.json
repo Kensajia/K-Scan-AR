@@ -5,11 +5,11 @@
     },
  
     "Targets": [
- {
+		{
  
             "targetIndex": 0,
             "elementos": [
-         {
+				{
  
                     "id": "Elem-0-0",
                     "src": "https://files.catbox.moe/eeyx2g.mp4",
@@ -18,15 +18,9 @@
                     "chromakey": false,
                     "chromaColor": ""
  
-                } 
-    ]
-},{
+				},{
  
-            "targetIndex": 0,
-            "elementos": [
-         {
- 
-                    "id": "Elem-0-0",
+                    "id": "Elem-0-1",
                     "src": "https://files.catbox.moe/b3k4kg.mp4",
                     "width": 1,
                     "height": 1.5,
@@ -34,29 +28,23 @@
                     "chromaColor": ""
  
                 } 
-    ]
-},{
+			]
+		},{
  
-            "targetIndex": 0,
+            "targetIndex": 1,
             "elementos": [
-         {
+				{
  
-                    "id": "Elem-0-0",
+                    "id": "Elem-1-0",
                     "src": "https://files.catbox.moe/eeyx2g.mp4",
                     "width": 1,
                     "height": 1.5,
                     "chromakey": false,
                     "chromaColor": ""
  
-                } 
-    ]
-},{
+                }, {
  
-            "targetIndex": 0,
-            "elementos": [
-         {
- 
-                    "id": "Elem-0-0",
+                    "id": "Elem-1-0",
                     "src": "https://files.catbox.moe/b3k4kg.mp4",
                     "width": 1,
                     "height": 1.5,
@@ -64,8 +52,8 @@
                     "chromaColor": ""
  
                 } 
-    ]
-} 
+			]
+		} 
     ]
  
 }
