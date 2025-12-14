@@ -1,0 +1,56 @@
+{
+ 
+    "meta": {
+        "description": "((IDENTIFICADOR DEL JSON))"
+    },
+ 
+    "Targets": [
+ {
+ 
+            "targetIndex": 0,
+            "elementos": [
+         {
+ 
+                    "id": "Elem-0-0",
+                    "src": "https://files.catbox.moe/ww4ry7.mp4",
+                    "width": 1,
+                    "height": 1.5,
+                    "chromakey": false,
+                    "chromaColor": ""
+ 
+                } 
+    ]
+},{
+ 
+            "targetIndex": 0,
+            "elementos": [
+         {
+ 
+                    "id": "Elem-0-0",
+                    "src": "https://files.catbox.moe/ng6u42.mp4",
+                    "width": 1,
+                    "height": 1.5,
+                    "chromakey": false,
+                    "chromaColor": ""
+ 
+                } 
+    ]
+},{
+ 
+            "targetIndex": 0,
+            "elementos": [
+         {
+ 
+                    "id": "Elem-0-0",
+                    "src": "https://files.catbox.moe/hpwdsh.mp4",
+                    "width": 1.0033,
+                    "height": 1.5,
+                    "chromakey": false,
+                    "chromaColor": ""
+ 
+                } 
+    ]
+} 
+    ]
+ 
+}
