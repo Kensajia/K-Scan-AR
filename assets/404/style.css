@@ -7,7 +7,13 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    /* Quitamos el centrado flex para usar el centrado absoluto en .container */
+    /* RESTAURAMOS CENTRADO FLEXBOX */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* AGREGAMOS POSITION: RELATIVE para contener el Sol/Luna/Nube */
+    position: relative; 
     min-height: 100vh;
     margin: 0;
     text-align: center;
@@ -22,14 +28,9 @@ body {
     padding: 20px;
     max-width: 500px;
     
-    /* SOLUCIÓN AL APILAMIENTO: Posicionamiento absoluto y Z-index alto */
-    position: absolute; 
-    top: 50%;           
-    left: 50%;          
-    transform: translate(-50%, -50%); 
-    
+    /* El z-index: 100 asegura que esté encima de todo */
     z-index: 100; 
-    text-align: center;
+    position: relative; /* Necesario para que el z-index funcione en Flexbox */
 }
 
 h1 {
@@ -89,7 +90,8 @@ h1 {
 /* 3. Estilos del Indicador de Tiempo (Sol/Luna/Nube) */
 /* ======================================= */
 #time-indicator {
-    position: fixed; 
+    /* CAMBIO CRÍTICO: De fixed a absolute. Ahora se refiere al body. */
+    position: absolute; 
     z-index: 9; /* Menor que 100 */
     
     left: 50%;
@@ -118,6 +120,7 @@ h1 {
 
 /* B. Luna en la Noche (Posición Fija) */
 .theme-night #time-indicator {
+    /* Sigue siendo absoluto, pero con diferentes coordenadas */
     left: auto;
     right: 10%;
     margin-left: 0;
@@ -163,7 +166,7 @@ h1 {
 }
 
 .star {
-    position: fixed;
+    position: absolute; /* Cambiamos a absolute ya que body es relative */
     width: 2px;
     height: 2px;
     background-color: #FFF8E1; 
