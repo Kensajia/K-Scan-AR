@@ -686,10 +686,10 @@ function initializeUIListeners() {
                 this.classList.toggle("active", !isCurrentlyOn);
                 this.innerHTML = !isCurrentlyOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
                 // Opcional: Re-verificar si la restricción fue aplicada (puede ser lento)
-                // const newSettings = trackRef.track.getSettings();
-                // const isNowOn = newSettings.torch || false;
-                // this.classList.toggle("active", isNowOn);
-                // this.innerHTML = isNowOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
+                 const newSettings = trackRef.track.getSettings();
+                 const isNowOn = newSettings.torch || false;
+                 this.classList.toggle("active", isNowOn);
+                 this.innerHTML = isNowOn ? "⚡ FLASH ON" : "⚡ FLASH OFF";
             }).catch(error => {
                 console.error("Error al intentar aplicar la restricción del flash:", error);
                 alert("No se pudo controlar el flash en este dispositivo.");
@@ -789,4 +789,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
 
