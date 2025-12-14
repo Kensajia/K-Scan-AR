@@ -7,30 +7,31 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    /* RESTAURAMOS CENTRADO FLEXBOX */
+    /* CENTRADO FLEXBOX ESTÁNDAR */
     display: flex;
     justify-content: center;
     align-items: center;
     
-    /* AGREGAMOS POSITION: RELATIVE para contener el Sol/Luna/Nube */
-    position: relative; 
+    /* CONFIGURACIÓN CRÍTICA PARA EL APILAMIENTO */
+    position: relative; /* Contenedor de referencia para Sol/Luna/Estrellas */
     min-height: 100vh;
     margin: 0;
     text-align: center;
     overflow: hidden; 
     
+    /* TRANSICIÓN DE FONDO DINÁMICO */
     transition: background-image 2s ease, background-color 2s ease, color var(--transition-speed); 
     background-attachment: fixed;
-    background-color: #1A237E; 
+    background-color: #1A237E; /* Fallback color */
 }
 
 .container {
     padding: 20px;
     max-width: 500px;
     
-    /* El z-index: 100 asegura que esté encima de todo */
+    /* SOLUCIÓN FINAL AL Z-INDEX: Debe ser position: relative para trabajar con Flexbox */
     z-index: 100; 
-    position: relative; /* Necesario para que el z-index funcione en Flexbox */
+    position: relative; 
 }
 
 h1 {
@@ -90,13 +91,14 @@ h1 {
 /* 3. Estilos del Indicador de Tiempo (Sol/Luna/Nube) */
 /* ======================================= */
 #time-indicator {
-    /* CAMBIO CRÍTICO: De fixed a absolute. Ahora se refiere al body. */
+    /* SOLUCIÓN AL APILAMIENTO: position: absolute y z-index bajo */
     position: absolute; 
-    z-index: 9; /* Menor que 100 */
+    z-index: 9; 
     
     left: 50%;
     margin-left: -35px; 
     
+    /* TRANSICIÓN para el movimiento JS */
     transition: background-color 0.5s, transform 0.5s linear; 
     
     display: none; 
@@ -120,7 +122,6 @@ h1 {
 
 /* B. Luna en la Noche (Posición Fija) */
 .theme-night #time-indicator {
-    /* Sigue siendo absoluto, pero con diferentes coordenadas */
     left: auto;
     right: 10%;
     margin-left: 0;
@@ -166,7 +167,8 @@ h1 {
 }
 
 .star {
-    position: absolute; /* Cambiamos a absolute ya que body es relative */
+    /* POSICION ABSOLUTA (Referencia al body) */
+    position: absolute; 
     width: 2px;
     height: 2px;
     background-color: #FFF8E1; 
