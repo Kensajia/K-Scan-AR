@@ -13,9 +13,8 @@ body {
     min-height: 100vh;
     margin: 0;
     text-align: center;
-    /* Aplicar la transición al fondo y color del texto */
     transition: background-color var(--transition-speed), color var(--transition-speed);
-    overflow: hidden; /* Evita barras de desplazamiento por elementos animados */
+    overflow: hidden; 
 }
 
 .container {
@@ -39,10 +38,6 @@ h1 {
     cursor: pointer;
     margin-top: 20px;
     transition: background-color 0.3s, transform 0.3s;
-}
-
-.home-button:hover {
-    transform: translateY(-2px);
 }
 
 /* ======================================= */
@@ -97,27 +92,29 @@ h1 {
     background: #ffffff; 
     border-radius: 40px;
     box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
-    left: -150px; /* Inicia fuera de pantalla */
+    left: -150px; 
     top: 20%; 
     z-index: 9; 
-    animation: float 45s linear infinite; /* Animación de movimiento */
+    animation: float 45s linear infinite; 
     display: block; 
 }
 
-
-/* B. Animación para la NOCHE: Luna */
+/* B. Animación para la NOCHE: Luna (Posición Corregida) */
 .theme-night #time-indicator {
     position: absolute;
     width: 60px;
     height: 60px;
-    background-color: #FFFDE7; /* Color de luna */
+    background-color: #FFFDE7; 
     border-radius: 50%;
-    /* Efecto de media luna simple */
     box-shadow: 10px 10px 0 #1A237E; 
-    top: 15%;
-    right: 15%;
+    
+    /* AJUSTE CLAVE: Subimos la luna al 5% del borde superior */
+    top: 5%; 
+    right: 10%; 
     z-index: 9;
-    display: block;
+    
+    /* Aseguramos la visibilidad en todos los viewports */
+    display: block !important; 
 }
 
 
@@ -133,6 +130,6 @@ h1 {
     height: 2px;
     background-color: #FFF8E1; 
     border-radius: 50%;
-    z-index: 5; /* Detrás del texto pero delante del fondo */
+    z-index: 5; 
     animation: twinkle 4s ease-in-out infinite alternate;
 }
