@@ -32,7 +32,7 @@
                     "src": "https://files.catbox.moe/d3d691.glb",
                     "type": "3d",
                     "position": "0 0 0.1",
-                    "scale": "0.25 0.25 0.25",
+                    "scale": "5 5 5",
                     "rotation": "0 45 0",
                     "animated": false,
                     "animationMixer": "clip: *; timeScale: 1.0"
@@ -54,3 +54,4 @@
         }
     ]
 }
+
