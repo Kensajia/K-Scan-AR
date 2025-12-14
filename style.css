@@ -1,0 +1,130 @@
+/* ======================================= */
+/* 1. Estilos Base y Transiciones */
+/* ======================================= */
+:root {
+    --transition-speed: 1s;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    text-align: center;
+    /* Aplicar la transición al fondo y color del texto */
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+    overflow: hidden; /* Importante para que las nubes/estrellas no creen barras de desplazamiento */
+}
+
+.container {
+    padding: 20px;
+    max-width: 500px;
+    z-index: 10;
+    position: relative;
+}
+
+h1 {
+    font-size: 6em;
+    margin: 0 0 10px 0;
+    letter-spacing: 5px;
+}
+
+.home-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.home-button:hover {
+    transform: translateY(-2px);
+}
+
+/* ======================================= */
+/* 2. Temas de Color (Aplicados por JS) */
+/* ======================================= */
+
+/* --- Tema Noche --- */
+.theme-night {
+    background-color: #1A237E; /* Azul oscuro profundo */
+    color: #E3F2FD; /* Azul claro para el texto */
+}
+.theme-night .home-button {
+    background-color: #3F51B5;
+    color: #fff;
+}
+.theme-night .home-button:hover {
+    background-color: #5C6BC0;
+}
+
+/* --- Tema Día --- */
+.theme-day {
+    background-color: #B3E5FC; /* Azul cielo claro */
+    color: #212121; /* Texto oscuro */
+}
+.theme-day .home-button {
+    background-color: #03A9F4;
+    color: #fff;
+}
+.theme-day .home-button:hover {
+    background-color: #29B6F6;
+}
+
+/* --- Tema Atardecer --- */
+.theme-dusk {
+    background-color: #FF5722; /* Tonos naranjas cálidos */
+    color: #FFFDE7;
+}
+.theme-dusk .home-button {
+    background-color: #FF9800;
+    color: #fff;
+}
+.theme-dusk .home-button:hover {
+    background-color: #FFB74D;
+}
+
+
+/* ======================================= */
+/* 3. Animaciones Específicas */
+/* ======================================= */
+
+/* A. Animación para el DÍA: Nube Flotante */
+@keyframes float {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(calc(100vw + 150px)); } /* Mueve la nube fuera de la pantalla */
+}
+
+/* Estilo para el elemento de la nube */
+.theme-day #time-indicator {
+    position: absolute;
+    width: 120px;
+    height: 40px;
+    background: #ffffff;
+    border-radius: 40px;
+    box-shadow: 10px 10px 0 rgba(0,0,0,0.1);
+    left: -150px; /* Inicia fuera de pantalla */
+    top: 20%;
+    animation: float 45s linear infinite; /* Animación de movimiento */
+}
+
+/* B. Animación para la NOCHE: Estrellas Parpadeantes (Generadas por JS) */
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0.1; }
+}
+
+.star {
+    position: fixed;
+    width: 2px;
+    height: 2px;
+    background-color: #FFF8E1; /* Blanco hueso */
+    border-radius: 50%;
+    z-index: 5;
+    animation: twinkle 4s ease-in-out infinite alternate;
+}
