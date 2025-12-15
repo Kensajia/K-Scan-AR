@@ -33,7 +33,17 @@
                     "chromakey": false,
                     "chromaColor": ""
  
-                } 
+                } ,
+                {
+                    "id": "Elem-1-1",
+                    "src": "https://files.catbox.moe/ho1wcr.glb",
+                    "type": "3d",
+                    "position": "0 0 0.1",
+                    "scale": "1.5 1.5 1.5",
+                    "rotation": "0 -90 0",
+                    "animated": false,
+                    "animationMixer": "clip: *; timeScale: 1.0"
+                }
     ]
 },		{
  
@@ -54,3 +64,4 @@
     ]
  
 }
+
