@@ -821,6 +821,7 @@ function initializeUIListeners() {
     // LÓGICA DE TOGGLE UI
     safeQuerySelector("#btn-toggle-ui", 'Toggle UI Button').addEventListener("click", () => {
         controls.classList.toggle("hidden");
+        btnReset3D.classList.toggle("hidden");
     });
 
     // Botón de Rotación Manual
@@ -851,4 +852,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
 
