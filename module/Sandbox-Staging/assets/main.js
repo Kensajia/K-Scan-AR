@@ -5,6 +5,7 @@ let controls;
 let trackRef = { track: null };
 let btnFlash;
 let btnNextVideo;
+let btnReset3D;
 let targetContainer;
 let assetsContainer;
 
@@ -52,6 +53,7 @@ function initializeSelectors() {
     controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
     btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
     btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
+    btnReset3D = safeQuerySelector("#btn-reset-3d", 'Reset 3D Button');
     targetContainer = safeQuerySelector("#target-container", 'Target Container');
     assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
 }
@@ -232,7 +234,12 @@ function initializeScene() {
                 modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
                 modelEntity.setAttribute('rotation', contentData.rotation || '0 0 0');
                 modelEntity.setAttribute('visible', index === 0); 
-                
+
+                // <<< INICIO: Guardar valores iniciales
+                modelEntity.dataset.initialRotation = contentData.rotation || '0 0 0';
+                modelEntity.dataset.initialScale = contentData.scale || '1 1 1';
+                // <<< FIN: Guardar valores iniciales
+                                         
                 if (contentData.animated) {
                     modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
                 }
@@ -440,6 +447,16 @@ function rotateVideoManually() {
     showVideo(activeTargetIndex, nextIndex);
     
     const nextEntity = state.arEntities[nextIndex];
+
+    // <<< INICIO: Lógica del Botón de Reset 3D al Rotar
+    const nextContentIs3D = nextEntity && nextEntity.hasAttribute('gltf-model');
+    
+    if (nextContentIs3D) {
+        btnReset3D.style.display = 'flex';
+    } else {
+        btnReset3D.style.display = 'none';
+    }
+    // <<< FIN: Lógica del Botón de Reset 3D al Rotar
     
     // 4. Si el siguiente elemento es un video, comenzar la reproducción
     if (nextEntity.tagName === 'A-VIDEO' || nextEntity.tagName === 'A-PLANE') {
@@ -512,7 +529,46 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     
     console.log(`[Audio 3D] Lógica de Audio 3D iniciada en Target ${targetIndex}.`); 
 }
-// ===============================================
+    // ===============================================
+
+    // === FUNCIÓN DE RESET DEL MODELO 3D ===
+    function resetActiveModelRotation() {
+    if (activeTargetIndex === null) return;
+
+    const state = videoRotationState[activeTargetIndex];
+    const currentIndex = state.currentVideoIndex;
+    const currentEntity = state.arEntities[currentIndex];
+
+    // Verificar si es un modelo 3D
+    if (currentEntity && currentEntity.tagName === 'A-ENTITY' && currentEntity.hasAttribute('gltf-model')) {
+        
+        // 1. Obtener valores iniciales guardados
+        const initialRotation = currentEntity.dataset.initialRotation || '0 0 0';
+        const initialScale = currentEntity.dataset.initialScale || '1 1 1';
+        
+        // 2. Aplicar el reset
+        currentEntity.setAttribute('rotation', initialRotation);
+        currentEntity.setAttribute('scale', initialScale);
+        
+        // 3. Resetear el estado interno del componente 'touch-rotation'
+        const touchRotationComp = currentEntity.components['touch-rotation'];
+        if (touchRotationComp) {
+            // Asegurarse de que el componente 'touch-rotation' refleje el estado inicial
+            const rotComponents = initialRotation.split(' ').map(Number);
+            // La rotación inicial solo necesita los valores x, y
+            touchRotationComp.currentRotation = { 
+                x: rotComponents[0] || 0, 
+                y: rotComponents[1] || 0, 
+                z: rotComponents[2] || 0 
+            };
+        }
+        
+        console.log(`[3D Reset] Modelo 3D reseteado a Rotación: ${initialRotation}, Escala: ${initialScale}`);
+    } else {
+        console.log("[3D Reset] El elemento activo no es un modelo 3D o no se encontró.");
+    }
+}
+// =====================================
 
 // === LÓGICA DE TRACKING Y EVENTOS ===
 function setupTrackingEvents(targetIndex, targetEntity) {
@@ -560,6 +616,17 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         } else {
             btnNextVideo.style.display = 'none';
         }
+
+        // <<< INICIO: Lógica del Botón de Reset 3D al encontrar Target
+        const initialContentIs3D = state.arEntities[0] && 
+            state.arEntities[0].hasAttribute('gltf-model');
+        
+        if (initialContentIs3D) {
+            btnReset3D.style.display = 'flex';
+        } else {
+            btnReset3D.style.display = 'none';
+        }
+        // <<< FIN: Lógica del Botón de Reset 3D al encontrar Target
         
         // === LÓGICA DE INICIO DEL CONTENIDO ACTUAL (Índice 0) ===
         const initialContentIsVideo = state.arEntities[0] && 
@@ -581,6 +648,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         if (activeTargetIndex === targetIndex) {
             activeTargetIndex = null;
             btnNextVideo.style.display = 'none';
+            btnReset3D.style.display = 'none';
         }
         
         const state = videoRotationState[targetIndex];
@@ -758,6 +826,9 @@ function initializeUIListeners() {
     // Botón de Rotación Manual
     btnNextVideo.addEventListener("click", rotateVideoManually);
 
+    // Botón de Reset 3D (NUEVO)
+    btnReset3D.addEventListener("click", resetActiveModelRotation);
+    
     // Botón de Calidad
     safeQuerySelector("#btn-hd", 'HD Button').addEventListener("click", function() {
         const isSD = this.innerHTML.includes("SD");
@@ -780,3 +851,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
