@@ -5,6 +5,7 @@ let controls;
 let trackRef = { track: null };
 let btnFlash;
 let btnNextVideo;
+let btnReset3D;
 let targetContainer;
 let assetsContainer;
 
@@ -52,6 +53,7 @@ function initializeSelectors() {
     controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
     btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
     btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
+    btnReset3D = safeQuerySelector("#btn-reset-3d", 'Reset 3D Button');
     targetContainer = safeQuerySelector("#target-container", 'Target Container');
     assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
 }
@@ -81,6 +83,7 @@ AFRAME.registerComponent('touch-rotation', {
         this.handleStart = this.handleStart.bind(this);
         this.handleMove = this.handleMove.bind(this);
         this.handleEnd = this.handleEnd.bind(this);
+        this.resetState = this.resetState.bind(this); // Exponer el método de reseteo
 
         // Escuchar los eventos táctiles en el lienzo de la escena para capturarlos sin conflicto.
         const canvas = this.el.sceneEl.canvas;
@@ -144,6 +147,20 @@ AFRAME.registerComponent('touch-rotation', {
     handleEnd: function () {
         this.isTouched = false;
     },
+    
+    // <<< NUEVO MÉTODO PARA EL RESETEO EXTERNO >>>
+    resetState: function() {
+        const initialRotationString = this.el.dataset.initialRotation || '0 0 0';
+        const rotComponents = initialRotationString.split(' ').map(Number);
+        
+        // Restablecer el estado interno del componente a la rotación inicial
+        this.currentRotation = { 
+            x: rotComponents[0] || 0, 
+            y: rotComponents[1] || 0, 
+            z: rotComponents[2] || 0 
+        };
+    },
+    // <<< FIN NUEVO MÉTODO >>>
 
     remove: function() {
         // Limpieza de event listeners al eliminar el componente
@@ -222,17 +239,21 @@ function initializeScene() {
                 const modelEntity = document.createElement('a-entity');
                 modelEntity.setAttribute('id', `ar-model-${targetIndex}-${index}`);
                 
-                // 1. Carga del modelo 3D (DEJAR ESTA LÍNEA)
+                // 1. Carga del modelo 3D
                 modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
                 
-                // 2. Control Táctil (APLICANDO EL COMPONENTE PERSONALIZADO)
+                // 2. Control Táctil
                 modelEntity.setAttribute('touch-rotation', ''); 
                 
                 modelEntity.setAttribute('position', contentData.position || '0 0 0');
                 modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
                 modelEntity.setAttribute('rotation', contentData.rotation || '0 0 0');
                 modelEntity.setAttribute('visible', index === 0); 
-                
+
+                // Guardar valores iniciales en el dataset
+                modelEntity.dataset.initialRotation = contentData.rotation || '0 0 0';
+                modelEntity.dataset.initialScale = contentData.scale || '1 1 1';
+                                         
                 if (contentData.animated) {
                     modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
                 }
@@ -240,7 +261,7 @@ function initializeScene() {
                 if (contentData.audioSrc) {
                     const audioId = `${contentData.id}_audio`;
                     
-                    // 1. Crear el elemento <audio> HTML (La fuente real de audio)
+                    // 1. Crear el elemento <audio> HTML
                     const audioAsset = document.createElement('audio');
                     audioAsset.setAttribute('id', audioId);
                     audioAsset.setAttribute('src', contentData.audioSrc);
@@ -251,10 +272,10 @@ function initializeScene() {
                     audioAsset.setAttribute('crossorigin', 'anonymous');
                     assetsContainer.appendChild(audioAsset);
                     
-                    // 2. Componente 'sound' de A-Frame (SOLO para la posicionalidad 3D)
+                    // 2. Componente 'sound' de A-Frame
                     modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
-                    // 3. Almacenar ambas referencias en el estado
+                    // 3. Almacenar ambas referencias
                     videoRotationState[targetIndex].audioEntity = modelEntity;
                     videoRotationState[targetIndex].audioAsset = audioAsset;
                 }
@@ -318,6 +339,34 @@ function initializeScene() {
         setupTrackingEvents(targetIndex, targetEntity);
     });
 }
+
+// === FUNCIÓN AUXILIAR DE RESETEO DE ESTADO (NUEVA) ===
+/**
+ * Restablece la rotación, escala y el estado interno del componente
+ * 'touch-rotation' de una entidad a sus valores iniciales guardados en el dataset.
+ * Esto asegura que un modelo 3D siempre empiece en su posición de diseño.
+ */
+function resetEntityState(currentEntity) {
+    if (!currentEntity || !currentEntity.dataset.initialRotation) {
+        return;
+    }
+    
+    const initialRotation = currentEntity.dataset.initialRotation || '0 0 0';
+    const initialScale = currentEntity.dataset.initialScale || '1 1 1';
+    
+    // 1. Aplicar el reset visual
+    currentEntity.setAttribute('rotation', initialRotation);
+    currentEntity.setAttribute('scale', initialScale);
+    
+    // 2. Resetear el estado interno del componente 'touch-rotation'
+    const touchRotationComp = currentEntity.components['touch-rotation'];
+    if (touchRotationComp && typeof touchRotationComp.resetState === 'function') {
+        touchRotationComp.resetState();
+        console.log(`[Estado Reseteado] Modelo 3D reseteado a Rotación: ${initialRotation}, Escala: ${initialScale}`);
+    }
+}
+// ====================================================
+
 
 // === LÓGICA DE ROTACIÓN Y VIDEO ===
 
@@ -440,6 +489,16 @@ function rotateVideoManually() {
     showVideo(activeTargetIndex, nextIndex);
     
     const nextEntity = state.arEntities[nextIndex];
+
+    // <<< INICIO: Lógica del Botón de Reset 3D al Rotar
+    const nextContentIs3D = nextEntity && nextEntity.hasAttribute('gltf-model');
+    
+    if (nextContentIs3D) {
+        btnReset3D.style.display = 'flex';
+    } else {
+        btnReset3D.style.display = 'none';
+    }
+    // <<< FIN: Lógica del Botón de Reset 3D al Rotar
     
     // 4. Si el siguiente elemento es un video, comenzar la reproducción
     if (nextEntity.tagName === 'A-VIDEO' || nextEntity.tagName === 'A-PLANE') {
@@ -512,7 +571,28 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     
     console.log(`[Audio 3D] Lógica de Audio 3D iniciada en Target ${targetIndex}.`); 
 }
-// ===============================================
+    // ===============================================
+
+    // === FUNCIÓN DE RESET DEL MODELO 3D ===
+    function resetActiveModelRotation() {
+    if (activeTargetIndex === null) return;
+
+    const state = videoRotationState[activeTargetIndex];
+    const currentIndex = state.currentVideoIndex;
+    const currentEntity = state.arEntities[currentIndex];
+
+    // Verificar si es un modelo 3D
+    if (currentEntity && currentEntity.tagName === 'A-ENTITY' && currentEntity.hasAttribute('gltf-model')) {
+        
+        // Reutilizamos la función auxiliar
+        resetEntityState(currentEntity);
+        
+        console.log(`[3D Reset] Modelo 3D reseteado por botón.`);
+    } else {
+        console.log("[3D Reset] El elemento activo no es un modelo 3D o no se encontró.");
+    }
+}
+// =====================================
 
 // === LÓGICA DE TRACKING Y EVENTOS ===
 function setupTrackingEvents(targetIndex, targetEntity) {
@@ -561,9 +641,21 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             btnNextVideo.style.display = 'none';
         }
         
+        const initialContent = state.arEntities[0];
+
+        // <<< INICIO: LÓGICA DE RESETEO AUTOMÁTICO AL ENCONTRAR MARCADOR >>>
+        if (initialContent && initialContent.hasAttribute('gltf-model')) {
+            // Esto es lo que asegura que el modelo 3D siempre inicie en su posición original (0,0,0)
+            resetEntityState(initialContent); 
+            btnReset3D.style.display = 'flex';
+        } else {
+            btnReset3D.style.display = 'none';
+        }
+        // <<< FIN: LÓGICA DE RESETEO AUTOMÁTICO >>>
+        
         // === LÓGICA DE INICIO DEL CONTENIDO ACTUAL (Índice 0) ===
-        const initialContentIsVideo = state.arEntities[0] && 
-            (state.arEntities[0].tagName === 'A-VIDEO' || state.arEntities[0].tagName === 'A-PLANE');
+        const initialContentIsVideo = initialContent && 
+            (initialContent.tagName === 'A-VIDEO' || initialContent.tagName === 'A-PLANE');
         
         if (initialContentIsVideo) {
             playCurrentVideo(targetIndex);
@@ -581,6 +673,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         if (activeTargetIndex === targetIndex) {
             activeTargetIndex = null;
             btnNextVideo.style.display = 'none';
+            btnReset3D.style.display = 'none';
         }
         
         const state = videoRotationState[targetIndex];
@@ -753,11 +846,15 @@ function initializeUIListeners() {
     // LÓGICA DE TOGGLE UI
     safeQuerySelector("#btn-toggle-ui", 'Toggle UI Button').addEventListener("click", () => {
         controls.classList.toggle("hidden");
+        btnReset3D.classList.toggle("hidden");
     });
 
     // Botón de Rotación Manual
     btnNextVideo.addEventListener("click", rotateVideoManually);
 
+    // Botón de Reset 3D (NUEVO)
+    btnReset3D.addEventListener("click", resetActiveModelRotation);
+    
     // Botón de Calidad
     safeQuerySelector("#btn-hd", 'HD Button').addEventListener("click", function() {
         const isSD = this.innerHTML.includes("SD");
