@@ -82,3 +82,44 @@ body {
     visibility: hidden !important; 
     pointer-events: none !important; 
 }
+
+/* ========================================================== */
+/* --- NUEVO BOTÓN: Reset 3D (Rectangular, Inferior Izquierda) --- */
+/* ========================================================== */
+
+#btn-reset-3d {
+    /* 1. Posicionamiento en la esquina inferior izquierda */
+    position: fixed;
+    bottom: 20px; 
+    left: 20px;   
+    z-index: 3000 !important;
+
+    /* 2. Estilo Rectangular Redondeado (Copiamos propiedades de .btn) */
+    padding: 10px 18px;
+    border-radius: 50px; /* Bordes muy redondeados */
+    color: white;
+    font-weight: 600;
+    font-size: 11px;
+    cursor: pointer;
+
+    /* 3. Estilo de Transparencia (Híbrido entre .btn y Toggle UI) */
+    background: rgba(0, 0, 0, 0.4); /* Fondo más oscuro como .btn */
+    backdrop-filter: blur(8px);     /* Blur más fuerte como .btn */
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    
+    /* 4. Alineación del contenido */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* 5. Transiciones y estado oculto */
+    transition: all 0.3s ease;
+}
+
+/* 6. Regla para ocultar con la clase .hidden */
+#btn-reset-3d.hidden {
+    opacity: 0;
+    transform: translateY(20px); /* Lo desliza hacia abajo */
+    pointer-events: none;
+}
