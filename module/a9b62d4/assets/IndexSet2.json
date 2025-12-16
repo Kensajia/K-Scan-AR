@@ -1,117 +1,70 @@
 {
     "meta": {
         "description": "a9b62d4  | chromaSimilarity: valores altos eliminan colores cercanos; valores bajos solo quitan el color exacto y dejan halo. Ajusta entre 0.3–0.5 hasta remover el fondo sin dañar el contenido."
-    },
-    "Targets": [
+        },
+        "Targets": [
         {
             "targetIndex": 0,
             "elementos": [
-                {
-                    "id": "Elem-0-0",
-                    "src": "https://files.catbox.moe/2ysumf.mp4",
-                    "width": 1,
-                    "height": 1.5,
-                    "chromakey": false,
-                    "chromaColor": "",
-                    "chromaSimilarity": 0.3,
-                    "position": "0 0 0"
-                }
+                 {
+                        "id": "Elem-0-0",
+                        "src": "https://files.catbox.moe/2ysumf.mp4",
+                        "width": 1,
+                        "height": 1.5,
+                        "chromakey": false,
+                        "chromaColor": "",
+                        "chromaSimilarity": 0.3,
+                        "position": "0 0 0"
+                } 
             ]
         },
         {
             "targetIndex": 1,
             "elementos": [
-                {
-                    "id": "Elem-1-0",
-                    "src": "https://files.catbox.moe/0zm4jf.mp4",
-                    "width": 1,
-                    "height": 1.5,
-                    "chromakey": false,
-                    "chromaColor": "",
-                    "chromaSimilarity": 0.3,
-                    "position": "0 0 0"
-                },
-                {
-                    "id": "Elem-1-1",
-                    "src": "https://files.catbox.moe/d3d691.glb",
-                    "type": "3d",
-                    "position": "0 0 0.1",
-                    "scale": "0.25 0.25 0.25",
-                    "rotation": "0 0 0",
-                    "animated": false,
-                    "animationMixer": "clip: *; timeScale: 1.0"
-                },
-                {
-                    "id": "Elem-1-2",
-                    "src": "https://files.catbox.moe/51w9xk.glb",
-                    "type": "3d",
-                    "position": "0 0 0.1",
-                    "scale": "0.25 0.25 0.25",
-                    "rotation": "0 0 0",
-                    "animated": false,
-                    "animationMixer": "clip: *; timeScale: 1.0"
-                }
+                 {
+                        "id": "Elem-1-0",
+                        "src": "https://files.catbox.moe/0zm4jf.mp4",
+                        "width": 1,
+                        "height": 1.5,
+                        "chromakey": false,
+                        "chromaColor": "",
+                        "chromaSimilarity": 0.3,
+                        "position": "0 0 0"
+                },                {
+                        "id": "Elem-1-1",
+                        "src": "https://files.catbox.moe/ho1wcr.glb",
+                        "type": "3d",
+                        "position": "0 0 0.1", 
+                        "scale": "0.25 0.25 0.25",
+                        "rotation": "0 0 0",
+                        "animated": false,
+                        "animationMixer": "clip: *; timeScale: 1.0"
+                },                {
+                        "id": "Elem-1-2",
+                        "src": "https://files.catbox.moe/51w9xk.glb",
+                        "type": "3d",
+                        "position": "0 0 0.1", 
+                        "scale": "0.25 0.25 0.25",
+                        "rotation": "0 0 0",
+                        "animated": false,
+                        "animationMixer": "clip: *; timeScale: 1.0"
+                } 
             ]
         },
         {
             "targetIndex": 2,
             "elementos": [
-                {
-                    "id": "Elem-2-0",
-                    "src": "https://files.catbox.moe/bucqj6.mp4",
-                    "width": 1.5,
-                    "height": 1.01,
-                    "chromakey": false,
-                    "chromaColor": "",
-                    "chromaSimilarity": 0.3,
-                    "position": "0 0 0"
-                }
+                 {
+                        "id": "Elem-2-0",
+                        "src": "https://files.catbox.moe/bucqj6.mp4",
+                        "width": 1.5,
+                        "height": 1.01,
+                        "chromakey": false,
+                        "chromaColor": "",
+                        "chromaSimilarity": 0.3,
+                        "position": "0 0 0"
+                } 
             ]
-        },
-        {
-            "targetIndex": 3,
-            "elementos": [
-                {
-                    "id": "Elem-3-0",
-                    "src": "https://files.catbox.moe/bucqj6.mp4",
-                    "width": 1.5,
-                    "height": 1.01,
-                    "chromakey": false,
-                    "chromaColor": "",
-                    "chromaSimilarity": 0.3,
-                    "position": "0 0 0"
-                }
-            ]
-        },
-        {
-            "targetIndex": 4,
-            "elementos": [
-                {
-                    "id": "Elem-4-0",
-                    "src": "https://files.catbox.moe/bucqj6.mp4",
-                    "width": 1.5,
-                    "height": 1.01,
-                    "chromakey": false,
-                    "chromaColor": "",
-                    "chromaSimilarity": 0.3,
-                    "position": "0 0 0"
-                }
-            ]
-        },
-        {
-            "targetIndex": 5,
-            "elementos": [
-                {
-                    "id": "Elem-5-0",
-                    "src": "https://files.catbox.moe/bucqj6.mp4",
-                    "width": 1.5,
-                    "height": 1.01,
-                    "chromakey": false,
-                    "chromaColor": "",
-                    "chromaSimilarity": 0.3,
-                    "position": "0 0 0"
-                }
-            ]
-        }
+        } 
     ]
 }
