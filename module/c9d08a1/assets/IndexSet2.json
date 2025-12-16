@@ -9,8 +9,8 @@
                 {
                     "id": "Elem-0-0",
                     "src": "https://files.catbox.moe/cld0qe.mp4",
-                    "width": 0.9,
-                    "height": 0.3564,
+                    "width": 0.85,
+                    "height": 0.3366,
                     "chromakey": true,
                     "chromaColor": "#067c00",
                     "chromaSimilarity": 0.3,
@@ -20,16 +20,17 @@
                 {
                     "id": "Elem-0-1",
                     "src": "https://files.catbox.moe/vmmgxy.mp4",
-                    "width": 1.5,
-                    "height": 0.5926,
+                    "width": 0.85,
+                    "height": 0.3358,
                     "chromakey": true,
                     "chromaColor": "#067c00",
                     "chromaSimilarity": 0.3,
-                    "position": "0 0 0"
+                    "position": "0 -0.5 0"
                     
                 }
             ]
         }
     ]
 }
+
 
