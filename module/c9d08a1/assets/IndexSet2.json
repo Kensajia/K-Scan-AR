@@ -13,8 +13,8 @@
  
                     "id": "Elem-0-0",
                     "src": "https://files.catbox.moe/cld0qe.mp4",
-                    "width": 1.5,
-                    "height": 0.5941,
+                    "width": 1,
+                    "height": 0.396,
                     "chromakey": true,
                     "chromaColor": "#067c00"
  
@@ -33,3 +33,4 @@
     ]
  
 }
+
