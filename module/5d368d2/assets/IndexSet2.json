@@ -1,56 +1,52 @@
 {
- 
     "meta": {
-        "description": "5d368d2"
-    },
- 
-    "Targets": [
- 		{
- 
+        "description": "5d368d2  | chromaSimilarity: valores altos eliminan colores cercanos; valores bajos solo quitan el color exacto y dejan halo. Ajusta entre 0.3–0.5 hasta remover el fondo sin dañar el contenido."
+        },
+        "Targets": [
+        {
             "targetIndex": 0,
             "elementos": [
-         {
- 
-                    "id": "Elem-0-0",
-                    "src": "https://files.catbox.moe/kw9et8.mp4",
-                    "width": 1.5,
-                    "height": 1.3766,
-                    "chromakey": false,
-                    "chromaColor": ""
- 
+                 {
+                        "id": "Elem-0-0",
+                        "src": "https://files.catbox.moe/kw9et8.mp4",
+                        "width": 1.5,
+                        "height": 1.3766,
+                        "chromakey": false,
+                        "chromaColor": "",
+                        "chromaSimilarity": 0.3,
+                        "position": "0 0 0"
                 } 
-    ]
-},		{
- 
+            ]
+        },
+        {
             "targetIndex": 1,
             "elementos": [
-         {
- 
-                    "id": "Elem-1-0",
-                    "src": "https://files.catbox.moe/tt3cwe.mp4",
-                    "width": 1.5,
-                    "height": 1.01,
-                    "chromakey": false,
-                    "chromaColor": ""
- 
+                 {
+                        "id": "Elem-1-0",
+                        "src": "https://files.catbox.moe/tt3cwe.mp4",
+                        "width": 1.5,
+                        "height": 1.01,
+                        "chromakey": false,
+                        "chromaColor": "",
+                        "chromaSimilarity": 0.3,
+                        "position": "0 0 0"
                 } 
-    ]
-},		{
- 
+            ]
+        },
+        {
             "targetIndex": 2,
             "elementos": [
-         {
- 
-                    "id": "Elem-2-0",
-                    "src": "https://files.catbox.moe/8z49qw.mp4",
-                    "width": 1.5,
-                    "height": 1.3533,
-                    "chromakey": false,
-                    "chromaColor": ""
- 
+                 {
+                        "id": "Elem-2-0",
+                        "src": "https://files.catbox.moe/8z49qw.mp4",
+                        "width": 1.5,
+                        "height": 1.3533,
+                        "chromakey": false,
+                        "chromaColor": "",
+                        "chromaSimilarity": 0.3,
+                        "position": "0 0 0"
                 } 
+            ]
+        } 
     ]
-} 
-    ]
- 
 }
