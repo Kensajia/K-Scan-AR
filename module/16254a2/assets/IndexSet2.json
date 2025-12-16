@@ -15,7 +15,8 @@
                         "chromaColor": "",
                         "chromaSimilarity": 0.3,
                         "position": "0 0 0"
-                },                {
+                },                
+                {
                         "id": "Elem-0-1",
                         "src": "https://files.catbox.moe/b3k4kg.mp4",
                         "width": 1,
@@ -39,7 +40,8 @@
                         "chromaColor": "",
                         "chromaSimilarity": 0.3,
                         "position": "0 0 0"
-                },                {
+                },                
+                {
                         "id": "Elem-1-1",
                         "src": "https://files.catbox.moe/eeyx2g.mp4",
                         "width": 1,
@@ -53,3 +55,4 @@
         } 
     ]
 }
+
