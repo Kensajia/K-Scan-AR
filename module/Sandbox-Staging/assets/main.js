@@ -70,11 +70,11 @@ AFRAME.registerComponent('keep-alive', {
 });
 
 
-// === NUEVO COMPONENTE: ROTACIÓN TÁCTIL SIMPLE (SOLO ROTACIÓN X/Y) ===
+// === NUEVO COMPONENTE: ROTACIÓN TÁCTIL SIMPLE (SOLO ROTACIÓN X/Y/Z) ===
 AFRAME.registerComponent('touch-rotation', {
     init: function () {
-        this.touchStart = { x: 0, y: 0 };
-        this.touchMove = { x: 0, y: 0 };
+        this.touchStart = { x: 0, y: 0, z:0 };
+        this.touchMove = { x: 0, y: 0, z 0 };
         this.isTouched = false;
         
         // Guardar la rotación inicial del modelo si la tiene
@@ -100,6 +100,7 @@ AFRAME.registerComponent('touch-rotation', {
             this.isTouched = true;
             this.touchStart.x = evt.touches[0].pageX;
             this.touchStart.y = evt.touches[0].pageY;
+			this.touchStart.z = evt.touches[0].pageZ;
             // Detener la propagación para evitar que otros elementos UI o controles AR procesen el gesto.
             evt.stopPropagation(); 
         } else {
@@ -113,10 +114,12 @@ AFRAME.registerComponent('touch-rotation', {
 
         this.touchMove.x = evt.touches[0].pageX;
         this.touchMove.y = evt.touches[0].pageY;
+		this.touchMove.z = evt.touches[0].pageZ;
 
         // Calcular el cambio de posición del dedo
         const dx = this.touchMove.x - this.touchStart.x;
         const dy = this.touchMove.y - this.touchStart.y;
+		const dz = this.touchMove.z - this.touchStart.z;
         
         // Sensibilidad (ajuste este valor, 0.2 es un buen punto de partida)
         const sensibility = 0.2; 
@@ -127,7 +130,11 @@ AFRAME.registerComponent('touch-rotation', {
         // Rotación X (Giro vertical) -> Afectado por dy
         const dPhi = dy * sensibility; 
         
+        // Rotación Z (Giro lateral) -> Afectado por dz
+        const dPsi = dz * sensibility; 
+		
         // Aplicar la rotación acumulada
+		this.currentRotation.z += dPsi;
         this.currentRotation.y += dTheta;
         this.currentRotation.x += dPhi;
         
@@ -139,6 +146,7 @@ AFRAME.registerComponent('touch-rotation', {
         // Actualizar el punto de inicio para el siguiente frame
         this.touchStart.x = this.touchMove.x;
         this.touchStart.y = this.touchMove.y;
+		this.touchStart.z = this.touchMove.z;
 
         evt.stopPropagation(); 
         evt.preventDefault(); // Evitar el scroll si estamos rotando
@@ -877,3 +885,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
