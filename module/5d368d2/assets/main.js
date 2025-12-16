@@ -70,8 +70,21 @@ AFRAME.registerComponent('keep-alive', {
 });
 
 
-// === NUEVO COMPONENTE: ROTACIÓN TÁCTIL SIMPLE (SOLO ROTACIÓN X/Y) ===
+// === NUEVO COMPONENTE: ROTACIÓN TÁCTIL SIMPLE (SOPORTE X/Y/Z) ===
 AFRAME.registerComponent('touch-rotation', {
+    schema: {
+        // Controla si se permite la rotación en el eje X (cabeceo vertical: mirar arriba/abajo)
+        enableX: { type: 'boolean', default: true },
+        // Controla si se permite la rotación en el eje Y (giro horizontal: mirar izquierda/derecha)
+        enableY: { type: 'boolean', default: true },
+        // Controla si se permite la rotación en el eje Z (alabeo/giro de pantalla)
+        // Por defecto, se usa el movimiento horizontal del dedo (dx) para el giro Y,
+        // y el movimiento vertical (dy) para la rotación X y Z.
+        enableZ: { type: 'boolean', default: false }, 
+        // Sensibilidad general de la rotación (ajuste este valor para control fino)
+        sensibility: { type: 'number', default: 0.2 }
+    },
+
     init: function () {
         this.touchStart = { x: 0, y: 0 };
         this.touchMove = { x: 0, y: 0 };
@@ -79,6 +92,9 @@ AFRAME.registerComponent('touch-rotation', {
         
         // Guardar la rotación inicial del modelo si la tiene
         this.currentRotation = this.el.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
+        
+        // Para acceder a los valores del schema de forma rápida
+        this.data = this.el.components['touch-rotation'].data;
 
         this.handleStart = this.handleStart.bind(this);
         this.handleMove = this.handleMove.bind(this);
@@ -92,6 +108,11 @@ AFRAME.registerComponent('touch-rotation', {
             canvas.addEventListener('touchmove', this.handleMove);
             canvas.addEventListener('touchend', this.handleEnd);
         }
+    },
+
+    update: function (oldData) {
+        // Actualizar la referencia a la data si el componente fue modificado dinámicamente
+        this.data = this.el.components['touch-rotation'].data;
     },
 
     handleStart: function (evt) {
@@ -115,24 +136,31 @@ AFRAME.registerComponent('touch-rotation', {
         this.touchMove.y = evt.touches[0].pageY;
 
         // Calcular el cambio de posición del dedo
-        const dx = this.touchMove.x - this.touchStart.x;
-        const dy = this.touchMove.y - this.touchStart.y;
+        const dx = this.touchMove.x - this.touchStart.x; // Movimiento Horizontal
+        const dy = this.touchMove.y - this.touchStart.y; // Movimiento Vertical
         
-        // Sensibilidad (ajuste este valor, 0.2 es un buen punto de partida)
-        const sensibility = 0.2; 
+        // Rotación Y (Giro horizontal/Yaw) -> Afectado por dx
+        if (this.data.enableY) {
+            const dThetaY = dx * this.data.sensibility; 
+            this.currentRotation.y += dThetaY;
+        }
+        
+        // Rotación X (Cabeceo vertical/Pitch) -> Afectado por dy
+        // El movimiento hacia abajo (dy positivo) típicamente aumenta X.
+        if (this.data.enableX) {
+            const dThetaX = dy * this.data.sensibility; 
+            this.currentRotation.x += dThetaX;
+        }
 
-        // Rotación Y (Giro horizontal) -> Afectado por dx
-        const dTheta = dx * sensibility; 
-        
-        // Rotación X (Giro vertical) -> Afectado por dy
-        const dPhi = dy * sensibility; 
-        
-        // Aplicar la rotación acumulada
-        this.currentRotation.y += dTheta;
-        this.currentRotation.x += dPhi;
-        
-        // Opcional: limitar la rotación X (para que no gire completamente al revés)
-        // this.currentRotation.x = Math.max(-90, Math.min(90, this.currentRotation.x));
+        // Rotación Z (Alabeo/Giro/Roll) -> Se mapea al movimiento horizontal (dx) para un alabeo (inclinación)
+        // o, si se desea, se puede mapear al movimiento vertical (dy) inverso al de X.
+        // Aquí usaremos una parte del movimiento X (vertical) con sensibilidad reducida.
+        if (this.data.enableZ) {
+            // Se usa el movimiento horizontal (dx) para el alabeo.
+            // Nota: Si Y está activado, X y Z compiten por el movimiento horizontal (dx).
+            const dThetaZ = -(dx / 2) * this.data.sensibility; // Cambio de X reducido para Z
+            this.currentRotation.z += dThetaZ;
+        }
         
         this.el.setAttribute('rotation', this.currentRotation);
 
@@ -148,7 +176,7 @@ AFRAME.registerComponent('touch-rotation', {
         this.isTouched = false;
     },
     
-    // <<< NUEVO MÉTODO PARA EL RESETEO EXTERNO >>>
+    // MÉTODO PARA EL RESETEO EXTERNO
     resetState: function() {
         const initialRotationString = this.el.dataset.initialRotation || '0 0 0';
         const rotComponents = initialRotationString.split(' ').map(Number);
@@ -160,7 +188,6 @@ AFRAME.registerComponent('touch-rotation', {
             z: rotComponents[2] || 0 
         };
     },
-    // <<< FIN NUEVO MÉTODO >>>
 
     remove: function() {
         // Limpieza de event listeners al eliminar el componente
@@ -243,7 +270,32 @@ function initializeScene() {
                 modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
                 
                 // 2. Control Táctil
-                modelEntity.setAttribute('touch-rotation', ''); 
+                
+                /*
+                ==========================================================
+                COMENTARIOS SOBRE CÓMO ACTIVAR/DESACTIVAR EJES (X, Y, Z):
+                
+                El componente 'touch-rotation' tiene tres propiedades booleanas
+                que puedes establecer al crear la entidad:
+                
+                * enableX (Rotación Vertical/Pitch): true o false
+                * enableY (Giro Horizontal/Yaw): true o false
+                * enableZ (Alabeo/Roll): true o false
+                * sensibility: Valor numérico (0.2 por defecto)
+
+                Usa los valores por defecto
+                modelEntity.setAttribute('touch-rotation', '');
+                
+                Si solo quieres el giro horizontal (Y):
+                modelEntity.setAttribute('touch-rotation', 'enableX: false; enableZ: false');
+                
+                Si quieres los 3 ejes:
+                modelEntity.setAttribute('touch-rotation', 'enableX: true; enableY: true; enableZ: true');
+                
+                Si no se especifica nada, toma los valores por defecto: X: true, Y: true, Z: false
+                ==========================================================
+                */
+                modelEntity.setAttribute('touch-rotation', 'enableX: true; enableY: true; enableZ: true'); //Activa o desactiva el eje deseado
                 
                 modelEntity.setAttribute('position', contentData.position || '0 0 0');
                 modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
@@ -309,12 +361,17 @@ function initializeScene() {
                     
                     const chromaColor = contentData.chromaColor || '#00ff00';
                     const normalizedRgb = hexToNormalizedRgb(chromaColor); 
+                    
+                    // Parámetro para controlar la agresividad de remoción del color
+                    // Recomendación: Ajusta este valor en tu JSON (ej: 0.3 a 0.5)
+                    const similarity = contentData.chromaSimilarity || 0.45; 
 
                     // FIX CHROMA: Asignar material COMPLETO y explícito
                     videoEntity.setAttribute('material', 
                         `shader: chromakey; 
                          src: #${contentData.id}; 
-                         color: ${normalizedRgb}`); 
+                         color: ${normalizedRgb};
+                         similarity: ${similarity}`); 
                     
                 } else {
                     videoEntity.setAttribute('src', `#${contentData.id}`); 
@@ -324,6 +381,10 @@ function initializeScene() {
                 
                 videoEntity.setAttribute('width', contentData.width);
                 videoEntity.setAttribute('height', contentData.height);
+                
+                // Utiliza la posición definida en el JSON para el ajuste de altura
+                videoEntity.setAttribute('position', contentData.position || '0 0 0');
+                
                 videoEntity.setAttribute('visible', index === 0); 
 
                 targetEntity.appendChild(videoEntity);
