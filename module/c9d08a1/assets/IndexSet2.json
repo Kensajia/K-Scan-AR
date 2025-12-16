@@ -8,25 +8,16 @@
             "elementos": [
                  {
                         "id": "Elem-0-0",
-                        "src": "https://files.catbox.moe/cld0qe.mp4",
+                        "src": "https://files.catbox.moe/yja3ni.mp4",
                         "width": 0.85,
                         "height": 0.3366,
                         "chromakey": true,
                         "chromaColor": "#067c00",
                         "chromaSimilarity": 0.3,
                         "position": "0 0 0"
-                },
-                {
-                        "id": "Elem-0-1",
-                        "src": "https://files.catbox.moe/vmmgxy.mp4",
-                        "width": 0.85,
-                        "height": 0.3358,
-                        "chromakey": true,
-                        "chromaColor": "#067c00",
-                        "chromaSimilarity": 0.3,
-                        "position": "0 0 0"
-                } 
+                }
             ]
         } 
     ]
 }
+
