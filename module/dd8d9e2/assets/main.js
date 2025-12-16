@@ -5,6 +5,7 @@ let controls;
 let trackRef = { track: null };
 let btnFlash;
 let btnNextVideo;
+let btnReset3D;
 let targetContainer;
 let assetsContainer;
 
@@ -52,6 +53,7 @@ function initializeSelectors() {
     controls = safeQuerySelector("#ui-controls", 'UI Controls Container');
     btnFlash = safeQuerySelector("#btn-flash", 'Flash Button');
     btnNextVideo = safeQuerySelector("#btn-next-video", 'Next Video Button'); 
+    btnReset3D = safeQuerySelector("#btn-reset-3d", 'Reset 3D Button');
     targetContainer = safeQuerySelector("#target-container", 'Target Container');
     assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
 }
@@ -68,8 +70,21 @@ AFRAME.registerComponent('keep-alive', {
 });
 
 
-// === NUEVO COMPONENTE: ROTACIÓN TÁCTIL SIMPLE (SOLO ROTACIÓN X/Y) ===
+// === NUEVO COMPONENTE: ROTACIÓN TÁCTIL SIMPLE (SOPORTE X/Y/Z) ===
 AFRAME.registerComponent('touch-rotation', {
+    schema: {
+        // Controla si se permite la rotación en el eje X (cabeceo vertical: mirar arriba/abajo)
+        enableX: { type: 'boolean', default: true },
+        // Controla si se permite la rotación en el eje Y (giro horizontal: mirar izquierda/derecha)
+        enableY: { type: 'boolean', default: true },
+        // Controla si se permite la rotación en el eje Z (alabeo/giro de pantalla)
+        // Por defecto, se usa el movimiento horizontal del dedo (dx) para el giro Y,
+        // y el movimiento vertical (dy) para la rotación X y Z.
+        enableZ: { type: 'boolean', default: false }, 
+        // Sensibilidad general de la rotación (ajuste este valor para control fino)
+        sensibility: { type: 'number', default: 0.2 }
+    },
+
     init: function () {
         this.touchStart = { x: 0, y: 0 };
         this.touchMove = { x: 0, y: 0 };
@@ -77,10 +92,14 @@ AFRAME.registerComponent('touch-rotation', {
         
         // Guardar la rotación inicial del modelo si la tiene
         this.currentRotation = this.el.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
+        
+        // Para acceder a los valores del schema de forma rápida
+        this.data = this.el.components['touch-rotation'].data;
 
         this.handleStart = this.handleStart.bind(this);
         this.handleMove = this.handleMove.bind(this);
         this.handleEnd = this.handleEnd.bind(this);
+        this.resetState = this.resetState.bind(this); // Exponer el método de reseteo
 
         // Escuchar los eventos táctiles en el lienzo de la escena para capturarlos sin conflicto.
         const canvas = this.el.sceneEl.canvas;
@@ -89,6 +108,11 @@ AFRAME.registerComponent('touch-rotation', {
             canvas.addEventListener('touchmove', this.handleMove);
             canvas.addEventListener('touchend', this.handleEnd);
         }
+    },
+
+    update: function (oldData) {
+        // Actualizar la referencia a la data si el componente fue modificado dinámicamente
+        this.data = this.el.components['touch-rotation'].data;
     },
 
     handleStart: function (evt) {
@@ -112,24 +136,31 @@ AFRAME.registerComponent('touch-rotation', {
         this.touchMove.y = evt.touches[0].pageY;
 
         // Calcular el cambio de posición del dedo
-        const dx = this.touchMove.x - this.touchStart.x;
-        const dy = this.touchMove.y - this.touchStart.y;
+        const dx = this.touchMove.x - this.touchStart.x; // Movimiento Horizontal
+        const dy = this.touchMove.y - this.touchStart.y; // Movimiento Vertical
         
-        // Sensibilidad (ajuste este valor, 0.2 es un buen punto de partida)
-        const sensibility = 0.2; 
+        // Rotación Y (Giro horizontal/Yaw) -> Afectado por dx
+        if (this.data.enableY) {
+            const dThetaY = dx * this.data.sensibility; 
+            this.currentRotation.y += dThetaY;
+        }
+        
+        // Rotación X (Cabeceo vertical/Pitch) -> Afectado por dy
+        // El movimiento hacia abajo (dy positivo) típicamente aumenta X.
+        if (this.data.enableX) {
+            const dThetaX = dy * this.data.sensibility; 
+            this.currentRotation.x += dThetaX;
+        }
 
-        // Rotación Y (Giro horizontal) -> Afectado por dx
-        const dTheta = dx * sensibility; 
-        
-        // Rotación X (Giro vertical) -> Afectado por dy
-        const dPhi = dy * sensibility; 
-        
-        // Aplicar la rotación acumulada
-        this.currentRotation.y += dTheta;
-        this.currentRotation.x += dPhi;
-        
-        // Opcional: limitar la rotación X (para que no gire completamente al revés)
-        // this.currentRotation.x = Math.max(-90, Math.min(90, this.currentRotation.x));
+        // Rotación Z (Alabeo/Giro/Roll) -> Se mapea al movimiento horizontal (dx) para un alabeo (inclinación)
+        // o, si se desea, se puede mapear al movimiento vertical (dy) inverso al de X.
+        // Aquí usaremos una parte del movimiento X (vertical) con sensibilidad reducida.
+        if (this.data.enableZ) {
+            // Se usa el movimiento horizontal (dx) para el alabeo.
+            // Nota: Si Y está activado, X y Z compiten por el movimiento horizontal (dx).
+            const dThetaZ = -(dx / 2) * this.data.sensibility; // Cambio de X reducido para Z
+            this.currentRotation.z += dThetaZ;
+        }
         
         this.el.setAttribute('rotation', this.currentRotation);
 
@@ -143,6 +174,19 @@ AFRAME.registerComponent('touch-rotation', {
 
     handleEnd: function () {
         this.isTouched = false;
+    },
+    
+    // MÉTODO PARA EL RESETEO EXTERNO
+    resetState: function() {
+        const initialRotationString = this.el.dataset.initialRotation || '0 0 0';
+        const rotComponents = initialRotationString.split(' ').map(Number);
+        
+        // Restablecer el estado interno del componente a la rotación inicial
+        this.currentRotation = { 
+            x: rotComponents[0] || 0, 
+            y: rotComponents[1] || 0, 
+            z: rotComponents[2] || 0 
+        };
     },
 
     remove: function() {
@@ -222,17 +266,46 @@ function initializeScene() {
                 const modelEntity = document.createElement('a-entity');
                 modelEntity.setAttribute('id', `ar-model-${targetIndex}-${index}`);
                 
-                // 1. Carga del modelo 3D (DEJAR ESTA LÍNEA)
+                // 1. Carga del modelo 3D
                 modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
                 
-                // 2. Control Táctil (APLICANDO EL COMPONENTE PERSONALIZADO)
-                modelEntity.setAttribute('touch-rotation', ''); 
+                // 2. Control Táctil
+                
+                /*
+                ==========================================================
+                COMENTARIOS SOBRE CÓMO ACTIVAR/DESACTIVAR EJES (X, Y, Z):
+                
+                El componente 'touch-rotation' tiene tres propiedades booleanas
+                que puedes establecer al crear la entidad:
+                
+                * enableX (Rotación Vertical/Pitch): true o false
+                * enableY (Giro Horizontal/Yaw): true o false
+                * enableZ (Alabeo/Roll): true o false
+                * sensibility: Valor numérico (0.2 por defecto)
+
+                Usa los valores por defecto
+                modelEntity.setAttribute('touch-rotation', '');
+                
+                Si solo quieres el giro horizontal (Y):
+                modelEntity.setAttribute('touch-rotation', 'enableX: false; enableZ: false');
+                
+                Si quieres los 3 ejes:
+                modelEntity.setAttribute('touch-rotation', 'enableX: true; enableY: true; enableZ: true');
+                
+                Si no se especifica nada, toma los valores por defecto: X: true, Y: true, Z: false
+                ==========================================================
+                */
+                modelEntity.setAttribute('touch-rotation', 'enableX: true; enableY: true; enableZ: true'); //Activa o desactiva el eje deseado
                 
                 modelEntity.setAttribute('position', contentData.position || '0 0 0');
                 modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
                 modelEntity.setAttribute('rotation', contentData.rotation || '0 0 0');
                 modelEntity.setAttribute('visible', index === 0); 
-                
+
+                // Guardar valores iniciales en el dataset
+                modelEntity.dataset.initialRotation = contentData.rotation || '0 0 0';
+                modelEntity.dataset.initialScale = contentData.scale || '1 1 1';
+                                         
                 if (contentData.animated) {
                     modelEntity.setAttribute('animation-mixer', contentData.animationMixer || 'clip: *'); 
                 }
@@ -240,7 +313,7 @@ function initializeScene() {
                 if (contentData.audioSrc) {
                     const audioId = `${contentData.id}_audio`;
                     
-                    // 1. Crear el elemento <audio> HTML (La fuente real de audio)
+                    // 1. Crear el elemento <audio> HTML
                     const audioAsset = document.createElement('audio');
                     audioAsset.setAttribute('id', audioId);
                     audioAsset.setAttribute('src', contentData.audioSrc);
@@ -251,10 +324,10 @@ function initializeScene() {
                     audioAsset.setAttribute('crossorigin', 'anonymous');
                     assetsContainer.appendChild(audioAsset);
                     
-                    // 2. Componente 'sound' de A-Frame (SOLO para la posicionalidad 3D)
+                    // 2. Componente 'sound' de A-Frame
                     modelEntity.setAttribute('sound', `src: #${audioId}; autoplay: false; loop: true; volume: 0.0; positional: true;`); 
                     
-                    // 3. Almacenar ambas referencias en el estado
+                    // 3. Almacenar ambas referencias
                     videoRotationState[targetIndex].audioEntity = modelEntity;
                     videoRotationState[targetIndex].audioAsset = audioAsset;
                 }
@@ -288,12 +361,17 @@ function initializeScene() {
                     
                     const chromaColor = contentData.chromaColor || '#00ff00';
                     const normalizedRgb = hexToNormalizedRgb(chromaColor); 
+                    
+                    // Parámetro para controlar la agresividad de remoción del color
+                    // Recomendación: Ajusta este valor en tu JSON (ej: 0.3 a 0.5)
+                    const similarity = contentData.chromaSimilarity || 0.45; 
 
                     // FIX CHROMA: Asignar material COMPLETO y explícito
                     videoEntity.setAttribute('material', 
                         `shader: chromakey; 
                          src: #${contentData.id}; 
-                         color: ${normalizedRgb}`); 
+                         color: ${normalizedRgb};
+                         similarity: ${similarity}`); 
                     
                 } else {
                     videoEntity.setAttribute('src', `#${contentData.id}`); 
@@ -303,6 +381,10 @@ function initializeScene() {
                 
                 videoEntity.setAttribute('width', contentData.width);
                 videoEntity.setAttribute('height', contentData.height);
+                
+                // Utiliza la posición definida en el JSON para el ajuste de altura
+                videoEntity.setAttribute('position', contentData.position || '0 0 0');
+                
                 videoEntity.setAttribute('visible', index === 0); 
 
                 targetEntity.appendChild(videoEntity);
@@ -318,6 +400,34 @@ function initializeScene() {
         setupTrackingEvents(targetIndex, targetEntity);
     });
 }
+
+// === FUNCIÓN AUXILIAR DE RESETEO DE ESTADO (NUEVA) ===
+/**
+ * Restablece la rotación, escala y el estado interno del componente
+ * 'touch-rotation' de una entidad a sus valores iniciales guardados en el dataset.
+ * Esto asegura que un modelo 3D siempre empiece en su posición de diseño.
+ */
+function resetEntityState(currentEntity) {
+    if (!currentEntity || !currentEntity.dataset.initialRotation) {
+        return;
+    }
+    
+    const initialRotation = currentEntity.dataset.initialRotation || '0 0 0';
+    const initialScale = currentEntity.dataset.initialScale || '1 1 1';
+    
+    // 1. Aplicar el reset visual
+    currentEntity.setAttribute('rotation', initialRotation);
+    currentEntity.setAttribute('scale', initialScale);
+    
+    // 2. Resetear el estado interno del componente 'touch-rotation'
+    const touchRotationComp = currentEntity.components['touch-rotation'];
+    if (touchRotationComp && typeof touchRotationComp.resetState === 'function') {
+        touchRotationComp.resetState();
+        console.log(`[Estado Reseteado] Modelo 3D reseteado a Rotación: ${initialRotation}, Escala: ${initialScale}`);
+    }
+}
+// ====================================================
+
 
 // === LÓGICA DE ROTACIÓN Y VIDEO ===
 
@@ -440,6 +550,16 @@ function rotateVideoManually() {
     showVideo(activeTargetIndex, nextIndex);
     
     const nextEntity = state.arEntities[nextIndex];
+
+    // <<< INICIO: Lógica del Botón de Reset 3D al Rotar
+    const nextContentIs3D = nextEntity && nextEntity.hasAttribute('gltf-model');
+    
+    if (nextContentIs3D) {
+        btnReset3D.style.display = 'flex';
+    } else {
+        btnReset3D.style.display = 'none';
+    }
+    // <<< FIN: Lógica del Botón de Reset 3D al Rotar
     
     // 4. Si el siguiente elemento es un video, comenzar la reproducción
     if (nextEntity.tagName === 'A-VIDEO' || nextEntity.tagName === 'A-PLANE') {
@@ -512,7 +632,28 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     
     console.log(`[Audio 3D] Lógica de Audio 3D iniciada en Target ${targetIndex}.`); 
 }
-// ===============================================
+    // ===============================================
+
+    // === FUNCIÓN DE RESET DEL MODELO 3D ===
+    function resetActiveModelRotation() {
+    if (activeTargetIndex === null) return;
+
+    const state = videoRotationState[activeTargetIndex];
+    const currentIndex = state.currentVideoIndex;
+    const currentEntity = state.arEntities[currentIndex];
+
+    // Verificar si es un modelo 3D
+    if (currentEntity && currentEntity.tagName === 'A-ENTITY' && currentEntity.hasAttribute('gltf-model')) {
+        
+        // Reutilizamos la función auxiliar
+        resetEntityState(currentEntity);
+        
+        console.log(`[3D Reset] Modelo 3D reseteado por botón.`);
+    } else {
+        console.log("[3D Reset] El elemento activo no es un modelo 3D o no se encontró.");
+    }
+}
+// =====================================
 
 // === LÓGICA DE TRACKING Y EVENTOS ===
 function setupTrackingEvents(targetIndex, targetEntity) {
@@ -561,9 +702,21 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             btnNextVideo.style.display = 'none';
         }
         
+        const initialContent = state.arEntities[0];
+
+        // <<< INICIO: LÓGICA DE RESETEO AUTOMÁTICO AL ENCONTRAR MARCADOR >>>
+        if (initialContent && initialContent.hasAttribute('gltf-model')) {
+            // Esto es lo que asegura que el modelo 3D siempre inicie en su posición original (0,0,0)
+            resetEntityState(initialContent); 
+            btnReset3D.style.display = 'flex';
+        } else {
+            btnReset3D.style.display = 'none';
+        }
+        // <<< FIN: LÓGICA DE RESETEO AUTOMÁTICO >>>
+        
         // === LÓGICA DE INICIO DEL CONTENIDO ACTUAL (Índice 0) ===
-        const initialContentIsVideo = state.arEntities[0] && 
-            (state.arEntities[0].tagName === 'A-VIDEO' || state.arEntities[0].tagName === 'A-PLANE');
+        const initialContentIsVideo = initialContent && 
+            (initialContent.tagName === 'A-VIDEO' || initialContent.tagName === 'A-PLANE');
         
         if (initialContentIsVideo) {
             playCurrentVideo(targetIndex);
@@ -581,6 +734,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         if (activeTargetIndex === targetIndex) {
             activeTargetIndex = null;
             btnNextVideo.style.display = 'none';
+            btnReset3D.style.display = 'none';
         }
         
         const state = videoRotationState[targetIndex];
@@ -753,11 +907,15 @@ function initializeUIListeners() {
     // LÓGICA DE TOGGLE UI
     safeQuerySelector("#btn-toggle-ui", 'Toggle UI Button').addEventListener("click", () => {
         controls.classList.toggle("hidden");
+        btnReset3D.classList.toggle("hidden");
     });
 
     // Botón de Rotación Manual
     btnNextVideo.addEventListener("click", rotateVideoManually);
 
+    // Botón de Reset 3D (NUEVO)
+    btnReset3D.addEventListener("click", resetActiveModelRotation);
+    
     // Botón de Calidad
     safeQuerySelector("#btn-hd", 'HD Button').addEventListener("click", function() {
         const isSD = this.innerHTML.includes("SD");
