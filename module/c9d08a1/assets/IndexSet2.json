@@ -14,10 +14,11 @@
                         "chromakey": true,
                         "chromaColor": "#067c00",
                         "chromaSimilarity": 0.3,
-                        "position": "0 -0.2 0"
+                        "position": "0 -0.8 0"
                 }
             ]
         } 
     ]
 }
+
 
