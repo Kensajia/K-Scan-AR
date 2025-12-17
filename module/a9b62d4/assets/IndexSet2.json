@@ -32,7 +32,7 @@
                         "position": "0 0 0"
                 },                {
                         "id": "Elem-1-1",
-                        "src": "https://files.catbox.moe/ho1wcr.glb",
+                        "src": "https://files.catbox.moe/yjtckq.glb",
                         "type": "3d",
                         "position": "0 0 0.1", 
                         "scale": "1.8 1.8 1.8",
@@ -41,7 +41,7 @@
                         "animationMixer": "clip: *; timeScale: 1.0"
                 },                {
                         "id": "Elem-1-2",
-                        "src": "https://files.catbox.moe/51w9xk.glb",
+                        "src": "https://files.catbox.moe/186o94.glb",
                         "type": "3d",
                         "position": "0 0 0.1",  
                         "scale": "1.8 1.8 1.8",
@@ -68,6 +68,7 @@
         } 
     ]
 }
+
 
 
 
