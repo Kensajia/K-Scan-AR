@@ -13,12 +13,13 @@
                         "height": 0.3320,
                         "chromakey": true,
                         "chromaColor": "#067c00",
-                        "chromaSimilarity": 0.5,
+                        "chromaSimilarity": 0.9,
                         "position": "0 -0.5 0"
                 }
             ]
         } 
     ]
 }
+
 
 
