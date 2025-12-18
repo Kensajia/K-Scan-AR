@@ -69,6 +69,13 @@ Todo el contenido de alto valor (videos, audios y modelos 3D) se aloja de forma 
 
 ---
 
+
+### 🧠 Proyecto Asistido por Inteligencia Artificial (IA)
+
+Este proyecto, desde su concepción de la arquitectura de la aplicación hasta el desarrollo del código y la documentación actual del README, fue **elaborado con la asistencia de Inteligencia Artificial (IA)**. Esto resalta que el proyecto es un ejemplo de desarrollo asistido por tecnología moderna.
+
+---
+
 ### 🔒 Uso Exclusivo
 
 Este proyecto es una herramienta comercial de **uso y gestión personal** para el negocio de sublimados. **No se aceptan contribuciones externas.**
