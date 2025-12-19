@@ -71,7 +71,7 @@ body {
 .dark-theme .access-btn { background: var(--accent); border: none; }
 .dark-theme .delete-btn { background: var(--danger); border: none; }
 .dark-theme input { background: #3c3c3c; color: white; border: 1px solid #4a4a4a; }
-.dark-theme .logo { background: white; padding: 12px; border-radius: 15px; filter: drop-shadow(0 0 5px white); }
+.dark-theme .logo { background: white; padding: 15px; border-radius: 15px; filter: drop-shadow(0 0 5px white); }
 .dark-theme .usuarioG { background: #6c757d; border: none; }
 .dark-theme .usuarioN { background: #5a7b7a; border: none; }
 
@@ -101,7 +101,7 @@ body {
 .palette2-theme .access-btn { background: #f6b51d; color: #040404; border: none; }
 .palette2-theme .delete-btn {  background: var(--danger); border: none; }
 .palette2-theme input { background: #3c3c3c; color: #f0f0f0; border: 1px solid #4a4a4a; }
-.palette2-theme .logo { background: white; padding: 12px; border-radius: 15px; filter: drop-shadow(0 0 5px white); }
+.palette2-theme .logo { background: white; padding: 15px; border-radius: 15px; filter: drop-shadow(0 0 5px white); }
 .palette2-theme .usuarioG { background: #4a4a4a; border: none; }
 .palette2-theme .usuarioN { background: #594c34; border: none; }
 
@@ -113,7 +113,7 @@ body {
 .palette3-theme #access-button, .palette3-theme .access-btn { background: #286820; color: white; border: none; }
 .palette3-theme .delete-btn { background: #007f5f; color: white; border: none; }
 .palette3-theme input { background: #3c3c3c; color: #f0f0f0; border: 1px solid #e71d36; }
-.palette3-theme .logo { background: white; padding: 12px; border-radius: 15px; filter: drop-shadow(0 0 5px #e71d36); }
+.palette3-theme .logo { background: white; padding: 15px; border-radius: 15px; filter: drop-shadow(0 0 5px #e71d36); }
 .palette3-theme .usuarioG { background: #007f5f; color: white; border: none; }
 .palette3-theme .usuarioN { background: #f6b51d; color: #000000; border: none; }
 
@@ -125,7 +125,7 @@ body {
 .palette4-theme #access-button, .palette4-theme .access-btn { background: #48cae4; color: #1a1a1a; border: none; }
 .palette4-theme .delete-btn { background: var(--danger); color: white; border: none; }
 .palette4-theme input { background: #604e42; color: #f8f4e3; border: 1px solid #48cae4; }
-.palette4-theme .logo { background: white; padding: 12px; border-radius: 15px; filter: drop-shadow(0 0 8px #48cae4); }
+.palette4-theme .logo { background: white; padding: 15px; border-radius: 15px; filter: drop-shadow(0 0 8px #48cae4); }
 .palette4-theme .usuarioG { background: #604e42; color: #f8f4e3; border: none; }
 .palette4-theme .usuarioN { background: #48cae4; color: #1a1a1a; border: none; }
 
