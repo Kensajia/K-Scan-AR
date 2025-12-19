@@ -21,15 +21,48 @@ body {
     width: 90%; max-width: 400px; transition: 0.3s;
 }
 
+.theme-selector {
+    display: flex;       /* Alinea el label y theme-circles horizontalmente */
+    align-items: center; /* Centra verticalmente el texto "Tema" con los círculos */
+}
+
 /* ===============================================================
     TEMA CLARO
 ================================================================ */
 .light-theme { background: #f4f4f4; color: #333; }
-.light-theme .container { background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-.light-theme button { background: var(--accent); color: white; }
+.light-theme .container { 
+    background: white; 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+}
+.light-theme button { 
+    background: var(--accent); 
+    color: white; 
+    border: none; /* Consistencia: Aseguramos que el botón general no tenga borde */
+}
+.light-theme #access-button,
+.light-theme .access-btn { 
+    background: var(--accent); 
+    border: none; 
+}
+.light-theme .delete-btn { background: var(--danger); border: none; }
+.light-theme input { 
+    background: white; 
+    color: #333; 
+    border: 1px solid #ccc; /* Consistencia: Aseguramos borde estándar */
+}
+.light-theme .logo { 
+    /* Consistencia: Valores neutros */
+    background: transparent; 
+    padding: 0; 
+    border-radius: 0; 
+    filter: none; 
+}
+.light-theme .usuarioG { background: #6c757d; color: white; border: none; }
+.light-theme .usuarioN { background: #5a7b7a; color: white; border: none; }
+
 
 /* ===============================================================
-    TEMA OSCURO
+    TEMA OSCURO (Se mantiene como estaba)
 ================================================================ */
 .dark-theme { background: #1a1a1a; color: #f4f4f4; }
 .dark-theme .container { background: #2c2c2c; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
@@ -39,44 +72,76 @@ body {
 .dark-theme .delete-btn { background: var(--danger); border: none; }
 .dark-theme input { background: #3c3c3c; color: white; border: 1px solid #4a4a4a; }
 .dark-theme .logo { background: white; padding: 12px; border-radius: 15px; filter: drop-shadow(0 0 5px white); }
+.dark-theme .usuarioG { background: #6c757d; border: none; }
+.dark-theme .usuarioN { background: #5a7b7a; border: none; }
 
 
-  
-    
 /* ===============================================================
-    🔵 PALLETAS PERSONALIZADAS (DESACTIVADAS)
-    PARA ACTIVAR UNA, SOLO BORRA EL "/*" Y "*/"
+    🔵 PALLETAS PERSONALIZADAS (ACTIVADAS)
 ================================================================ */
 
 /* ---------- PALETA 1 ---------- */
-.palette1-theme { background: #f2ebe9; color: #4a3b36; }
-.palette1-theme .container { background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-.palette1-theme button { background: #9c6644; color: white; }
-/* */
+.palette1-theme { background: #f6b51d; color: #333333; }
+.palette1-theme .container { background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+.palette1-theme button { color: #333333; border: none; background: #e6e6e6; }
+.palette1-theme #access-button, 
+.palette1-theme .access-btn { background: #333333; color: #f6b51d; border: none; }
+.palette1-theme .delete-btn { background: var(--danger); color: white; border: none; }
+.palette1-theme input { background: white; color: #333333; border: 1px solid #9c6644; }
+.palette1-theme .logo { background: transparent; padding: 0; border-radius: 0; filter: none; }
+.palette1-theme .usuarioG { background: #9c6644; color: white; border: none; }
+.palette1-theme .usuarioN { background: #7a7a7a; color: white; border: none; }
+
 
 /* ---------- PALETA 2 ---------- */
-.palette2-theme { background: #001219; color: #e9d8a6; }
-.palette2-theme .container { background: #0a9396; }
-.palette2-theme button { background: #94d2bd; }
-/* */
+.palette2-theme { background: #252626; color: #f0f0f0; }
+.palette2-theme .container { background: #333333; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+.palette2-theme button { color: #f0f0f0; border: 1px solid #4a4a4a; background: #3c3c3c; }
+.palette2-theme #access-button, 
+.palette2-theme .access-btn { background: #f6b51d; color: #040404; border: none; }
+.palette2-theme .delete-btn {  background: var(--danger); border: none; }
+.palette2-theme input { background: #3c3c3c; color: #f0f0f0; border: 1px solid #4a4a4a; }
+.palette2-theme .logo { background: white; padding: 12px; border-radius: 15px; filter: drop-shadow(0 0 5px white); }
+.palette2-theme .usuarioG { background: #4a4a4a; border: none; }
+.palette2-theme .usuarioN { background: #594c34; border: none; }
+
 
 /* ---------- PALETA 3 ---------- */
-.palette3-theme { background: #002b36; color: #eee8d5; }
-.palette3-theme .container { background: #073642; }
-.palette3-theme button { background: #b58900; color: #002b36; }
-/* */
+.palette3-theme { background: #1a1a1a; color: #f0f0f0; }
+.palette3-theme .container { background: #333333; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+.palette3-theme button { color: #f0f0f0; border: 1px solid #666666; background: #4a4a4a; }
+.palette3-theme #access-button, .palette3-theme .access-btn { background: #286820; color: white; border: none; }
+.palette3-theme .delete-btn { background: #007f5f; color: white; border: none; }
+.palette3-theme input { background: #3c3c3c; color: #f0f0f0; border: 1px solid #e71d36; }
+.palette3-theme .logo { background: white; padding: 12px; border-radius: 15px; filter: drop-shadow(0 0 5px #e71d36); }
+.palette3-theme .usuarioG { background: #007f5f; color: white; border: none; }
+.palette3-theme .usuarioN { background: #f6b51d; color: #000000; border: none; }
+
 
 /* ---------- PALETA 4 ---------- */
-.palette4-theme { background: #22223b; color: #f2e9e4; }
-.palette4-theme .container { background: #4a4e69; }
-.palette4-theme button { background: #9a8c98; }
-/* */
+.palette4-theme { background: #3e3025; color: #f8f4e3; }
+.palette4-theme .container { background: #4e3b2e; box-shadow: 0 4px 12px rgba(0,0,0,0.7); }
+.palette4-theme button { color: #f8f4e3; border: none; background: #604e42; }
+.palette4-theme #access-button, .palette4-theme .access-btn { background: #48cae4; color: #1a1a1a; border: none; }
+.palette4-theme .delete-btn { background: var(--danger); color: white; border: none; }
+.palette4-theme input { background: #604e42; color: #f8f4e3; border: 1px solid #48cae4; }
+.palette4-theme .logo { background: white; padding: 12px; border-radius: 15px; filter: drop-shadow(0 0 8px #48cae4); }
+.palette4-theme .usuarioG { background: #604e42; color: #f8f4e3; border: none; }
+.palette4-theme .usuarioN { background: #48cae4; color: #1a1a1a; border: none; }
+
 
 /* ---------- PALETA 5 ---------- */
 .palette5-theme { background: #ffe6e6; color: #663333; }
-.palette5-theme .container { background: white; }
-.palette5-theme button { background: #ff9999; }
-/* */
+.palette5-theme .container { background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+.palette5-theme button { background: #ff9999; color: #663333; border: none; }
+.palette5-theme #access-button,
+.palette5-theme .access-btn { background: #ff9999; border: none; }
+.palette5-theme .delete-btn { background: var(--danger); color: white; border: none; }
+.palette5-theme input { background: white; color: #663333; border: 1px solid #ccc; }
+.palette5-theme .logo { background: transparent; padding: 0; border-radius: 0; filter: none; }
+.palette5-theme .usuarioG { background: #6c757d; color: white; border: none; }
+.palette5-theme .usuarioN { background: #ff7777; color: white; border: none; } /* Color independiente adaptado */
+
 
 /* ===============================================================
     ELEMENTOS COMUNES
@@ -102,13 +167,13 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
 .circle[data-value="dark"] { background: #000; }
 
 /* PARA ACTIVAR PALETAS, DESCOMENTA ESTOS: */
-/*
-.circle[data-value="palette1"] { background: #9c6644; }
-.circle[data-value="palette2"] { background: #0a9396; }
-.circle[data-value="palette3"] { background: #b58900; }
-.circle[data-value="palette4"] { background: #4a4e69; }
+
+.circle[data-value="palette1"] { background: linear-gradient(135deg, #ffffff 50%, #f6b51d 50%); }
+.circle[data-value="palette2"] { background: linear-gradient(135deg, #333333 50%, #f6b51d 50%); }
+.circle[data-value="palette3"] { background: linear-gradient(135deg, #286820 50%, #e71d36 50%); }
+.circle[data-value="palette4"] { background: #3e3025; }
 .circle[data-value="palette5"] { background: #ff9999; }
-*/
+
 
 
 /* ===============================================================
@@ -130,6 +195,22 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
     align-items: center;
     margin-top: 10px;
 }
+
+/* Botón "Usuarios Guardados" (Se mantiene independiente) */
+.usuarioG {
+    background: #6c757d;
+    color: white;
+    border: none;
+}
+
+/* Botón "Nuevo Usuario" (Se mantiene independiente) */
+.usuarioN {
+    background: #5a7b7a; 
+    color: white;
+    margin-top: 20px !important;
+    border: none;
+}
+
 
 
 /* ===============================================================
