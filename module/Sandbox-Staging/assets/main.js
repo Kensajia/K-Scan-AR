@@ -80,7 +80,7 @@ AFRAME.registerComponent('touch-rotation', {
         // Controla si se permite la rotación en el eje Z (alabeo/giro de pantalla)
         // Por defecto, se usa el movimiento horizontal del dedo (dx) para el giro Y,
         // y el movimiento vertical (dy) para la rotación X y Z.
-        enableZ: { type: 'boolean', default: false }, 
+        enableZ: { type: 'boolean', default: true }, 
         // Sensibilidad general de la rotación (ajuste este valor para control fino)
         sensibility: { type: 'number', default: 0.2 }
     },
@@ -938,3 +938,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
