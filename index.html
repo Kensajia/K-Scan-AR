@@ -31,7 +31,7 @@
         <input type="text" id="user-code" placeholder="CÓDIGO ÚNICO">
 
         <button onclick="handleAccess()" id="access-button">Acceder</button>
-        <button onclick="toggleViews('selection')" id="back-button" style="display:none; background:#6c757d">Usuarios Guardados</button>
+        <button onclick="toggleViews('selection')" id="back-button" class="usuarioG" style="display:none;">Usuarios Guardados</button>
 
         <p id="error-message"></p>
     </div>
@@ -39,23 +39,23 @@
     <div id="selection-view" style="display:none;">
         <h2>Usuarios Guardados</h2>
         <div id="selection-list"></div>
-        <button onclick="toggleViews('input')" style="background:#6c757d; margin-top:20px">Nuevo Usuario</button>
+        <button onclick="toggleViews('input')" class="usuarioN">Nuevo Usuario</button>
     </div>
 </div>
 
 <div class="theme-selector">
-    <label>Tema</label>
+    <label style="margin-right: 15px;">Tema</label>
     <div class="theme-circles">
         <div class="circle" data-value="auto" title="Automático"></div>
         <div class="circle" data-value="light" title="Claro"></div>
         <div class="circle" data-value="dark" title="Oscuro"></div>
         
-        <!-- DESCOMENTAR PARA ACTIVAR PALETAS--
-        <div class="circle" data-value="palette1"></div>
-        <div class="circle" data-value="palette2"></div>
-        <div class="circle" data-value="palette3"></div>
-        <div class="circle" data-value="palette4"></div>
-        <div class="circle" data-value="palette5"></div>
+        <!--
+        <div class="circle" data-value="palette1" title="Paleta 1"></div>
+        <div class="circle" data-value="palette2" title="Paleta 2"></div>
+        <div class="circle" data-value="palette3" title="Paleta 3"></div>
+        <div class="circle" data-value="palette4" title="Paleta 4"></div>
+        <div class="circle" data-value="palette5" title="Paleta 5"></div>
         <!---->
         
         </div>
