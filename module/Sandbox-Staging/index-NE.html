@@ -16,10 +16,6 @@
     
 </head>
 <body>
-    <div id="loading-overlay">
-        <span>Cargando multimedia...</span>
-    </div>
-    
     <div id="ui-controls">
         <button id="btn-audio" class="btn" style="display: flex; background: var(--accent);">🔊 SONIDO</button>
         <button id="btn-flash" class="btn" style="display:none">⚡ FLASH OFF</button>
@@ -28,6 +24,13 @@
     </div>
 
     <button id="btn-reset-3d" style="display: none;">🔄 RESTAURAR</button>
+    
+    <div id="loader-bar-container" style="display: none;">
+        <span id="loader-text">Cargando multimedia...</span>
+        <div id="progress-bar-bg">
+            <div id="progress-bar-fill"></div>
+        </div>
+    </div>
     
     <button id="btn-toggle-ui" class="btn">⚙️</button>
 
@@ -67,6 +70,7 @@
 
 </body>
 </html>
+
 
 
 
