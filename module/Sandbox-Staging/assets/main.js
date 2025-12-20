@@ -8,7 +8,11 @@ let btnNextVideo;
 let btnReset3D;
 let targetContainer;
 let assetsContainer;
-let loaderOverlay; // NUEVO: Referencia al indicador de carga
+
+// NUEVAS VARIABLES GLOBALES PARA EL CARGADOR
+let loaderBarContainer; 
+let loaderText;         
+let progressBarFill;    
 
 let videoRotationState = {}; 
 let config = null; 
@@ -57,20 +61,35 @@ function initializeSelectors() {
     btnReset3D = safeQuerySelector("#btn-reset-3d", 'Reset 3D Button');
     targetContainer = safeQuerySelector("#target-container", 'Target Container');
     assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
-    loaderOverlay = safeQuerySelector("#loading-overlay", 'Loading Overlay'); // NUEVO: Referencia al cargador
+    
+    // NUEVO: Referencias a los componentes de la barra de carga
+    loaderBarContainer = safeQuerySelector("#loader-bar-container", 'Loader Bar Container');
+    loaderText = safeQuerySelector("#loader-text", 'Loader Text');
+    progressBarFill = safeQuerySelector("#progress-bar-fill", 'Progress Bar Fill');
 }
 
 
-// === FUNCIONES DE CONTROL DEL CARGADOR (AÑADIDO PARA ESTABILIDAD) ===
-function showLoader() {
-    if (loaderOverlay) {
-        loaderOverlay.style.display = 'flex';
+// === FUNCIONES DE CONTROL DEL CARGADOR (MODIFICADAS) ===
+function showLoader(text = "Cargando multimedia...") {
+    if (loaderBarContainer) {
+        loaderText.textContent = text;
+        
+        // Configurar la barra para el modo Indeterminado (animación CSS)
+        progressBarFill.style.width = '100%';
+        progressBarFill.style.transform = 'translateX(-100%)'; 
+        progressBarFill.style.animationPlayState = 'running';
+
+        loaderBarContainer.style.display = 'flex';
     }
 }
 
 function hideLoader() {
-    if (loaderOverlay) {
-        loaderOverlay.style.display = 'none';
+    if (loaderBarContainer) {
+        // Detener la animación
+        progressBarFill.style.animationPlayState = 'paused';
+        progressBarFill.style.transform = 'translateX(0%)';
+        
+        loaderBarContainer.style.display = 'none';
     }
 }
 // ===================================================================
@@ -184,6 +203,7 @@ AFRAME.registerComponent('touch-rotation', {
             y: rotComponents[1] || 0, 
             z: rotComponents[2] || 0 
         };
+        this.el.setAttribute('rotation', this.currentRotation);
     },
 
     remove: function() {
@@ -265,11 +285,15 @@ function initializeScene() {
                 // 1. Carga del modelo 3D
                 modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
                 
-                // 2. Ocultar cargador cuando el modelo esté listo (IMPORTANTE PARA ESTABILIDAD)
-                modelEntity.addEventListener('model-loaded', hideLoader, { once: true });
+                // 2. Listener de Carga 3D: Oculta el cargador cuando el modelo termine de cargar
+                modelEntity.addEventListener('model-loaded', () => {
+                    // Solo ocultamos si este modelo es el contenido activo/inicial en el momento de la carga
+                    if (activeTargetIndex === targetIndex && videoRotationState[targetIndex].currentVideoIndex === index) {
+                         hideLoader();
+                    }
+                }, { once: true });
                 
                 // 3. Control Táctil (Configuración desde JSON: touchRotation)
-                // Esto lee la cadena: 'enableX: true; enableY: true; enableZ: false; sensibility: 0.5'
                 modelEntity.setAttribute('touch-rotation', contentData.touchRotation || ''); 
                 
                 modelEntity.setAttribute('position', contentData.position || '0 0 0');
@@ -325,9 +349,6 @@ function initializeScene() {
                 videoAsset.setAttribute('crossorigin', 'anonymous');
                 assetsContainer.appendChild(videoAsset);
                 
-                // Ocultar cargador cuando el video cargue (IMPORTANTE PARA ESTABILIDAD)
-                videoAsset.addEventListener('loadeddata', hideLoader, { once: true });
-                
                 const videoEntity = document.createElement(contentData.chromakey ? 'a-plane' : 'a-video');
                 videoEntity.setAttribute('id', `ar-video-${targetIndex}-${index}`);
                 
@@ -335,7 +356,7 @@ function initializeScene() {
                     
                     const chromaColor = contentData.chromaColor || '#00ff00';
                     const normalizedRgb = hexToNormalizedRgb(chromaColor); 
-                    const similarity = contentData.chromaSimilarity || 0.45; // Se agrega el default de similarity
+                    const similarity = contentData.chromaSimilarity || 0.45; 
 
                     videoEntity.setAttribute('material', 
                         `shader: chromakey; 
@@ -384,7 +405,6 @@ function resetEntityState(currentEntity) {
     const touchRotationComp = currentEntity.components['touch-rotation'];
     if (touchRotationComp && typeof touchRotationComp.resetState === 'function') {
         touchRotationComp.resetState();
-        console.log(`[Estado Reseteado] Modelo 3D reseteado a Rotación: ${initialRotation}, Escala: ${initialScale}`);
     }
 }
 // ====================================================
@@ -400,6 +420,7 @@ function showVideo(targetIndex, contentIndex) {
     state.currentVideoIndex = contentIndex;
 }
 
+// FUNCIÓN CLAVE: Ahora oculta el loader basado en la promesa de play(), asegurando estabilidad.
 function playCurrentVideo(targetIndex) {
     const state = videoRotationState[targetIndex];
     const currentVideoIndex = state.currentVideoIndex; 
@@ -443,25 +464,28 @@ function playCurrentVideo(targetIndex) {
     
     // Si el video necesita ser cargado (primera vez o cambio de fuente)
     if (!currentVidAsset.dataset.loadedSrc || currentVidAsset.dataset.loadedSrc !== currentUrl) {
+        
+        // 1. Mostrar cargador y actualizar el origen
+        showLoader("Cargando video..."); 
         currentVidAsset.src = currentUrl;
         currentVidAsset.load(); 
         currentVidAsset.dataset.loadedSrc = currentUrl; 
-        showLoader(); // Muestra el loader mientras se carga la fuente
     } else {
-        // Si ya estaba cargado, ocultar el loader inmediatamente y reproducir
-        hideLoader(); // Ocultar si está en caché
-        currentVidAsset.muted = isGlobalAudioMuted; 
-        currentVidAsset.play().catch(error => {
-             console.warn("Fallo al intentar reproducir video (Autoplay bloqueado).", error);
-        });
-        return;
+        // 1. Si ya estaba cargado, ocultar el loader inmediatamente y reproducir
+        hideLoader(); 
     }
     
     currentVidAsset.muted = isGlobalAudioMuted; 
     currentVidAsset.onended = null; 
     
-    currentVidAsset.play().catch(error => {
-        console.warn("Fallo al intentar reproducir video (Autoplay bloqueado).", error);
+    // 2. Intentar Reproducir. Esto es una promesa y solo se resuelve cuando el video está listo para reproducir.
+    currentVidAsset.play().then(() => {
+        // ÉXITO DE REPRODUCCIÓN: El video ha cargado y ha comenzado (o continuado)
+        hideLoader();
+    }).catch(error => {
+        // ERROR: Autoplay bloqueado o error de carga
+        console.warn("Fallo al intentar reproducir video. Causa común: Autoplay bloqueado. Intenta desmutear.", error);
+        hideLoader(); // Ocultar cargador para no confundir al usuario
     }); 
 }
 
@@ -517,7 +541,7 @@ function rotateVideoManually() {
     // 2. Determinar el siguiente índice
     const nextIndex = (currentIndex + 1) % totalEntities;
     
-    showLoader(); // Mostrar el cargador antes de cambiar
+    showLoader("Cargando contenido siguiente..."); // Mostrar el cargador antes de cambiar
     
     // 3. Aplicar la visibilidad al siguiente elemento
     showVideo(activeTargetIndex, nextIndex);
@@ -529,7 +553,7 @@ function rotateVideoManually() {
     
     if (nextContentIs3D) {
         btnReset3D.style.display = 'flex';
-        // Ocultar el loader si el modelo 3D ya está en caché
+        // Si el modelo 3D ya está en caché
         if (nextEntity.components['gltf-model'] && nextEntity.components['gltf-model'].model) {
             hideLoader();
         } 
@@ -555,7 +579,7 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
 
     const state = videoRotationState[targetIndex];
     let soundComp = audioEntity.components.sound;
-    const audioAsset = state.audioAsset; // Referencia al <audio> HTML
+    const audioAsset = state.audioAsset; 
 
     if (!audioAsset) {
         console.error(`[Audio 3D] ERROR: Elemento <audio> HTML no encontrado para Target ${targetIndex}.`);
@@ -573,6 +597,8 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
     audioAsset.load();
 
     audioAsset.play().then(() => {
+        
+        hideLoader(); // Ocultar cargador si el audio comienza
         
         // 3. Conectar el componente A-Frame
         if (soundComp && typeof soundComp.setVolume === 'function') {
@@ -594,6 +620,7 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
 
     }).catch(error => {
         console.warn(`[Audio 3D] Fallo al iniciar reproducción del asset HTML #${audioAsset.id}.`, error);
+        hideLoader(); // Ocultar si falló
         if (soundComp && typeof soundComp.setVolume === 'function') { 
             soundComp.setVolume(1.0); 
         }
@@ -614,10 +641,6 @@ function startAudio3D(audioEntity, targetIndex, isGlobalAudioMuted) {
         
         // Reutilizamos la función auxiliar
         resetEntityState(currentEntity);
-        
-        console.log(`[3D Reset] Modelo 3D reseteado por botón.`);
-    } else {
-        console.log("[3D Reset] El elemento activo no es un modelo 3D o no se encontró.");
     }
 }
 // =====================================
@@ -648,7 +671,6 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             }
             if (audioEntity) { 
                 const soundComp = audioEntity.components.sound;
-                // SOLO si el componente está listo, lo controlamos
                 if (soundComp && typeof soundComp.setVolume === 'function') {
                     soundComp.setVolume(0.0);
                     if (typeof soundComp.stopSound === 'function') { 
@@ -661,7 +683,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         activeTargetIndex = targetIndex; 
         const state = videoRotationState[targetIndex];
 
-        showLoader(); // Mostrar cargador al encontrar el marcador (IMPORTANTE PARA ESTABILIDAD)
+        showLoader("Preparando contenido..."); // Mostrar cargador al encontrar el marcador
 
         // Mostrar botón SIGUIENTE (Si hay más de 1 elemento en el array 'elementos')
         const totalEntities = state.arEntities.length;
@@ -690,13 +712,14 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             playCurrentVideo(targetIndex);
         } else {
             showVideo(targetIndex, 0); 
-            // Si es un modelo 3D ya cargado o un elemento estático simple, ocultamos el loader aquí.
-            if (!initialContentIsVideo) {
-                const modelLoaded = initialContent && initialContent.components['gltf-model'] && initialContent.components['gltf-model'].model;
-                if (modelLoaded || !initialContent) {
-                    hideLoader();
-                }
+            
+            const modelLoaded = initialContent && initialContent.components['gltf-model'] && initialContent.components['gltf-model'].model;
+            
+            // Si el modelo 3D ya está en caché o es un elemento simple estático, ocultamos el loader.
+            if (modelLoaded || !initialContent) {
+                hideLoader();
             }
+            // Si es un modelo 3D que DEBE cargarse, 'model-loaded' lo ocultará.
         }
         
         // Iniciar Audio 3D si el elemento actual es el modelo 3D
@@ -908,7 +931,8 @@ initializeSelectors();
 
 // 2. Ejecutar la carga del JSON y la inicialización de la UI después de que el DOM esté cargado.
 document.addEventListener('DOMContentLoaded', () => {
-    showLoader(); // Muestra el cargador al inicio de la carga general
+    // Muestra el cargador justo al inicio (mientras carga MindAR)
+    showLoader("Iniciando AR..."); 
     initializeUIListeners();
     loadConfig(); 
 });
