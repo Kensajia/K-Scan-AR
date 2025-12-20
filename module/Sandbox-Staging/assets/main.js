@@ -10,9 +10,7 @@ let targetContainer;
 let assetsContainer;
 
 // NUEVAS VARIABLES GLOBALES PARA EL CARGADOR
-let loaderBarContainer; 
-let loaderText;         
-let progressBarFill;    
+let btnLoader; // <- AÑADIDO: Referencia al botón de carga
 
 let videoRotationState = {}; 
 let config = null; 
@@ -62,35 +60,43 @@ function initializeSelectors() {
     targetContainer = safeQuerySelector("#target-container", 'Target Container');
     assetsContainer = safeQuerySelector("#assets-container", 'Assets Container');
     
-    // NUEVO: Referencias a los componentes de la barra de carga
-    loaderBarContainer = safeQuerySelector("#loader-bar-container", 'Loader Bar Container');
-    loaderText = safeQuerySelector("#loader-text", 'Loader Text');
-    progressBarFill = safeQuerySelector("#progress-bar-fill", 'Progress Bar Fill');
+    // NUEVO: Referencia al botón que usaremos para indicar la carga
+    btnLoader = safeQuerySelector("#btn-loader", 'Loader Button'); 
 }
 
 
-// === FUNCIONES DE CONTROL DEL CARGADOR (MODIFICADAS) ===
+// === FUNCIONES DE CONTROL DEL CARGADOR (LÓGICA BASADA EN BOTONES) ===
 function showLoader(text = "Cargando multimedia...") {
-    if (loaderBarContainer) {
-        loaderText.textContent = text;
+    if (btnLoader) {
+        btnLoader.innerHTML = `⏳ ${text}`; 
+        btnLoader.style.display = 'flex'; // Muestra el botón de carga
         
-        // Configurar la barra para el modo Indeterminado (animación CSS)
-        progressBarFill.style.width = '100%';
-        progressBarFill.style.transform = 'translateX(-100%)'; 
-        progressBarFill.style.animationPlayState = 'running';
-
-        loaderBarContainer.style.display = 'flex';
+        // Si los controles están ocultos (clase .hidden), el cargador también debe ocultarse.
+        if (controls.classList.contains('hidden')) {
+             btnLoader.classList.add('hidden');
+        } else {
+             btnLoader.classList.remove('hidden');
+        }
     }
+    
+    // Ocultar botones interactivos para no confundir o interrumpir la carga
+    safeQuerySelector("#btn-hd", 'HD Button').style.display = 'none';
+    btnFlash.style.display = 'none'; 
+    btnNextVideo.style.display = 'none';
+    safeQuerySelector("#btn-audio", 'Audio Button').disabled = true;
 }
 
 function hideLoader() {
-    if (loaderBarContainer) {
-        // Detener la animación
-        progressBarFill.style.animationPlayState = 'paused';
-        progressBarFill.style.transform = 'translateX(0%)';
-        
-        loaderBarContainer.style.display = 'none';
+    if (btnLoader) {
+        btnLoader.style.display = 'none'; // Oculta el botón de carga
+        btnLoader.classList.remove('hidden'); // Limpiar la clase hidden
     }
+    
+    // Restaurar botones ocultos (HD y Audio)
+    safeQuerySelector("#btn-audio", 'Audio Button').disabled = false;
+    safeQuerySelector("#btn-hd", 'HD Button').style.display = 'flex';
+    
+    // La visibilidad de btnFlash y btnNextVideo se gestiona en targetFound/Lost
 }
 // ===================================================================
 
@@ -108,13 +114,11 @@ AFRAME.registerComponent('keep-alive', {
 
 // === COMPONENTE: ROTACIÓN TÁCTIL SIMPLE (SOPORTE X/Y/Z Y SENSIBILIDAD DINÁMICA) ===
 AFRAME.registerComponent('touch-rotation', {
-    // COMENTARIOS SOBRE CÓMO ACTIVAR/DESACTIVAR EJES (X, Y, Z):
-    // El componente 'touch-rotation' tiene propiedades booleanas que se leen desde el JSON.
     schema: {
-        enableX: { type: 'boolean', default: true },  // Rotación Vertical/Pitch
-        enableY: { type: 'boolean', default: true },  // Giro Horizontal/Yaw
-        enableZ: { type: 'boolean', default: false }, // Alabeo/Roll
-        sensibility: { type: 'number', default: 0.2 } // Valor numérico para la velocidad
+        enableX: { type: 'boolean', default: true }, 
+        enableY: { type: 'boolean', default: true },
+        enableZ: { type: 'boolean', default: false }, 
+        sensibility: { type: 'number', default: 0.2 }
     },
 
     init: function () {
@@ -139,7 +143,6 @@ AFRAME.registerComponent('touch-rotation', {
     },
 
     update: function (oldData) {
-        // Asegura que this.data siempre tenga los valores del esquema, incluso después de un update de atributo
         this.data = this.el.components['touch-rotation'].data; 
     },
 
@@ -163,7 +166,6 @@ AFRAME.registerComponent('touch-rotation', {
         const dx = this.touchMove.x - this.touchStart.x; 
         const dy = this.touchMove.y - this.touchStart.y; 
         
-        // Uso de los datos del esquema para activar/desactivar ejes
         if (this.data.enableY) {
             const dThetaY = dx * this.data.sensibility; 
             this.currentRotation.y += dThetaY;
@@ -175,7 +177,6 @@ AFRAME.registerComponent('touch-rotation', {
         }
 
         if (this.data.enableZ) {
-            // Rotación Z (alabeo)
             const dThetaZ = -(dx / 2) * this.data.sensibility; 
             this.currentRotation.z += dThetaZ;
         }
@@ -779,6 +780,8 @@ function initializeUIListeners() {
     // Detección de Flash
     sceneEl.addEventListener("arReady", () => {
         
+        // NOTA: Se eliminó la corrección de z-index del canvas (la barra de carga ahora es un botón)
+        
         const mindarComponent = sceneEl.components['mindar-image'];
         let track = null;
         let flashAvailable = false;
@@ -826,6 +829,11 @@ function initializeUIListeners() {
         
         // Ocultar el cargador una vez que la escena AR esté lista
         hideLoader(); 
+        
+        // Aseguramos la visibilidad del flash si está disponible (fue ocultado por showLoader)
+        if (flashAvailable) {
+            btnFlash.style.display = 'flex'; 
+        }
     });
 
     // Lógica de click del botón de flash
@@ -904,6 +912,11 @@ function initializeUIListeners() {
     safeQuerySelector("#btn-toggle-ui", 'Toggle UI Button').addEventListener("click", () => {
         controls.classList.toggle("hidden");
         btnReset3D.classList.toggle("hidden");
+        
+        // 🚨 AÑADIDO: Si el cargador está visible, también debe ocultarse/mostrar
+        if (btnLoader && btnLoader.style.display !== 'none') {
+             btnLoader.classList.toggle("hidden");
+        }
     });
 
     // Botón de Rotación Manual
