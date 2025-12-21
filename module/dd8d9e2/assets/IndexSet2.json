@@ -33,7 +33,7 @@
                 },
                 {
                         "id": "Elem-1-1",
-                        "src": "https://files.catbox.moe/l9vt0y.glb",
+                        "src": "https://files.catbox.moe/k45ond.glb",
                         "type": "3d",
                         "position": "0 0 0.1", 
                         "scale": "1.8 1.8 1.8",
@@ -60,4 +60,5 @@
         } 
     ]
 }
+
 
