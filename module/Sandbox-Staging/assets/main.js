@@ -273,7 +273,7 @@ function initializeScene() {
                 modelEntity.setAttribute('gltf-model', `#${contentData.id}`);
                 
                 // 2. Control Táctil
-                modelEntity.setAttribute('touch-rotation', 'enableX: true; enableY: true; enableZ: true'); //Activa o desactiva el eje deseado
+                modelEntity.setAttribute('touch-rotation', 'enableX: true; enableY: true; enableZ: false'); //Activa o desactiva el eje deseado
                 
                 modelEntity.setAttribute('position', contentData.position || '0 0 0');
                 modelEntity.setAttribute('scale', contentData.scale || '1 1 1');
@@ -962,3 +962,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeUIListeners();
     loadConfig(); 
 });
+
