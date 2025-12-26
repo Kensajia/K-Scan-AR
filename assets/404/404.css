@@ -1,0 +1,188 @@
+/* --- Variables CSS Base --- */
+:root {
+    /* Valores por defecto (Día) */
+    --background-color: #ffffff;
+    --text-color: #000000;
+    --button-bg-start: #61a6df; /* Azul claro para el degradado del botón */
+    --button-bg-end: #337ab7;   /* Azul oscuro para el degradado del botón */
+    --button-shadow: rgba(0, 0, 0, 0.2);
+}
+
+/* --- Temas Dinámicos (Clases añadidas por JS) --- */
+
+/* Noche */
+.theme-night {
+    --background-color: #333333;
+    --text-color: #ffffff;
+    /* Colores del botón en la noche (puedes ajustarlos para que resalten más sobre el fondo oscuro) */
+    --button-bg-start: #5a82bb; 
+    --button-bg-end: #2d5a8f; 
+}
+
+/* Amanecer / Atardecer */
+.theme-twilight {
+    --background-color: #f6b51d; /* Naranja/Amarillo */
+    --text-color: #000000;
+}
+
+/* --- Estilos Generales --- */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 1s ease; /* Transición suave de color de fondo */
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+#error-container {
+    text-align: center;
+    padding: 20px;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+}
+
+.error-code {
+    font-size: 15vw; /* Grande y responsivo */
+    margin: 0;
+    line-height: 1;
+    font-weight: 900;
+    opacity: 0.8;
+}
+
+.content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+p {
+    margin: 10px 0;
+}
+
+/* --- Contenedor de Ilustración --- */
+
+#illustration-container {
+    margin: 20px auto;
+    max-width: 400px; /* Ancho máximo en modo escritorio */
+    height: auto;
+    overflow: hidden;
+}
+
+#illustration-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* --- Botón "Volver a Casa" (Estilo del PowerPoint) --- */
+
+.home-button {
+    display: inline-block;
+    padding: 10px 30px;
+    margin: 20px 0;
+    border-radius: 20px; /* Bordes redondeados */
+    text-decoration: none;
+    font-weight: bold;
+    color: #ffffff;
+    
+    /* Estilo del degradado azul y sombra suave (como en la imagen) */
+    background-image: linear-gradient(to top, var(--button-bg-end), var(--button-bg-start));
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 6px var(--button-shadow); /* Sombra */
+    transition: all 0.3s ease;
+}
+
+.home-button:hover {
+    box-shadow: 0 6px 8px var(--button-shadow);
+    transform: translateY(-2px);
+}
+
+/* --- Diseño Responsivo (Móvil vs. Escritorio) --- */
+
+/* Por defecto, usamos el diseño Vertical (Móvil) */
+#error-container {
+    display: flex;
+    flex-direction: column; /* Apilado: 404, Ilustración, Texto, Botón */
+    align-items: center;
+}
+
+/* Medios Query para Escritorio (Ancho > 768px) */
+@media (min-width: 768px) {
+    #error-container {
+        display: flex;
+        flex-direction: row; /* Horizontal: 404/Texto vs. Ilustración */
+        justify-content: space-evenly;
+        align-items: center;
+        max-width: 1200px;
+        margin: auto;
+        padding: 40px;
+    }
+
+    .error-code {
+        font-size: 10rem; 
+        text-align: left;
+    }
+
+    .content {
+        max-width: 50%;
+        text-align: left;
+    }
+
+    #illustration-container {
+        order: 2; /* Mueve la imagen a la derecha */
+        max-width: 45%; 
+        min-width: 300px;
+        margin: 0;
+    }
+
+    .message, .sub-message, .theme-info {
+        text-align: left;
+    }
+
+    .home-button {
+        text-align: left;
+    }
+}
+
+/* --- Campo de Estrellas (Solo Noche) --- */
+
+#star-field {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none; /* Permite interactuar con el contenido detrás */
+    /* Inicialmente invisible */
+    opacity: 0; 
+    transition: opacity 1s ease;
+}
+
+/* Clase para mostrar el campo de estrellas */
+.theme-night #star-field {
+    opacity: 1; 
+}
+
+/* Generación de estrellas (CSS trucado) */
+.star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 1s infinite alternate; /* Animación de parpadeo */
+    /* Las estrellas específicas se crean y posicionan con JS */
+}
+
+@keyframes twinkle {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+}
