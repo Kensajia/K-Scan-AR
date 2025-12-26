@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Lista de rutas de tus imágenes (deben estar en assets/404/Img/)
     const IMAGES = [
-        'K-Scan-AR/assets/404/Img/01.webp',
-        'K-Scan-AR/assets/404/Img/02.webp',
+        '/K-Scan-AR/assets/404/Img/01.webp',
+        '/K-Scan-AR/assets/404/Img/02.webp',
         // Añade más rutas si tienes más imágenes
     ];
 
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
+	/**
      * Crea un número aleatorio de estrellas y las posiciona.
      */
     function createStars() {
