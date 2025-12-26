@@ -4,6 +4,27 @@
 let ProyectosAR = {};
 const KEY_STORAGE = "arUserCodes";
 const KEY_THEME = "arThemePreference";
+// 🚨 VARIABLE DE CONTROL DE MANTENIMIENTO 🚨
+const IS_MAINTENANCE_MODE = false; // <-- CAMBIA ESTO a 'false' para desactivar el modo y true para activarlo
+
+/* ===============================================================
+    FUNCIÓN DE CHEQUEO DE MANTENIMIENTO
+================================================================ */
+function checkMaintenanceMode() {
+    if (IS_MAINTENANCE_MODE) {
+        // Asumiendo que el HTML del overlay lo agregaste al index.html
+        const overlay = document.getElementById('maintenance-overlay');
+        const loadingView = document.getElementById("loading-view");
+        
+        // 1. Mostrar el overlay y ocultar la vista de carga (si aún está visible)
+        if (overlay) overlay.classList.remove('maintenance-hide');
+        if (loadingView) loadingView.style.display = 'none'; 
+        
+        console.log("Modo Mantenimiento Activado. Deteniendo carga del índice.");
+        return true; 
+    }
+    return false; 
+}
 
 /* ===============================================================
     TOOLTIP DE TEMAS (TEXTO TEMPORAL AL SELECCIONAR)
