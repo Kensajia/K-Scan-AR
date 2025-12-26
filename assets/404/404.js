@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Lista de rutas de tus imágenes (deben estar en assets/404/Img/)
     const IMAGES = [
-        'assets/404/Img/01.png',
-        'assets/404/Img/02.png',
+        'assets/404/Img/01.webp',
+        'assets/404/Img/02.webp',
         // Añade más rutas si tienes más imágenes
     ];
 
