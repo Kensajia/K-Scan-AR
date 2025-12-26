@@ -79,7 +79,7 @@ body {
     width: 100%;
     position: relative;
     z-index: 10;
-    /* En móvil, es una columna flexible (ya configurado por defecto) */
+    /* En móvil, es una columna flexible (la columna de texto es el elemento principal) */
     display: flex; 
     flex-direction: column; 
     align-items: center;
@@ -89,6 +89,10 @@ body {
 #text-column {
     width: 100%;
     text-align: center;
+    /* Asegura que el contenido interno de la columna de texto se apile en móvil */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 /* Ajuste para el 404 (Vertical: más grande) */
@@ -100,21 +104,25 @@ body {
     opacity: 0.8;
 }
 
-/* Contenedor de Ilustración (Vertical: más pequeño) */
-#illustration-container {
+/* [MÓVIL]: Contenedor de Imagen Solo Móvil (Visible por defecto) */
+#mobile-illustration {
+    /* Debe estar dentro de #text-column para la estructura móvil */
+    display: block; 
     margin: 20px auto;
     max-width: 300px; 
     width: 80%;
     height: auto;
     overflow: hidden;
-    /* En móvil se posiciona justo debajo del texto */
-    order: 2; 
 }
-
-#illustration-container img {
+#mobile-illustration img {
     width: 100%;
     height: auto;
     display: block;
+}
+
+/* [ESCRITORIO]: Contenedor de Imagen Solo Escritorio (Oculto en Móvil) */
+#desktop-illustration {
+    display: none; 
 }
 
 /* Botón "Volver a Casa" */
@@ -153,7 +161,7 @@ body {
 
 @media (min-width: 768px) {
     #error-container {
-        /* Estructura de dos columnas */
+        /* Permite que las dos columnas ocupen el espacio horizontal */
         display: flex;
         flex-direction: row; 
         justify-content: center; 
@@ -161,47 +169,56 @@ body {
         max-width: 1200px;
         margin: auto;
         padding: 40px;
-        text-align: left;
+        min-height: 100vh;
     }
 
     /* Columna Izquierda: Texto y Botón (50% del ancho) */
     #text-column {
         order: 1;
         width: 50%; /* ASIGNACIÓN DEL 50% */
-        text-align: left;
-        padding-right: 30px; /* Espacio de separación */
+        /* CLAVE: Centra los elementos de texto verticalmente en horizontal */
+        display: flex;
+        flex-direction: column;
+        justify-content: center; 
+        
+        text-align: left; /* Alinea el texto a la izquierda */
+        padding-right: 30px; 
+        height: 100%; /* Ayuda al centrado */
     }
 
-    /* Columna Derecha: Imagen (50% del ancho) */
-    #illustration-container {
+    /* [MÓVIL]: Ocultar la imagen móvil en escritorio */
+    #mobile-illustration {
+        display: none; 
+    }
+
+    /* [ESCRITORIO]: Mostrar la imagen de escritorio y darle el 50% */
+    #desktop-illustration {
+        display: flex; 
         order: 2; 
         width: 50%; /* ASIGNACIÓN DEL 50% */
-        max-width: none; /* Ignora el max-width de móvil */
+        max-width: none; 
         margin: 0;
-        /* Centra la imagen dentro de su 50% */
-        display: flex;
         justify-content: center;
         align-items: center;
     }
     
     /* Asegura que la imagen sea responsiva dentro de su contenedor */
-    #illustration-container img {
+    #desktop-illustration img {
         max-width: 100%;
         height: auto;
     }
 
-    /* Ajustes de elementos de la columna de texto */
+    /* Asegura que todos los elementos de la columna de texto estén alineados a la izquierda */
+    .error-code, .message, .sub-message, .theme-info {
+        text-align: left;
+    }
+    
     .error-code {
         font-size: 10rem; 
     }
     
     .theme-info {
         margin-top: 20px; 
-    }
-    
-    /* Asegura que todos los párrafos y el código de error se alineen a la izquierda */
-    .error-code, .message, .sub-message, .theme-info {
-        text-align: left;
     }
 }
 
