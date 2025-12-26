@@ -1,9 +1,9 @@
 /* styles.css */
 
 :root { 
-    --accent: #4CAF50; /* Verde */
-    --danger: #f44336; /* Rojo */
-    --warn: #FFC107; /* Amarillo */
+    --accent: rgba(76,175,80,0.8); /*#4CAF50; /* Verde */
+    --danger: rgba(244,67,54,0.8); /*#f44336; /* Rojo */
+    --warn: rgba(255,193,7,0.8); /*#FFC107; /* Amarillo */
 }
 body { 
     font-family: sans-serif; 
@@ -31,33 +31,45 @@ body {
     font-weight: 600;
     cursor: pointer;
     font-size: 11px;
-    /* 🚨 CAMBIO AQUÍ: Bajamos el valor alfa de 0.6 a 0.4 para más transparencia */
     background: rgba(0, 0, 0, 0.4); 
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.2);
-    display: flex;
-    align-items: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    /* Transición simple para estados */
-    transition: background 0.2s, opacity 0.3s;
+    border: 1px solid rgba(255,255,255,0.2); 
+    transition: all 0.2s ease;
+    text-align: center;
 }
 
-/* Estado de los botones */
-#btn-flash.active { background: var(--warn); color: black; }
-#btn-flash:disabled,
-#btn-next-video:disabled,
-#btn-audio:disabled { 
-    background: gray !important; 
-    cursor: not-allowed; 
+.btn:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.6);
 }
 
-/* Botón de control INFERIOR */
+.btn:active:not(:disabled) {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#ui-controls.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; 
+}
+
+/* Botón de toggle UI (configuración) - esquina inferior derecha */
 #btn-toggle-ui {
     position: fixed;
-    bottom: 20px;
+    bottom: 20px; 
     right: 20px;
-    z-index: 3000 !important;
-    width: 50px;
+    z-index: 3000; 
+    /*width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;*/
+	width: 50px;
     height: 50px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.2);
@@ -70,95 +82,128 @@ body {
     color: white;
 }
 
-.hidden { 
-    opacity: 0; 
-    transform: translateY(-20px); 
-    pointer-events: none; 
+/* ========================================================== */
+/* --- CONTENEDOR DE BOTONES 3D (Inferior Izquierda) --- */
+/* ========================================================== */
+
+#btn-3d-controls-container {
+    /* Posicionamiento: Esquina inferior izquierda */
+    position: fixed;
+    bottom: 20px; 
+    left: 20px;
+    z-index: 3000 !important;
+    
+    /* Apilamiento Vertical */
+    display: flex;
+    flex-direction: column-reverse; /* El reset (bottom) va abajo, el girar (top) va arriba */
+    gap: 10px; /* Separación entre los botones */
+    
+    /* Ocultar si el botón de toggle está activo */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-/* ELIMINACIÓN TOTAL DEL BOTÓN VR */
+#btn-3d-controls-container.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Estilos de botones individuales dentro del contenedor */
+#btn-rotate-3d,
+#btn-reset-3d {
+    width: 100%; /* Asegurar que ambos tengan el mismo ancho */
+    /* Anulamos la propiedad 'display: none' si el contenedor es visible (lo controlamos con JS) */
+    display: flex !important;
+}
+
+/* ELIMINACIóN TOTAL DEL BOTóN VR */
 .a-enter-vr { 
     display: none !important; 
     visibility: hidden !important; 
     pointer-events: none !important; 
 }
 
-/* ---  Reset 3D (Rectangular, Inferior Izquierda) --- */
 
-#btn-reset-3d {
-    /* 1. Posicionamiento en la esquina inferior izquierda */
+/* ========================================================== */
+/* --- BARRA DE ESTADO (TOAST NOTIFICATION) --- */
+/* ========================================================== */
+
+#status-bar {
+    /* 1. Posicionamiento base - Propiedades Comunes */
     position: fixed;
     bottom: 20px; 
-    left: 20px;   
+    /* Las propiedades 'left' y 'transform' se definen en las clases de posición (.pos-*) */
     z-index: 3000 !important;
 
-    /* 2. Estilo Rectangular Redondeado (Copiamos propiedades de .btn) */
-    padding: 10px 18px;
-    border-radius: 50px; /* Bordes muy redondeados */
-    color: white;
-    font-weight: 600;
-    font-size: 11px;
-    cursor: pointer;
-
-    /* 3. Estilo de Transparencia (Híbrido entre .btn y Toggle UI) */
-    background: rgba(0, 0, 0, 0.4); /* Fondo más oscuro como .btn */
-    backdrop-filter: blur(8px);     /* Blur más fuerte como .btn */
-    border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    /* 2. Estilo y Visibilidad (COMÚN A TODOS) */
+    display: block;
+    padding: 10px 10px;
+    max-width: 38vw;
+    width: fit-content; 
     
-    /* 4. Alineación del contenido */
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    /* Fondo oscuro y transparente con blur (Propiedades de estilo que no cambian) */
+    background: rgba(0, 0, 0, 0.6); 
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    color: white; 
     
-    /* 5. Transiciones y estado oculto */
-    transition: all 0.3s ease;
+    /* Transici車n para ocultar/mostrar y POSICIONAMIENTO */
+    transition: 
+        opacity 0.3s ease, 
+        transform 0.3s ease,
+        /*left 0.3s ease, /* AÑADIDO: transiciona la posición horizontal */
+        visibility 0.3s ease; 
 }
 
-/* 6. Regla para ocultar con la clase .hidden */
-#btn-reset-3d.hidden {
-    opacity: 0;
-    transform: translateY(20px); /* Lo desliza hacia abajo */
-    pointer-events: none;
-}
+/* ---------------------------------- */
+/* --- ESTILOS DE POSICIONAMIENTO --- */
+/* ---------------------------------- */
 
-/* Estilos para el botón de carga centrado en la parte inferior */
-#btn-loader {
-    position: fixed;
-    bottom: 20px; /* Distancia desde la parte inferior */
+/* 1. Entorno Inicial (Posición por defecto: Centro Izquierda - Mantiene su estilo original) */
+#status-bar.pos-initial {
     left: 50%;
-    transform: translateX(-50%); /* Centrar horizontalmente */
-    z-index: 9999; /* Asegurar que esté por encima de todo */
-
-    /* Estilos visuales */
-    background: #007bff !important; /* Color Azul para Carga */
-    cursor: wait !important;
-    font-weight: bold;
-    pointer-events: none; /* Crucial: no debe ser interactivo */
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    color: white;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    
-    /* Animación de pulso */
-    animation: pulse-load 1.5s infinite; 
+    transform: translateX(-50%); 
 }
 
-/* Define la animación de pulso */
-@keyframes pulse-load {
-    0% {
-        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
-    }
+/* 2. Entorno Video (Posición: Izquierda) */
+#status-bar.pos-video {
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-/* Manejar la ocultación con la clase 'hidden' para btn-loader */
-#btn-loader.hidden {
-    display: none !important;
+/* 3. Entorno 3D (Posición: Centro Derecha) */
+#status-bar.pos-3d {
+    left: 50%;
+    transform: translateX(-32%); /* Centrado relativo al 68% */
+}
+
+/* 4. Entorno 3D+Audio (Posición: Derecha) */
+#status-bar.pos-3daudio {
+    left: 50%;
+    transform: translateX(-32%); /* Alineado completamente a la derecha */
+}
+
+/* El estilo .hidden se mantiene igual, ya que solo maneja opacidad/visibilidad. */
+#status-bar.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 10px); 
+}
+
+/* ========================================================== */
+/* --- ESTILO DEL TEXTO DENTRO DE LA BARRA (VUELTO A AGREGAR) --- */
+/* ========================================================== */
+#status-text {
+    margin: 0; 
+    white-space: normal; 
+    text-align: center; /* Centrar el texto en múltiples líneas */
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+
+/* Asegurar que la barra de estado se oculte con el botón de toggle si está en el mismo nivel */
+#ui-controls.hidden ~ #status-bar {
+    /* No es necesario ya que controlamos su visibilidad directamente con JS */
 }
