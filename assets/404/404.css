@@ -3,8 +3,14 @@
     /* Valores por defecto (Día) */
     --background-color: #ffffff;
     --text-color: #000000;
-    --button-bg-start: #61a6df; /* Azul claro para el degradado del botón */
-    --button-bg-end: #337ab7;   /* Azul oscuro para el degradado del botón */
+    
+    /* Colores para la transición de temas */
+    --color-twilight: #f6b51d; /* Naranja/Amarillo (Amanecer/Atardecer) */
+    --color-night: #333333;    /* Gris oscuro (Noche) */
+
+    /* Colores del botón (Degradado azul suave) */
+    --button-bg-start: #61a6df; 
+    --button-bg-end: #337ab7;   
     --button-shadow: rgba(0, 0, 0, 0.2);
 }
 
@@ -12,17 +18,39 @@
 
 /* Noche */
 .theme-night {
-    --background-color: #333333;
+    --background-color: var(--color-night);
     --text-color: #ffffff;
-    /* Colores del botón en la noche (puedes ajustarlos para que resalten más sobre el fondo oscuro) */
+    /* Botón más discreto en la noche */
     --button-bg-start: #5a82bb; 
     --button-bg-end: #2d5a8f; 
 }
 
-/* Amanecer / Atardecer */
-.theme-twilight {
-    --background-color: #f6b51d; /* Naranja/Amarillo */
-    --text-color: #000000;
+/* Amanecer: Naranja abajo, Oscuro arriba (Degradado) */
+.theme-sunrise {
+    background-color: var(--color-night);
+    --text-color: #000000; /* Texto negro para contraste con el naranja/amarillo */
+    
+    background-image: linear-gradient(
+        to bottom, 
+        var(--color-night) 0%, 
+        var(--color-night) 60%, 
+        var(--color-twilight) 100%
+    );
+    color: var(--text-color);
+}
+
+/* Atardecer: Oscuro abajo, Naranja arriba (Degradado) */
+.theme-sunset {
+    background-color: var(--color-twilight);
+    --text-color: #000000; /* Texto negro para contraste con el naranja/amarillo */
+
+    background-image: linear-gradient(
+        to top, 
+        var(--color-night) 0%, 
+        var(--color-night) 60%, 
+        var(--color-twilight) 100%
+    );
+    color: var(--text-color);
 }
 
 /* --- Estilos Generales --- */
@@ -38,6 +66,7 @@ body {
     transition: background-color 1s ease; /* Transición suave de color de fondo */
     background-color: var(--background-color);
     color: var(--text-color);
+    /* Nota: El fondo de amanecer/atardecer usa background-image */
 }
 
 #error-container {
@@ -48,9 +77,10 @@ body {
     z-index: 10;
 }
 
+/* Ajuste para el 404 (Vertical: más grande) */
 .error-code {
-    font-size: 15vw; /* Grande y responsivo */
-    margin: 0;
+    font-size: 25vw; 
+    margin: 10px 0;
     line-height: 1;
     font-weight: 900;
     opacity: 0.8;
@@ -65,11 +95,11 @@ p {
     margin: 10px 0;
 }
 
-/* --- Contenedor de Ilustración --- */
-
+/* Contenedor de Ilustración (Vertical: más pequeño) */
 #illustration-container {
     margin: 20px auto;
-    max-width: 400px; /* Ancho máximo en modo escritorio */
+    max-width: 300px; 
+    width: 80%;
     height: auto;
     overflow: hidden;
 }
@@ -80,22 +110,20 @@ p {
     display: block;
 }
 
-/* --- Botón "Volver a Casa" (Estilo del PowerPoint) --- */
-
+/* Botón "Volver a Casa" */
 .home-button {
     display: inline-block;
     padding: 10px 30px;
     margin: 20px 0;
-    border-radius: 20px; /* Bordes redondeados */
+    border-radius: 20px; 
     text-decoration: none;
     font-weight: bold;
     color: #ffffff;
     
-    /* Estilo del degradado azul y sombra suave (como en la imagen) */
     background-image: linear-gradient(to top, var(--button-bg-end), var(--button-bg-start));
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 6px var(--button-shadow); /* Sombra */
+    box-shadow: 0 4px 6px var(--button-shadow); 
     transition: all 0.3s ease;
 }
 
@@ -104,49 +132,53 @@ p {
     transform: translateY(-2px);
 }
 
-/* --- Diseño Responsivo (Móvil vs. Escritorio) --- */
-
-/* Por defecto, usamos el diseño Vertical (Móvil) */
-#error-container {
-    display: flex;
-    flex-direction: column; /* Apilado: 404, Ilustración, Texto, Botón */
-    align-items: center;
+/* Nota de pie (theme-info: mucho más pequeña y discreta) */
+.theme-info {
+    font-size: 0.7rem; 
+    opacity: 0.6;
+    margin-top: 50px; 
 }
 
-/* Medios Query para Escritorio (Ancho > 768px) */
+
+/* --- Diseño Responsivo (Horizontal / Escritorio) --- */
+
 @media (min-width: 768px) {
     #error-container {
         display: flex;
-        flex-direction: row; /* Horizontal: 404/Texto vs. Ilustración */
-        justify-content: space-evenly;
+        flex-direction: row; 
+        justify-content: center; 
         align-items: center;
         max-width: 1200px;
         margin: auto;
         padding: 40px;
+        text-align: left;
     }
 
+    /* 404 más pequeño en escritorio */
     .error-code {
         font-size: 10rem; 
         text-align: left;
     }
 
+    /* Columna Izquierda: Texto */
     .content {
+        order: 1; 
         max-width: 50%;
+        padding-right: 30px; 
         text-align: left;
     }
 
+    /* Columna Derecha: Imagen (Lo más grande posible) */
     #illustration-container {
-        order: 2; /* Mueve la imagen a la derecha */
-        max-width: 45%; 
+        order: 2; 
+        max-width: 50%; 
+        height: auto;
         min-width: 300px;
         margin: 0;
     }
 
+    /* Asegura que todos los elementos de texto estén alineados a la izquierda */
     .message, .sub-message, .theme-info {
-        text-align: left;
-    }
-
-    .home-button {
         text-align: left;
     }
 }
@@ -160,26 +192,22 @@ p {
     width: 100%;
     height: 100%;
     z-index: 1;
-    pointer-events: none; /* Permite interactuar con el contenido detrás */
-    /* Inicialmente invisible */
+    pointer-events: none; 
     opacity: 0; 
     transition: opacity 1s ease;
 }
 
-/* Clase para mostrar el campo de estrellas */
 .theme-night #star-field {
     opacity: 1; 
 }
 
-/* Generación de estrellas (CSS trucado) */
 .star {
     position: absolute;
     width: 2px;
     height: 2px;
     background: white;
     border-radius: 50%;
-    animation: twinkle 1s infinite alternate; /* Animación de parpadeo */
-    /* Las estrellas específicas se crean y posicionan con JS */
+    animation: twinkle 1s infinite alternate; 
 }
 
 @keyframes twinkle {
