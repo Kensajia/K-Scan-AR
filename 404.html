@@ -1,31 +1,30 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="stylesheet" href="/K-Scan-AR/assets/404/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Página no encontrada</title>
+    <link rel="stylesheet" href="/K-Scan-AR/assets/404/404.css">
 </head>
-<body id="page-404">
-    
-    <div class="container">
-        <header>
-            <h1>404</h1>
-        </header>
-
-        <section>
-            <p>Parece que has tomado un camino equivocado. ¡Esta página no existe!</p>
-            <p>El sitio está aquí, pero la ruta no se encuentra.</p>
-        </section>
+<body>
+    <div id="error-container">
+        <div id="star-field"></div>
         
-        <a href="/K-Scan-AR/">
-            <button class="home-button">Volver a Casa</button>
-        </a>
+        <h1 class="error-code">404</h1>
+        
+        <div class="content">
+            <div id="illustration-container">
+                </div>
 
-        <footer>
-            <p class="footer-note">El tema visual actual depende de tu hora local.</p>
-        </footer>
+            <p class="message">Parece que has tomado un camino equivocado. ¡Esta página no existe!</p>
+            <p class="sub-message">El sitio está aquí, pero la ruta no se encuentra.</p>
+            
+            <a href="/K-Scan-AR/" class="home-button">Volver a Casa</a>
+            
+            <p class="theme-info">El tema visual actual depende de tu hora local.</p>
+        </div>
     </div>
-    
-    <div id="time-indicator"></div> 
-    
-    <script src="/K-Scan-AR/assets/404/theme-switcher.js"></script>
+
+    <script src="/K-Scan-AR/assets/404/404.js"></script>
 </body>
 </html>
