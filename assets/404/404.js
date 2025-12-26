@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    //**
+    /**
      * Aplica el tema CSS al cuerpo del documento y gestiona la animación.
      */
     function applyTheme() {
