@@ -10,12 +10,17 @@
                 {
 
                     "id": "Elem-0-0",
-                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf",
+                    "src": "https://files.catbox.moe/k45ond.glb",
                     "type": "3d", 
-                    "position": "0 0 0.1", 
-                    "scale": "0.25 0.25 0.25",
-                    "rotation": "0 45 0",
-                    "touchRotation": "enableX: true; enableY: true; enableZ: false; sensibility: 0.5"
+                    "position": "0 0 0.1" ,
+                    "scale": "1.8 1.8 1.8",
+                    "rotation": "0 -90 0",
+                    "rotationEnableX": true,
+                    "rotationEnableY": true,
+                    "rotationEnableZ": false,
+                    "rotationSensibility": 0.3,
+					"giraEje": "Y",           
+					"giraDuracion": 1500
                 },
                 {
                     
@@ -73,10 +78,7 @@
                     "type": "3d",
                     "position": "0 0 0.1", 
                     "scale": "0.1 0.1 0.1",
-                    "rotation": "0 0 0",
-                    "touchRotation": "enableX: true; enableY: true; enableZ: false; sensibility: 0.5",
-                    "animated": true,
-                    "animationMixer": "clip: *; timeScale: 1.0"
+                    "animated": true
                 },
                 {
                     
@@ -88,17 +90,6 @@
                     "chromaColor": "#ffffff",
                     "chromaSimilarity": 0.3,
                     "position": "0 0 0"
-                },
-                {
-                     "id": "Elem-1-2",
-                    "src": "https://files.catbox.moe/k45ond.glb",
-                    "type": "3d",
-                    "position": "0 0 0.1", 
-                    "scale": "1.8 1.8 1.8",
-                    "rotation": "0 -90 0",
-                    "touchRotation": "enableX: true; enableY: true; enableZ: false; sensibility: 0.5",
-                    "animated": false,
-                    "animationMixer": "clip: *; timeScale: 1.0"
                 }
             ]
         },
@@ -108,30 +99,37 @@
                 {
                     
                     "id": "Elem-2-0",
-                    "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/raccoon/scene.gltf",
+                    "src": "https://files.catbox.moe/l9vt0y.glb",
                     "type": "3d",
                     "position": "0 0 0.1", 
-                    "scale": "0.25 0.25 0.25",
-                    "rotation": "0 0 0",
+                    "scale": "1.8 1.8 1.8",
+                    "rotation": "0 -90 0",
                     "animated": true,
-                    "animationMixer": "clip: *; timeScale: 1.0",
-                    "audioSrc": "https://files.catbox.moe/1jk9yo.mp3"
+                    "rotationEnableX": true,
+                    "rotationEnableY": true,
+                    "rotationEnableZ": false,
+                    "rotationSensibility": 0.3,
+					"giraEje": "Y",           
+					"giraDuracion": 1500
                 },
                 {
                     
                     "id": "Elem-2-1",
                     "src": "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/band-example/bear/scene.gltf",
-                    "type": "3d",
+                    "type": "3d+audio",
                     "position": "0 0 0.1", 
                     "scale": "0.25 0.25 0.25",
                     "rotation": "0 0 0",
                     "animated": true,
-                    "animationMixer": "clip: *; timeScale: 1.0",
-                    "audioSrc": "https://files.catbox.moe/b3k4kg.mp4"
+                    "rotationEnableX": true,
+                    "rotationEnableY": true,
+                    "rotationEnableZ": false,
+                    "rotationSensibility": 0.3,
+					"giraEje": "Y",           
+					"giraDuracion": 1500,
+					"audioSrc": "https://files.catbox.moe/mq8k1z.mp4"
                 }
             ]
         }
     ]
 }
-
-
