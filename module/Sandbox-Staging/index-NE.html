@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8">
     <link rel="icon" type="image/png" href="../../favicon.png" sizes="64x64">
-    <title>AR Video Experience</title>
+    <title>Kensajia · Visualizador AR</title>
 
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -16,17 +16,24 @@
     
 </head>
 <body>
+    
     <div id="ui-controls">
         <button id="btn-audio" class="btn" style="display: flex; background: var(--accent);">🔊 SONIDO</button>
         <button id="btn-flash" class="btn" style="display:none">⚡ FLASH OFF</button>
         <button id="btn-next-video" class="btn" style="display:none">⏩ SIGUIENTE</button>
         <button id="btn-hd" class="btn">📺 CALIDAD: HD</button>
     </div>
-
-    <button id="btn-loader" class="btn" style="display:none;">⏳ CARGANDO...</button>
-    
-    <button id="btn-reset-3d" style="display: none;">🔄 RESTAURAR</button>
-    
+	
+	<div id="status-bar" class="hidden pos-initial">
+        <p id="status-text">Mensaje de estado aquí</p>
+    </div>
+	
+    <div id="btn-3d-controls-container" style="display: none;">
+        
+        <button id="btn-reset-3d" class="btn">🔄 RESTAURAR</button>
+		<button id="btn-rotate-3d" class="btn">🔃 GIRAR</button>
+		
+    </div>
     <button id="btn-toggle-ui" class="btn">⚙️</button>
 
     <a-scene
@@ -65,22 +72,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
