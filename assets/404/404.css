@@ -1,3 +1,8 @@
+/*
+ * Archivo: assets/404/404.css
+ * Descripción: Estilos responsivos y dinámicos para la página 404.
+ */
+
 /* --- Variables CSS Base --- */
 :root {
     /* Valores por defecto (Día) */
@@ -28,7 +33,7 @@
 /* Amanecer: Naranja abajo, Oscuro arriba (Degradado) */
 .theme-sunrise {
     background-color: var(--color-night);
-    --text-color: #000000; /* Texto negro para contraste con el naranja/amarillo */
+    --text-color: #000000; 
     
     background-image: linear-gradient(
         to bottom, 
@@ -42,7 +47,7 @@
 /* Atardecer: Oscuro abajo, Naranja arriba (Degradado) */
 .theme-sunset {
     background-color: var(--color-twilight);
-    --text-color: #000000; /* Texto negro para contraste con el naranja/amarillo */
+    --text-color: #000000;
 
     background-image: linear-gradient(
         to top, 
@@ -63,10 +68,9 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: background-color 1s ease; /* Transición suave de color de fondo */
+    transition: background-color 1s ease; 
     background-color: var(--background-color);
     color: var(--text-color);
-    /* Nota: El fondo de amanecer/atardecer usa background-image */
 }
 
 #error-container {
@@ -75,6 +79,16 @@ body {
     width: 100%;
     position: relative;
     z-index: 10;
+    /* En móvil, es una columna flexible (ya configurado por defecto) */
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+}
+
+/* Columna de Texto: En móvil ocupa todo el ancho */
+#text-column {
+    width: 100%;
+    text-align: center;
 }
 
 /* Ajuste para el 404 (Vertical: más grande) */
@@ -86,15 +100,6 @@ body {
     opacity: 0.8;
 }
 
-.content {
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-p {
-    margin: 10px 0;
-}
-
 /* Contenedor de Ilustración (Vertical: más pequeño) */
 #illustration-container {
     margin: 20px auto;
@@ -102,6 +107,8 @@ p {
     width: 80%;
     height: auto;
     overflow: hidden;
+    /* En móvil se posiciona justo debajo del texto */
+    order: 2; 
 }
 
 #illustration-container img {
@@ -140,10 +147,13 @@ p {
 }
 
 
-/* --- Diseño Responsivo (Horizontal / Escritorio) --- */
+/* ----------------------------------------------------------------- */
+/* --- DISEÑO HORIZONTAL (ESCRITORIO: DOS COLUMNAS AL 50%) --- */
+/* ----------------------------------------------------------------- */
 
 @media (min-width: 768px) {
     #error-container {
+        /* Estructura de dos columnas */
         display: flex;
         flex-direction: row; 
         justify-content: center; 
@@ -154,31 +164,43 @@ p {
         text-align: left;
     }
 
-    /* 404 más pequeño en escritorio */
-    .error-code {
-        font-size: 10rem; 
+    /* Columna Izquierda: Texto y Botón (50% del ancho) */
+    #text-column {
+        order: 1;
+        width: 50%; /* ASIGNACIÓN DEL 50% */
         text-align: left;
+        padding-right: 30px; /* Espacio de separación */
     }
 
-    /* Columna Izquierda: Texto */
-    .content {
-        order: 1; 
-        max-width: 50%;
-        padding-right: 30px; 
-        text-align: left;
-    }
-
-    /* Columna Derecha: Imagen (Lo más grande posible) */
+    /* Columna Derecha: Imagen (50% del ancho) */
     #illustration-container {
         order: 2; 
-        max-width: 50%; 
-        height: auto;
-        min-width: 300px;
+        width: 50%; /* ASIGNACIÓN DEL 50% */
+        max-width: none; /* Ignora el max-width de móvil */
         margin: 0;
+        /* Centra la imagen dentro de su 50% */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    /* Asegura que la imagen sea responsiva dentro de su contenedor */
+    #illustration-container img {
+        max-width: 100%;
+        height: auto;
     }
 
-    /* Asegura que todos los elementos de texto estén alineados a la izquierda */
-    .message, .sub-message, .theme-info {
+    /* Ajustes de elementos de la columna de texto */
+    .error-code {
+        font-size: 10rem; 
+    }
+    
+    .theme-info {
+        margin-top: 20px; 
+    }
+    
+    /* Asegura que todos los párrafos y el código de error se alineen a la izquierda */
+    .error-code, .message, .sub-message, .theme-info {
         text-align: left;
     }
 }
