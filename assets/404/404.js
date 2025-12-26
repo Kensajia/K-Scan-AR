@@ -19,17 +19,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. SELECCIÓN DE IMAGEN ALEATORIA ---
     
-    const illustrationContainer = document.getElementById('illustration-container');
+    const mobileContainer = document.getElementById('mobile-illustration');
+    const desktopContainer = document.getElementById('desktop-illustration');
     
     if (IMAGES.length > 0) {
         const randomIndex = Math.floor(Math.random() * IMAGES.length);
         const selectedImageSrc = IMAGES[randomIndex];
         
-        const imgElement = document.createElement('img');
-        imgElement.src = selectedImageSrc;
-        imgElement.alt = "Ilustración de error 404";
-        
-        illustrationContainer.appendChild(imgElement);
+        // Función auxiliar para crear y configurar la imagen
+        const createAndInsertImage = (container) => {
+             const imgElement = document.createElement('img');
+             imgElement.src = selectedImageSrc;
+             imgElement.alt = "Ilustración de error 404";
+             container.appendChild(imgElement);
+        };
+
+        // Insertar la misma imagen aleatoria en ambos contenedores
+        if (mobileContainer) {
+            createAndInsertImage(mobileContainer);
+        }
+        if (desktopContainer) {
+            createAndInsertImage(desktopContainer);
+        }
     }
 
     // --- 3. LÓGICA DE TEMAS DINÁMICOS Y ANIMACIÓN NOCTURNA ---
