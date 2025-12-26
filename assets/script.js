@@ -1,23 +1,26 @@
 /* ===============================================================
     VARIABLES GLOBALES
 ================================================================ */
+// 🚨 VARIABLE DE CONTROL DE MANTENIMIENTO 🚨
+// Si es 'true', la web mostrará el aviso de actualización y detendrá la ejecución del resto del script.
+const IS_MAINTENANCE_MODE = false; // <-- ¡CAMBIA ESTO a 'false' para desactivar el modo y a 'true' para activar el modo!
+
 let ProyectosAR = {};
 const KEY_STORAGE = "arUserCodes";
 const KEY_THEME = "arThemePreference";
-// 🚨 VARIABLE DE CONTROL DE MANTENIMIENTO 🚨
-const IS_MAINTENANCE_MODE = false; // <-- CAMBIA ESTO a 'false' para desactivar el modo y true para activarlo
 
 /* ===============================================================
     FUNCIÓN DE CHEQUEO DE MANTENIMIENTO
 ================================================================ */
 function checkMaintenanceMode() {
     if (IS_MAINTENANCE_MODE) {
-        // Asumiendo que el HTML del overlay lo agregaste al index.html
         const overlay = document.getElementById('maintenance-overlay');
         const loadingView = document.getElementById("loading-view");
         
-        // 1. Mostrar el overlay y ocultar la vista de carga (si aún está visible)
+        // 1. Mostrar el overlay
         if (overlay) overlay.classList.remove('maintenance-hide');
+        
+        // 2. Ocultar la vista de carga (si existe)
         if (loadingView) loadingView.style.display = 'none'; 
         
         console.log("Modo Mantenimiento Activado. Deteniendo carga del índice.");
@@ -25,6 +28,7 @@ function checkMaintenanceMode() {
     }
     return false; 
 }
+
 
 /* ===============================================================
     TOOLTIP DE TEMAS (TEXTO TEMPORAL AL SELECCIONAR)
@@ -61,9 +65,10 @@ function setupThemeTooltips() {
 async function loadData() {
     try {
         // Asegúrate de que esta ruta sea correcta
-        const r = await fetch("./index-vault/IndexSet.json"); 
+        const r = await fetch("./index-vault/IndexSet.json"); 
         if (!r.ok) throw new Error("Network error or file not found");
         ProyectosAR = await r.json();
+        // Ocultar la vista de carga SOLO si no estamos en modo mantenimiento
         document.getElementById("loading-view").style.display = "none";
         init();
     } catch (e) {
@@ -84,7 +89,7 @@ function applyTheme(theme) {
         : theme;
 
     // Quita cualquier tema anterior y aplica el nuevo
-    body.className = finalTheme + "-theme"; 
+    body.className = finalTheme + "-theme"; 
     localStorage.setItem(KEY_THEME, theme);
 
     document.querySelectorAll(".circle").forEach(c =>
@@ -176,6 +181,15 @@ function init() {
     EVENTOS DE INICIO
 ================================================================ */
 document.addEventListener("DOMContentLoaded", () => {
+    
+    // 🚨 0. CHEQUEO GLOBAL DE MANTENIMIENTO Y SALIDA 🚨
+    if (checkMaintenanceMode()) {
+        // Si el modo mantenimiento está activo, salimos de la función y detenemos la inicialización.
+        return; 
+    }
+
+    // --- El resto del código solo se ejecuta si NO estamos en modo mantenimiento ---
+
     // 1. Inicializar Tooltips
     setupThemeTooltips();
 
