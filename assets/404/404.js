@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const HOUR_CONFIG = {
 		SUNRISE_START: 6.58, // 06:35 a.m. (Amanecer)
 		DAY_START: 7.0,      // 07:00 a.m. (Día)
-		TWILIGHT_START: 16.73, // 06:26 p.m. (Atardecer)
+		TWILIGHT_START: 18.3, // 06:30 p.m. (Atardecer)
 		NIGHT_START: 19.0     // 07:00 p.m. (Noche)
 	};
 
