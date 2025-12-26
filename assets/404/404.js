@@ -11,10 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Horarios (en 24H) para la transición de temas.
     // Usamos horas en formato decimal (e.g., 6.58 = 6:35 AM, 19.0 = 7:00 PM).
     const HOUR_CONFIG = {
-        SUNRISE_START: 6.58,  // 06:35 a.m. (Inicio Amanecer)
-        DAY_START: 7.0,       // 07:00 a.m. (Inicio Día)
-        TWILIGHT_START: 18.0, // 06:00 p.m. (Inicio Atardecer)
-        NIGHT_START: 19.0     // 07:00 p.m. (Inicio Noche)
+        SUNRISE_START: 6.58,    // 06:35 (Inicio Amanecer)
+        DAY_START: 7.0,         // 07:00 (Inicio Día)
+        TWILIGHT_START: 18.58,  // 18:35 (Inicio Atardecer)
+        NIGHT_START: 19.0       // 19:00 (Inicio Noche)
     };
 
     // --- 2. SELECCIÓN DE IMAGEN ALEATORIA ---
@@ -68,10 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // Transición (Amanecer o Atardecer)
             if (currentHourDecimal >= SUNRISE_START && currentHourDecimal < DAY_START) {
-                 // 6:35 a.m. - 6:59 a.m.
+                 // Amanecer
                  return 'theme-sunrise';
             } else {
-                 // 6:00 p.m. - 6:59 p.m.
+                 // Atardecer
                  return 'theme-sunset';
             }
         }
@@ -116,12 +116,17 @@ document.addEventListener('DOMContentLoaded', () => {
              body.classList.add(newTheme);
         }
 
-        // Gestión de la animación de estrellas
-        if (newTheme === 'theme-night') {
+        // Gestión de la animación de estrellas (Noche y Atardecer)
+        if (newTheme === 'theme-night' || newTheme === 'theme-sunset') {
             if (starField.children.length === 0) {
                  createStars();
             }
-        } 
+        } else {
+             // Eliminar las estrellas cuando no se usan (Día/Amanecer)
+             if (starField.children.length > 0) {
+                 starField.innerHTML = '';
+             }
+        }
         
         console.log(`Hora actual: ${now.getHours()}:${now.getMinutes()}. Tema aplicado: ${newTheme}`);
     }
