@@ -5,15 +5,12 @@
 
 /* --- Variables CSS Base --- */
 :root {
-    /* Valores por defecto (Día) */
     --background-color: #ffffff;
     --text-color: #000000;
     
-    /* Colores para la transición de temas */
-    --color-twilight: #f6b51d; /* Naranja/Amarillo (Amanecer/Atardecer) */
-    --color-night: #333333;    /* Gris oscuro (Noche) */
+    --color-twilight: #f6b51d; 
+    --color-night: #333333;    
 
-    /* Colores del botón (Degradado azul suave) */
     --button-bg-start: #61a6df; 
     --button-bg-end: #337ab7;   
     --button-shadow: rgba(0, 0, 0, 0.2);
@@ -25,35 +22,34 @@
 .theme-night {
     --background-color: var(--color-night);
     --text-color: #ffffff;
-    /* Botón más discreto en la noche */
+    
     --button-bg-start: #5a82bb; 
     --button-bg-end: #2d5a8f; 
 }
 
-/* Amanecer: Naranja abajo, Oscuro arriba (Degradado) */
+/* Amanecer: Degradado Naranja sobre Fondo DÍA (Blanco) */
 .theme-sunrise {
-    background-color: var(--color-night);
-    --text-color: #000000; 
+    --text-color: #000000;
     
     background-image: linear-gradient(
         to bottom, 
-        var(--color-night) 0%, 
-        var(--color-night) 60%, 
-        var(--color-twilight) 100%
+        transparent 0%, 
+        transparent 50%,
+        var(--color-twilight) 100% 
     );
     color: var(--text-color);
 }
 
-/* Atardecer: Oscuro abajo, Naranja arriba (Degradado) */
+/* Atardecer: Degradado Naranja sobre Fondo NOCHE (Gris Oscuro) */
 .theme-sunset {
-    background-color: var(--color-twilight);
-    --text-color: #000000;
+    --background-color: var(--color-night);
+    --text-color: #ffffff;
 
     background-image: linear-gradient(
         to top, 
-        var(--color-night) 0%, 
-        var(--color-night) 60%, 
-        var(--color-twilight) 100%
+        transparent 0%, 
+        transparent 50%,
+        var(--color-twilight) 100% 
     );
     color: var(--text-color);
 }
@@ -78,18 +74,16 @@ body {
     padding: 20px;
     width: 100%;
     position: relative;
-    z-index: 10;
-    /* En móvil, es una columna flexible (la columna de texto es el elemento principal) */
+    z-index: 10; /* Contenido principal, sobre las estrellas */
     display: flex; 
     flex-direction: column; 
     align-items: center;
 }
 
-/* Columna de Texto: En móvil ocupa todo el ancho */
+/* Columna de Texto: En móvil ocupa todo el ancho, y el texto está centrado */
 #text-column {
     width: 100%;
     text-align: center;
-    /* Asegura que el contenido interno de la columna de texto se apile en móvil */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -106,7 +100,6 @@ body {
 
 /* [MÓVIL]: Contenedor de Imagen Solo Móvil (Visible por defecto) */
 #mobile-illustration {
-    /* Debe estar dentro de #text-column para la estructura móvil */
     display: block; 
     margin: 20px auto;
     max-width: 300px; 
@@ -161,7 +154,6 @@ body {
 
 @media (min-width: 768px) {
     #error-container {
-        /* Permite que las dos columnas ocupen el espacio horizontal */
         display: flex;
         flex-direction: row; 
         justify-content: center; 
@@ -175,15 +167,22 @@ body {
     /* Columna Izquierda: Texto y Botón (50% del ancho) */
     #text-column {
         order: 1;
-        width: 50%; /* ASIGNACIÓN DEL 50% */
-        /* CLAVE: Centra los elementos de texto verticalmente en horizontal */
+        width: 50%; 
         display: flex;
         flex-direction: column;
         justify-content: center; 
         
-        text-align: left; /* Alinea el texto a la izquierda */
+        /* Centrado horizontal en modo escritorio */
+        align-items: center; 
+        text-align: center; 
         padding-right: 30px; 
-        height: 100%; /* Ayuda al centrado */
+        height: 100%; 
+    }
+
+    /* Asegura que todos los elementos de la columna de texto estén centrados */
+    .error-code, .message, .sub-message, .theme-info {
+        text-align: center;
+        width: 100%; 
     }
 
     /* [MÓVIL]: Ocultar la imagen móvil en escritorio */
@@ -195,7 +194,7 @@ body {
     #desktop-illustration {
         display: flex; 
         order: 2; 
-        width: 50%; /* ASIGNACIÓN DEL 50% */
+        width: 50%; 
         max-width: none; 
         margin: 0;
         justify-content: center;
@@ -208,11 +207,6 @@ body {
         height: auto;
     }
 
-    /* Asegura que todos los elementos de la columna de texto estén alineados a la izquierda */
-    .error-code, .message, .sub-message, .theme-info {
-        text-align: left;
-    }
-    
     .error-code {
         font-size: 10rem; 
     }
@@ -222,7 +216,7 @@ body {
     }
 }
 
-/* --- Campo de Estrellas (Solo Noche) --- */
+/* --- Campo de Estrellas (Solo Noche y Atardecer) --- */
 
 #star-field {
     position: fixed;
@@ -230,13 +224,18 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1;
+    
+    /* CLAVE: Lo bajamos para que quede debajo del z-index: 10 de #error-container */
+    z-index: 5; 
+    
     pointer-events: none; 
     opacity: 0; 
     transition: opacity 1s ease;
 }
 
-.theme-night #star-field {
+/* Muestra las estrellas tanto en la Noche como en el Atardecer */
+.theme-night #star-field, 
+.theme-sunset #star-field { 
     opacity: 1; 
 }
 
