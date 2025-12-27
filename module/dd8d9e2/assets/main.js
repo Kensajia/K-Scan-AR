@@ -1138,23 +1138,28 @@ function setupTrackingEvents(targetIndex, targetEntity) {
             // FIX 2A: LÓGICA DE REANUDACIÓN PARA CONTENIDO 3D/3D+AUDIO DURANTE EL TIEMPO DE GRACIA
             const currentContent = state.arEntities[state.currentVideoIndex];
             
-            // Reanudar Animación 3D para cualquier modelo 3D animado que haya sido pausado (incluye 3D+audio)
-            if (currentContent && currentContent.hasAttribute('gltf-model') && currentContent.hasAttribute('animation-mixer')) {
-                toggleAnimation3D(currentContent, false); 
-            }
+            // MODIFICACIÓN: Comprobar si es un modelo 3D (simple o +audio)
+            if (currentContent && currentContent.hasAttribute('gltf-model')) {
+                
+                // 1. Asegurar Visibilidad del 3D y Controles (Soluciona el problema de 3D simple)
+                showVideo(targetIndex, state.currentVideoIndex);
+                btn3DContainer.style.display = 'flex'; 
+
+                // 2. Reanudar Animación 3D (si existe)
+                if (currentContent.hasAttribute('animation-mixer')) {
+                    toggleAnimation3D(currentContent, false); 
+                }
             
-            // Reanudar Audio para 3D+Audio
-            if (currentContent && currentContent.dataset.audioVideoId) {
-                 const audioAsset = state.audioVideoAssets[currentContent.dataset.audioVideoId];
-                 if (audioAsset) {
-                     audioAsset.muted = isGlobalAudioMuted; // Asegurar estado del mute
-                     audioAsset.play().catch(e => {
-                         console.warn(`[3D+Audio] Fallo al reanudar audio en targetFound: ${e}`);
-                     });
-                 }
-                 // Asegurar que el contenedor 3D esté visible
-                 btn3DContainer.style.display = 'flex';
-                 showVideo(targetIndex, state.currentVideoIndex); // Asegurar visibilidad
+                // 3. Reanudar Audio para 3D+Audio (si existe)
+                if (currentContent.dataset.audioVideoId) {
+                     const audioAsset = state.audioVideoAssets[currentContent.dataset.audioVideoId];
+                     if (audioAsset) {
+                         audioAsset.muted = isGlobalAudioMuted; // Asegurar estado del mute
+                         audioAsset.play().catch(e => {
+                             console.warn(`[3D+Audio] Fallo al reanudar audio en targetFound: ${e}`);
+                         });
+                     }
+                }
             }
         }
         
@@ -1196,7 +1201,7 @@ function setupTrackingEvents(targetIndex, targetEntity) {
         const isCurrentContent3D = currentContent && currentContent.hasAttribute('gltf-model');
 
         // FIX 2B: Solo llamar a playCurrentContent si hubo reset o si es un video.
-        // Si es 3D sin reset (grace period), ya fue reanudado manualmente en el bloque `else`.
+        // Si es 3D sin reset (grace period), la lógica de visibilidad y audio ya fue reanudada manualmente en el bloque `else` (el 3D simple ya no necesita esta llamada).
         if (shouldReset || isCurrentContentVideo) {
              if (isCurrentContentVideo || isCurrentContent3D) {
                 playCurrentContent(targetIndex); 
