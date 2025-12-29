@@ -26,13 +26,13 @@ let isGlobalAudioMuted = true;
 let gracePeriodTimer = null; 
 
 // === CONSTANTES DE ÍCONOS SVG ===
-const SVG_ICON = (id) => `<svg class="icon"><use xlink:href="#${id}"></use></svg>`;
+const SVG_ICON = (id, extraClass = '') => `<svg class="icon ${extraClass}"><use xlink:href="#${id}"></use></svg>`;
 
 // Gira a la Derecha (D) - Añade la clase 'spin-right'
-const SVG_SPIN_D = (id) => `<svg class="icon spin-right"><use xlink:href="#${id}"></use></svg>`; 
+const SVG_SPIN_D = (id, extraClass = '') => `<svg class="icon spin-right ${extraClass}"><use xlink:href="#${id}"></use></svg>`; 
 
 // Gira a la Izquierda (I) - Añade la clase 'spin-left'
-const SVG_SPIN_I = (id) => `<svg class="icon spin-left"><use xlink:href="#${id}"></use></svg>`;
+const SVG_SPIN_I = (id, extraClass = '') => `<svg class="icon spin-left ${extraClass}"><use xlink:href="#${id}"></use></svg>`;
 
 const ICON_CARGA_1 = SVG_ICON('CARGA 1');           // (CARGA 1)
 const ICON_CARGA_2 = SVG_SPIN_D('CARGA 2');           // (CARGA 2)
