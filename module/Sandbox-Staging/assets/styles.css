@@ -1,0 +1,301 @@
+/* styles.css */
+
+:root { 
+    --accent: rgba(76,175,80,0.8); /*#4CAF50; /* Verde */
+    --danger: rgba(244,67,54,0.8); /*#f44336; /* Rojo */
+    --warn: rgba(255,193,7,0.8); /*#FFC107; /* Amarillo */
+}
+body { 
+    font-family: sans-serif; 
+    margin: 0; 
+    overflow: hidden; 
+	display: flex;
+    align-items: center; /* Asegura el centrado vertical de todos los elementos */
+}
+
+/* Panel superior */
+#ui-controls {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn {
+    padding: 10px 18px;
+    border-radius: 50px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 11px;
+    background: rgba(0, 0, 0, 0.4); 
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2); 
+    transition: all 0.2s ease;
+    text-align: center;
+	display: flex;
+    align-items: center; /* Centrado vertical */
+    gap: 8px; /* Espacio entre icono y texto */
+}
+
+.btn:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.btn:active:not(:disabled) {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.hidden {
+    display: none !important; /* Usar !important si hay conflictos */
+}
+
+.btn-audio-on {
+    background: var(--accent) !important;
+}
+.btn-audio-off {
+    background: var(--danger) !important;
+}
+
+#ui-controls.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; 
+}
+
+/* Botón de toggle UI (configuración) - esquina inferior derecha */
+#btn-toggle-ui {
+    position: fixed;
+    bottom: 20px; 
+    right: 20px;
+    z-index: 3000; 
+    /*width: 38px;
+    height: 38px;
+    display: flex;*/
+    padding: 12px;
+	width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    color: white;
+}
+
+/* ========================================================== */
+/* --- CONTENEDOR DE BOTONES 3D (Inferior Izquierda) --- */
+/* ========================================================== */
+
+#btn-3d-controls-container {
+    /* Posicionamiento: Esquina inferior izquierda */
+    position: fixed;
+    bottom: 20px; 
+    left: 20px;
+    z-index: 3000 !important;
+    
+    /* Apilamiento Vertical */
+    display: flex;
+    flex-direction: column-reverse; /* El reset (bottom) va abajo, el girar (top) va arriba */
+    gap: 10px; /* Separación entre los botones */
+    
+    /* Ocultar si el botón de toggle está activo */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#btn-3d-controls-container.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Estilos de botones individuales dentro del contenedor */
+#btn-rotate-3d,
+#btn-reset-3d {
+    width: 100%; /* Asegurar que ambos tengan el mismo ancho */
+    /* Anulamos la propiedad 'display: none' si el contenedor es visible (lo controlamos con JS) */
+    display: flex !important;
+}
+
+/* ELIMINACIóN TOTAL DEL BOTóN VR */
+.a-enter-vr { 
+    display: none !important; 
+    visibility: hidden !important; 
+    pointer-events: none !important; 
+}
+
+
+/* ========================================================== */
+/* --- BARRA DE ESTADO (TOAST NOTIFICATION) --- */
+/* ========================================================== */
+
+#status-bar {
+    /* 1. Posicionamiento base - Propiedades Comunes */
+    position: fixed;
+    bottom: 20px; 
+    /* Las propiedades 'left' y 'transform' se definen en las clases de posición (.pos-*) */
+    z-index: 3000 !important;
+
+    /* 2. Estilo y Visibilidad (COMÚN A TODOS) */
+    display: block;
+    padding: 10px 10px;
+    max-width: 38vw;
+    width: fit-content; 
+    
+    /* Fondo oscuro y transparente con blur (Propiedades de estilo que no cambian) */
+    background: rgba(0, 0, 0, 0.6); 
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    color: white; 
+    
+    /* Transici車n para ocultar/mostrar y POSICIONAMIENTO */
+    transition: 
+        opacity 0.3s ease, 
+        transform 0.3s ease,
+        /*left 0.3s ease, /* AÑADIDO: transiciona la posición horizontal */
+        visibility 0.3s ease; 
+}
+
+/* ---------------------------------- */
+/* --- ESTILOS DE POSICIONAMIENTO --- */
+/* ---------------------------------- */
+
+/* 1. Entorno Inicial (Posición por defecto: Centro Izquierda - Mantiene su estilo original) */
+#status-bar.pos-initial {
+    left: 50%;
+    transform: translateX(-50%); 
+}
+
+/* 2. Entorno Video (Posición: Izquierda) */
+#status-bar.pos-video {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* 3. Entorno 3D (Posición: Centro Derecha) */
+#status-bar.pos-3d {
+    left: 50%;
+    transform: translateX(-32%); /* Centrado relativo al 68% */
+}
+
+/* 4. Entorno 3D+Audio (Posición: Derecha) */
+#status-bar.pos-3daudio {
+    left: 50%;
+    transform: translateX(-32%); /* Alineado completamente a la derecha */
+}
+
+/* El estilo .hidden se mantiene igual, ya que solo maneja opacidad/visibilidad. */
+#status-bar.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 10px); 
+}
+
+/* ========================================================== */
+/* --- ESTILO DEL TEXTO DENTRO DE LA BARRA (VUELTO A AGREGAR) --- */
+/* ========================================================== */
+#status-text {
+    margin: 0; 
+    white-space: normal; 
+    text-align: center; /* Centrar el texto en múltiples líneas */
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+
+/* Asegurar que la barra de estado se oculte con el botón de toggle si está en el mismo nivel */
+#ui-controls.hidden ~ #status-bar {
+    /* No es necesario ya que controlamos su visibilidad directamente con JS */
+}
+
+
+/* ========================================================== */
+/* --- ESTILOS SVG SPRITE --- */
+/* ========================================================== */
+
+/* 1. ESTILO BASE PARA TODOS LOS ÍCONOS SVG (.icon) */
+/* Controla tamaño, color y alineación con el texto. */
+.icon {
+    /* CLAVE PARA EL COLOR: Hace que el SVG use el color de texto (la propiedad 'color' del padre). */
+    fill: currentColor; 
+    
+    /* Define el ancho y alto deseados para todos los iconos */
+    width: 20px;  /* Por ejemplo, 30 píxeles */
+    height: 20px; /* Asegura que la altura sea igual para mantener la proporción */
+    
+    /* Controla la alineación vertical del icono con respecto al texto */
+    vertical-align: middle;
+    
+    /* Espaciado: Separa el ícono de las palabras como "SIGUIENTE" o "SONIDO". */
+    margin-right: 0.25em; 
+    
+    /* Transición (Opcional): Suaviza el cambio de color si usas hover en el botón. */
+    transition: fill 0.2s ease, transform 0.2s ease;
+}
+
+
+/* Estilo específico para el icono dentro del botón de Visible/Invisible */
+#btn-toggle-ui .icon {
+	width: 40px;
+    height: 40px;
+    /* El botón ya es un círculo, no necesita margen a la derecha. */
+    margin-right: 0;
+}
+
+
+/* 2. ANIMACIÓN DE GIRO PARA ÍCONOS DE CARGA (.spinning-icon) */
+
+/* Definición del giro en sentido HORARIO (Derecha) */
+@keyframes spin-right-keyframe {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Definición del giro en sentido ANTI-HORARIO (Izquierda) */
+@keyframes spin-left-keyframe {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(-360deg); /* CLAVE: Valor negativo para anti-horario */
+    }
+}
+
+/* ➡️ Clase para Íconos que Giran a la DERECHA */
+.spin-right {
+    transform-origin: center center; 
+    /* Usamos el keyframe HORARIO */
+    animation: spin-right-keyframe 1.2s linear infinite; 
+}
+
+/* ⬅️ Clase para Íconos que Giran a la IZQUIERDA */
+.spin-left {
+    transform-origin: center center;
+    /* Usamos el keyframe ANTI-HORARIO */
+    animation: spin-left-keyframe 1.2s linear infinite; 
+}
+
+/* Estilo para los mensajes de estado, si deseas un color diferente en el ícono de éxito (CARGAR FIN) */
+#status-bar #status-text .icon {
+    /* Dejamos que el ícono herede el color 'white' de #status-bar, 
+       pero puedes cambiarlo aquí si quieres diferenciar un ícono de éxito. */
+}
+
