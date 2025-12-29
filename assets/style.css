@@ -41,20 +41,35 @@
 }
 
 
-/* ===============================================================
+/* /* ===============================================================
     ESTILO BASE
 ================================================================ */
 body {
     font-family: sans-serif;
-    display: flex; justify-content: center; align-items: center;
-    height: 100vh; margin: 0; flex-direction: column;
+    /* Mantener el centrado horizontal y la disposición en columna */
+    display: flex; 
+    justify-content: center; 
+    flex-direction: column; 
+    
+    /* Nueva lógica de altura: */
+    min-height: 100vh; /* Asegura que la altura mínima sea la ventana */
+    margin: 0; 
+    
+    /* Permite que el contenido se alinee a la parte superior */
+    align-items: center; 
+    
     transition: 0.3s;
 }
 
+/* Aplicar la restricción de centrado vertical solo al .container */
 .container {
     padding: 40px; border-radius: 10px; text-align: center;
     width: 90%; max-width: 400px; transition: 0.3s;
+    /* Añadir margin-top y margin-bottom automáticos para el centrado */
+    margin-top: auto;
+    margin-bottom: auto;
 }
+
 
 .theme-selector {
     display: flex;       /* Alinea el label y theme-circles horizontalmente */
