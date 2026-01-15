@@ -4,54 +4,115 @@
  */
 
 /* --- Variables CSS Base --- */
+
 :root {
-    --background-color: #ffffff;
-    --text-color: #000000;
-    
-    --color-twilight: #f6b51d; 
-    --color-night: #333333;    
+    --color-day-bg: #ffffff;
+    --color-day-text: #000000;
+    --color-night-bg: #333333; /* #1a1a2e; Un azul noche más profundo */ /* #333333; Colo oscuro*/
+    --color-night-text: #ffffff;
+
+    --color-sunrise-warm: #ffac78;
+    --color-sunset-warm: #e96443;
 
     --button-bg-start: #61a6df; 
     --button-bg-end: #337ab7;   
     --button-shadow: rgba(0, 0, 0, 0.2);
-}
-
-/* --- Temas Dinámicos (Clases añadidas por JS) --- */
-
-/* Noche */
-.theme-night {
-    --background-color: var(--color-night);
-    --text-color: #ffffff;
     
-    --button-bg-start: #5a82bb; 
-    --button-bg-end: #2d5a8f; 
+    --transition-progress: 0;
+	
+	--button-txt: #000000;
+	--tooltip-color: #000000;
+	
 }
 
-/* Amanecer: Degradado Naranja sobre Fondo DÍA (Blanco) */
+/* --- Transición Amanecer (Noche -> Día) --- */
 .theme-sunrise {
-    --text-color: #000000;
-    
-    background-image: linear-gradient(
-        to bottom, 
-        transparent 0%, 
-        transparent 50%,
-        var(--color-twilight) 100% 
-    );
-    color: var(--text-color);
+    /* Empieza blanco porque viene de la noche */
+    background-color: color-mix(in srgb, var(--color-night-bg), var(--color-day-bg) calc(var(--transition-progress) * 100%));
+    color: var(--color-night-text);
+	--button-bg-start: var(--color-sunset-warm);
+    --button-bg-end: var(--color-sunrise-warm);
+	--button-txt: #ffffff;
+	--tooltip-color: #000000;
 }
 
-/* Atardecer: Degradado Naranja sobre Fondo NOCHE (Gris Oscuro) */
-.theme-sunset {
-    --background-color: var(--color-night);
-    --text-color: #ffffff;
+.theme-sunrise .error-code, 
+.theme-sunrise .message,
+.theme-sunrise .sub-message,
+.theme-sunrise .theme-info {
+    /* Borde suave color noche que se desvanece */
+    text-shadow: 0 0 10px rgba(51, 51, 51, calc(1 - var(--transition-progress)));
 
-    background-image: linear-gradient(
-        to top, 
-        transparent 0%, 
-        transparent 50%,
-        var(--color-twilight) 100% 
-    );
-    color: var(--text-color);
+}
+
+.theme-sunrise.mid-transition {
+    color: var(--color-day-text); /* Cambia a negro a mitad del amanecer */
+}
+
+/* --- Transición Atardecer (Día -> Noche) --- */
+.theme-sunset {
+	/* Empieza negro porque viene del día */
+    background-color: color-mix(in srgb, var(--color-day-bg), var(--color-night-bg) calc(var(--transition-progress) * 100%));
+    color: var(--color-day-text);
+	--button-bg-start: var(--color-sunrise-warm);
+    --button-bg-end: var(--color-sunset-warm);
+	--button-txt: #000000;
+	--tooltip-color: #ffffff;
+}
+
+
+.theme-sunset .error-code, 
+.theme-sunset .message,
+.theme-sunset .sub-message,
+.theme-sunset .theme-info {
+    /* Borde suave color día que se desvanece */
+    text-shadow: 0 0 15px rgba(255, 255, 255, calc(1 - var(--transition-progress)));
+}
+
+.theme-sunset.mid-transition {
+    color: var(--color-night-text); /* Cambia a blanco a mitad del atardecer */
+}
+
+/* Estilos de Noche y Día puros */
+.theme-night { 
+	background-color: var(--color-night-bg); 
+	color: var(--color-night-text);
+	--button-bg-start: #3971b0;
+    --button-bg-end: #0c2b5e; 
+	--button-txt: #ffffff;
+	--tooltip-color: #ffffff;
+}
+
+.theme-night .error-code {
+	text-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+}
+
+.theme-day { 
+	background-color: var(--color-day-bg);
+	color: var(--color-day-text); 
+	--button-bg-start: #337ab7; 
+    --button-bg-end: #61a6df;
+	--button-txt: #ffffff;
+	--tooltip-color: #000000;
+}
+
+/* Capa de degradado extra para atmósfera */
+.theme-sunrise::before, .theme-sunset::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.theme-sunrise::before {
+    background: linear-gradient(to top, var(--color-sunrise-warm), transparent);
+    opacity: calc(1 - var(--transition-progress));
+}
+
+.theme-sunset::before {
+    background: linear-gradient(to top, var(--color-sunset-warm), transparent);
+    opacity: var(--transition-progress);
 }
 
 /* --- Estilos Generales --- */
@@ -95,7 +156,7 @@ body {
     margin: 10px 0;
     line-height: 1;
     font-weight: 900;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 /* [MÓVIL]: Contenedor de Imagen Solo Móvil (Visible por defecto) */
@@ -106,6 +167,7 @@ body {
     width: 80%;
     height: auto;
     overflow: hidden;
+	filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.15));
 }
 #mobile-illustration img {
     width: 100%;
@@ -116,29 +178,118 @@ body {
 /* [ESCRITORIO]: Contenedor de Imagen Solo Escritorio (Oculto en Móvil) */
 #desktop-illustration {
     display: none; 
+	filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.15));
 }
 
 /* Botón "Volver a Casa" */
-.home-button {
-    display: inline-block;
-    padding: 10px 30px;
-    margin: 20px 0;
-    border-radius: 20px; 
-    text-decoration: none;
-    font-weight: bold;
-    color: #ffffff;
-    
-    background-image: linear-gradient(to top, var(--button-bg-end), var(--button-bg-start));
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 6px var(--button-shadow); 
-    transition: all 0.3s ease;
+.button {
+  --width: 160px;
+  --height: 35px;
+  --tooltip-height: 35px;
+  --tooltip-width: 180px;
+  --gap-between-tooltip-to-button: 18px;
+  --button-color: var(--button-bg-start);
+  width: var(--width);
+  height: var(--height);
+  background: var(--button-color);
+  position: relative;
+  text-align: center;
+  border-radius: 0.45em;
+  font-family: "Arial";
+  transition: background 0.3s;
 }
 
-.home-button:hover {
-    box-shadow: 0 6px 8px var(--button-shadow);
-    transform: translateY(-2px);
+.button::before {
+  position: absolute;
+  content: attr(data-tooltip);
+  width: var(--tooltip-width);
+  height: var(--tooltip-height);
+  background-image: linear-gradient(to top, var(--button-bg-end) 100%, transparent 100%);
+  font-size: 0.9rem;
+  color: var(--tooltip-color);
+  border-radius: .25em;
+  line-height: var(--tooltip-height);
+  bottom: calc(var(--height) + var(--gap-between-tooltip-to-button) + 10px);
+  left: calc(50% - var(--tooltip-width) / 2);
 }
+
+.button::after {
+  position: absolute;
+  content: '';
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-top-color: var(--button-bg-end);
+  left: calc(50% - 10px);
+  bottom: calc(100% + var(--gap-between-tooltip-to-button) - 10px);
+}
+
+.button::after,.button::before {
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.5s;
+}
+
+.text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-wrapper,.text,.text2 {
+  overflow: hidden;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  color: var(--button-txt);
+}
+
+.text {
+  top: 0
+}
+
+.text,.text2 {
+  transition: top 0.5s;
+}
+
+.text2 {
+  color: var(--button-txt);
+  top: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.button:hover {
+  background: var(--button-bg-start);
+}
+
+.button:hover .text {
+  top: -100%;
+  color: var(--button-txt);
+}
+
+.button:hover .text2 {
+  top: 0;
+  color: var(--button-txt);
+  text-decoration: none;
+}
+
+.button:hover:before,.button:hover:after {
+  opacity: 1;
+  visibility: visible;
+}
+
+.button:hover:after {
+  bottom: calc(var(--height) + var(--gap-between-tooltip-to-button) - 20px);
+}
+
+.button:hover:before {
+  bottom: calc(var(--height) + var(--gap-between-tooltip-to-button));
+}
+
 
 /* Nota de pie (theme-info: mucho más pequeña y discreta) */
 .theme-info {
