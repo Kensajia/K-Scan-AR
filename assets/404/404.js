@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body.className = theme; 
         body.style.setProperty('--transition-progress', progress);
 		
-		// Clase para cambiar el color del texto a mitad de camino
+		// NUEVO: Clase para cambiar el color del texto a mitad de camino
 		if (progress > 0.5) {
 			body.classList.add('mid-transition');
 		} else {
@@ -110,6 +110,20 @@ document.addEventListener('DOMContentLoaded', () => {
             starField.style.opacity = "0";
         }
     }
+
+	// --- 4. LÓGICA DE BOTON CON RETRASO ---
+    // Definimos la función globalmente dentro del scope para que el HTML la encuentre
+    window.delayedNavigation = function(event, url) {
+        event.preventDefault(); // Detiene la carga inmediata
+		// 2. Obtenemos la URL directamente del atributo href del elemento
+		const destination = url.href;
+        // 3. Navegamos tras 1 segundo
+    setTimeout(() => {
+        if (destination) {
+            window.location.href = destination;
+        }
+    }, 1500); // Milisegundo de retraso
+    };
 
     applyTheme();
     setInterval(applyTheme, 30000); // Revisar cada 30 seg para suavidad
