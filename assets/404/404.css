@@ -183,7 +183,7 @@ body {
 
 /* Botón "Volver a Casa" */
 .button {
-  --width: 160px;
+  --width: 180px;
   --height: 35px;
   --tooltip-height: 35px;
   --tooltip-width: 180px;
@@ -211,6 +211,7 @@ body {
   line-height: var(--tooltip-height);
   bottom: calc(var(--height) + var(--gap-between-tooltip-to-button) + 10px);
   left: calc(50% - var(--tooltip-width) / 2);
+    font-weight: bold;
 }
 
 .button::after {
@@ -243,10 +244,11 @@ body {
   height: 100%;
   left: 0;
   color: var(--button-txt);
+  text-decoration: none;
 }
 
 .text {
-  top: 0
+  top: 0;
 }
 
 .text,.text2 {
@@ -259,7 +261,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  text-decoration: none;
 }
 
 .button:hover {
@@ -269,6 +270,7 @@ body {
 .button:hover .text {
   top: -100%;
   color: var(--button-txt);
+  text-decoration: none;
 }
 
 .button:hover .text2 {
