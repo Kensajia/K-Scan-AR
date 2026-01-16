@@ -9,10 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     // Horarios (en 24H) para la transición de temas.
-    // Usamos horas en formato decimal (e.g., 6.58 = 6:35 AM, 19.0 = 7:00 PM).
+    // Usamos horas en formato decimal.
   	const HOUR_CONFIG = {
-        SUNRISE_START: (06+(35/60)),    // 06:35 (Inicio Amanecer)
-        DAY_START: (07+(00/60)),         // 07:00 (Inicio Día)
+        SUNRISE_START: (06+(00/60)),    // 06:00 (Inicio Amanecer)
+        DAY_START: (06+(45/60)),         // 06:45 (Inicio Día)
         TWILIGHT_START: (18+(35/60)),  // 18:35 (Inicio Atardecer)
         NIGHT_START: (19+(00/60))       // 19:00 (Inicio Noche)
     };
