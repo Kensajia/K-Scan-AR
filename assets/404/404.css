@@ -301,6 +301,19 @@ body {
 }
 
 
+
+/* ----------------------------------------------------------------- */
+/* --- DISEÑO HORIZONTAL (MOVIL: DOS COLUMNAS AL 50%) --- */
+/* ----------------------------------------------------------------- */
+
+/* --- Configuración de textos por defecto (Móvil) --- */
+.d-desktop {
+    display: none !important; /* Oculto boton final en móvil */
+}
+.d-mobile {
+    display: inline; /* Visible boton final en móvil */
+}
+
 /* ----------------------------------------------------------------- */
 /* --- DISEÑO HORIZONTAL (ESCRITORIO: DOS COLUMNAS AL 50%) --- */
 /* ----------------------------------------------------------------- */
@@ -366,6 +379,13 @@ body {
     
     .theme-info {
         margin-top: 20px; 
+    }
+	
+	.d-desktop {
+        display: inline !important; /* Visible boton final en escitorio */
+    }
+    .d-mobile {
+        display: none !important; /* Oculto boton final en escitorio */
     }
 }
 
