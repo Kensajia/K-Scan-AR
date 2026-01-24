@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Personalización AR</title>
+    <link rel="stylesheet" href="/K-Scan-AR/assets/CalcuPre/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-center-wrapper">
+				<a href="Calculo de precios.html" class="header-link">
+				  <div class="header-container">
+					<h1 class="main-title">Calculadora de Sublimados AR</h1>
+					<h2 class="sub-title">
+					  <span class="anim-pulse-left">«</span> Por docena <span class="anim-pulse-right">»</span>
+					</h2>
+				  </div>
+				</a>
+			  </div>
+			
+            <p class="disclaimer">⚠️ Presupuestador técnico - No es una tienda online.</p>
+			
+        </header>
+
+        <nav class="filter-container">
+            <div id="category-filters" class="category-list">
+                </div>
+        </nav>
+
+        <section class="product-selector">
+            <div id="product-cards-container" class="cards-scroll-container">
+                </div>
+        </section>
+
+        <section id="details-section" class="details-box hidden">
+            <h2 id="selected-name"></h2>
+            <p id="selected-desc"></p>
+            <ul id="specs-list" class="specs-grid"></ul>
+        </section>
+
+        <section id="config-section" class="calculator-grid hidden">
+            <div class="group">
+                <label>Tipo de Experiencia AR:</label>
+                <div id="ar-options-radio" class="ar-button-group"></div>
+            </div>
+
+            <div id="ar-settings-container" class="inputs-row-main">
+                <div class="input-item">
+                    <label>
+                        Marcadores Totales 
+                        <span class="help-icon" title="Cantidad de imágenes físicas diferentes que activarán el AR.">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/><path d="M10.5 8.677a2 2 0 1 1 1.995 3.261c-.268.068-.495.286-.495.562v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                    </label>
+                    <div class="number-control">
+						<button type="button" onclick="changeValue('num-marcadores', -1)">-</button>
+						<input type="number" id="num-marcadores" value="1" min="1" readonly>
+						<button type="button" onclick="changeValue('num-marcadores', 1)">+</button>
+					</div>
+                </div>
+                <div class="input-item">
+                    <label>
+                        Marcadores a la vez
+                        <span class="help-icon" title="Cuántos marcadores puede reconocer la cámara simultáneamente.">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/><path d="M10.5 8.677a2 2 0 1 1 1.995 3.261c-.268.068-.495.286-.495.562v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                    </label>
+                    <div class="number-control">
+						<button type="button" onclick="changeValue('num-simultaneos', -1)">-</button>
+						<input type="number" id="num-simultaneos" value="1" min="1" readonly>
+						<button type="button" onclick="changeValue('num-simultaneos', 1)">+</button>
+					</div>
+                </div>
+            </div>
+			
+            <div id="multimedia-section-container" class="multimedia-container">
+                <label>
+                    Multimedia por Marcador
+                    <span class="help-icon" title="Define cuántos elementos tendrá cada marcador por separado.">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/><path d="M10.5 8.677a2 2 0 1 1 1.995 3.261c-.268.068-.495.286-.495.562v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                </label>
+				<div class="number-control">
+					<div id="multimedia-inputs-container" class="multimedia-inputs-grid"></div>
+				</div>
+            </div>
+			
+			<div id="dynamic-price-display" class="dynamic-price-tag">
+				Precio Estimado: $<span>0.00</span>
+			</div>
+			
+            <button id="add-calculation" class="btn-primary">Añadir al Presupuesto</button>
+        </section>
+
+        <section class="summary-section">
+            <h3 id="summary-title">Seleccione un elemento de arriba para continuar.</h3>
+            <div class="table-wrapper">
+                <table id="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Configuración</th>
+                            <th>Precio u.</th>
+                            <th>Precio doc.</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="total-bar">
+			
+			<!--<div class="total-text">Total estimado: <span>$</span><span id="grand-total">0.00</span> por unidad | <span>$</span><span id="grand-total-doc">0.00</span> por docena (12 unidades)</div>
+			-->
+			
+			<div class="total-container">
+			  <div class="total-line title">
+				<span class="label"><b>Total estimado</b></span>
+			  </div>
+				
+			  <ul>
+				<li><div class="total-line unit-price">
+				<span class="currency">$</span><span id="grand-total">0.00</span> 
+				<span class="suffix-1">por unidad</span>
+			  </div></li>
+				<li><div class="total-line dozen-price">
+				<span class="currency">$</span><span id="grand-total-doc">0.00</span> 
+				<span class="suffix-1">por docena (12 unidades)</span>
+			  </div></li>
+			</ul>
+
+			</div>
+			
+			
+			
+					<button id="send-whatsapp" class="btn-whatsapp">
+					<svg viewBox="-2 -2 24 24" class="svgIcon">
+					    <path d="M15.821 14.121c-.241.682-1.199 1.247-1.963 1.412-.523.11-1.205.199-3.503-.754C7.774 13.71 4.19 9.901 4.19 7.366c0-1.29.744-2.793 2.045-2.793.626 0 .764.012.97.507.241.582.829 2.016.899 2.163.289.603-.294.956-.717 1.482-.135.158-.288.329-.117.623.17.288.758 1.246 1.622 2.015 1.116.995 2.021 1.312 2.345 1.447.241.1.529.077.705-.111.223-.241.5-.641.782-1.036.199-.282.452-.317.717-.217.179.062 2.454 1.119 2.55 1.288.071.123.071.705-.17 1.387M10.002 0h-.005C4.484 0 0 4.485 0 10c0 2.187.705 4.215 1.904 5.86L.658 19.578l3.843-1.228A9.92 9.92 0 0 0 10.002 20C15.515 20 20 15.515 20 10S15.515 0 10.002 0"/>
+					</svg>
+					<span class="btn-text">Enviar Consulta WhatsApp</span>
+				</button>
+			</div>
+        </section>
+    </div>
+    <script src="/K-Scan-AR/assets/CalcuPre/script12.js"></script>
+</body>
+</html>
