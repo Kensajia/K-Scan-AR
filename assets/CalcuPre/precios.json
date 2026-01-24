@@ -1,0 +1,897 @@
+{
+  "meta": {
+    "description": "Calculadora de precios personalizados de productos sublimados | Usar null para llenar espacio en las URL de imagen y video",
+    "version": "1.0"
+  },
+  "productos": [
+	 {
+      "id": "TA-LL-BL",
+      "nombre": "Jarro normal",
+      "color": "Blanco",
+      "URL_Imagen": [
+		  "https://cdn.store.link/products/store10333/60vjzm-s002.jpg",
+		  "https://cdn.store.link/products/store10333/wku9x2-s002-02.png",
+		  "https://cdn.store.link/products/store10333/t2jf41-s002-03.png",
+		  "https://cdn.store.link/products/store10333/-gwi-x-s002-04.png",
+		  null,
+		  null
+	  ],
+      "URL_Video": [
+		  null,
+		  "https://files.catbox.moe/mq8k1z.mp4",
+		  null,
+		  null,
+		  null,
+		  null
+	  ],
+      "especificaciones": {
+        "material": "Cerámica",
+        "tamaño": "8,2 cm * 9,5 cm",
+        "tipo": "Normal",
+        "descripcion": "Jarro Llano Blanco",
+		"categoria": "Jarro"
+      },
+      "precios_base": {
+        "imagen_ar": 6.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "reglas_adicionales": {
+        "marcador_extra": { 
+			"aplica_desde": 3, 
+			"precio_unitario": 1.00 
+		},
+        "simultaneo_extra": { 
+			"aplica_desde": 2, 
+			"precio_unitario": 2.00 
+		},
+        "rangos_multimedia_por_marcador": [
+          { "min": 2, "max": 4, "precio": 0.25 },
+          { "min": 5, "max": 8, "precio": 0.20 },
+          { "min": 9, "max": 15, "precio": 0.15 }
+        ]
+      },
+      "precios_oferta": {
+        "imagen_ar": 5.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "fechas_oferta_nombre": [
+        "Año Nuevo",
+		"Carnaval",
+		"Viernes Santo",
+		"Día del Trabajo",
+		"Batalla del Pichincha",
+		"Primer Grito de Independencia",
+		"Independencia de Guayaquil",
+		"Día de Difuntos",
+		"Independencia de Cuenca",
+		"Navidad",
+		"San Valentín"
+      ],
+      "fechas_oferta_inicial": [
+        "1/1/2026",
+		"3/3/2026",
+		"18/4/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+	  "fechas_oferta_final": [
+        "1/1/2026",
+		"4/3/2026",
+		"18/04/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+      "precios_docena": {
+        "imagen_ar": 5.00,
+        "audio_ar": 1.50,
+        "video_ar": 3.25,
+        "3d_ar": 5.00,
+        "3d+audio_ar": 6.25
+      }
+    },
+    {
+      "id": "JA-MA-MA-NE",
+      "nombre": "Jarro mágico",
+      "color": "Negro",
+      "URL_Imagen": [
+		  "https://cdn.store.link/products/store10333/atr4bb-s001.jpeg",
+		  "https://cdn.store.link/products/store10333/h0tusk-s001-05.jpg",
+		  "https://cdn.store.link/products/store10333/b11evn-s001-06.png",
+		  "https://cdn.store.link/products/store10333/rxpa4--s001-07.png",
+		  null,
+		  null
+	  ],
+      "URL_Video": [
+		  null,
+		  null,
+		  null,
+		  null,
+		  null
+	  ],
+	  "especificaciones": {
+        "material": "Cerámica",
+        "tamaño": "8,2 cm * 9,5 cm",
+        "tipo": "Mágico",
+        "descripcion": "Jarro Mágico Mate Negro",
+		"categoria": "Jarro"
+      },
+      "precios_base": {
+        "imagen_ar": 8.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "reglas_adicionales": {
+        "marcador_extra": { 
+			"aplica_desde": 3, 
+			"precio_unitario": 1.00 
+		},
+        "simultaneo_extra": { 
+			"aplica_desde": 2, 
+			"precio_unitario": 2.00 
+		},
+        "rangos_multimedia_por_marcador": [
+          { "min": 2, "max": 4, "precio": 0.25 },
+          { "min": 5, "max": 8, "precio": 0.20 },
+          { "min": 9, "max": 15, "precio": 0.15 }
+        ]
+      },
+      "precios_oferta": {
+        "imagen_ar": 7.50,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "fechas_oferta_nombre": [
+        "Año Nuevo",
+		"Carnaval",
+		"Viernes Santo",
+		"Día del Trabajo",
+		"Batalla del Pichincha",
+		"Primer Grito de Independencia",
+		"Independencia de Guayaquil",
+		"Día de Difuntos",
+		"Independencia de Cuenca",
+		"Navidad",
+		"San Valentín"
+      ],
+      "fechas_oferta_inicial": [
+        "1/1/2026",
+		"3/3/2026",
+		"18/4/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+	  "fechas_oferta_final": [
+        "1/1/2026",
+		"4/3/2026",
+		"18/04/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+      "precios_docena": {
+        "imagen_ar": 7.50,
+        "audio_ar": 1.50,
+        "video_ar": 3.25,
+        "3d_ar": 5.00,
+        "3d+audio_ar": 6.25
+      }
+    },
+    {
+      "id": "PO-PI-OB",
+      "nombre": "Marco de la foto",
+      "color": "",
+      "URL_Imagen": [
+		  "https://cdn.store.link/products/store10333/z6x04t-s003.jpeg",
+		  "https://cdn.store.link/products/store10333/zjoddx-s003-02.jpg",
+		  "https://cdn.store.link/products/store10333/o49utd-s003-03.png",
+		  "https://cdn.store.link/products/store10333/ptmn8v-s003-04.png",
+		  null,
+		  null
+	  ],
+      "URL_Video": [
+		  null,
+		  null,
+		  null,
+		  null,
+		  null
+	  ],
+      "especificaciones": {
+        "material": "Piedra",
+        "tamaño": "20 cm * 20 cm",
+        "tipo": "",
+        "descripcion": "Portaretrato de piedra oblicuo",
+		"categoria": "Portaretrato"
+      },
+      "precios_base": {
+        "imagen_ar": 11.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "reglas_adicionales": {
+        "marcador_extra": { "aplica_desde": 3, "precio_unitario": 1.00 },
+        "simultaneo_extra": { "aplica_desde": 2, "precio_unitario": 2.00 },
+        "rangos_multimedia_por_marcador": [
+          { "min": 2, "max": 4, "precio": 0.25 },
+          { "min": 5, "max": 8, "precio": 0.20 },
+          { "min": 9, "max": 15, "precio": 0.15 }
+        ]
+      },
+      "precios_oferta": {
+        "imagen_ar": 10.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "fechas_oferta_nombre": [
+        "Año Nuevo",
+		"Carnaval",
+		"Viernes Santo",
+		"Día del Trabajo",
+		"Batalla del Pichincha",
+		"Primer Grito de Independencia",
+		"Independencia de Guayaquil",
+		"Día de Difuntos",
+		"Independencia de Cuenca",
+		"Navidad",
+		"San Valentín"
+      ],
+      "fechas_oferta_inicial": [
+        "1/1/2026",
+		"3/3/2026",
+		"18/4/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+	  "fechas_oferta_final": [
+        "1/1/2026",
+		"4/3/2026",
+		"18/04/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+      "precios_docena": {
+        "imagen_ar": 9.00,
+        "audio_ar": 1.50,
+        "video_ar": 3.25,
+        "3d_ar": 5.00,
+        "3d+audio_ar": 6.25
+      }
+    },
+    {
+      "id": "TO-LL-BL",
+      "nombre": "Tomatodo de aluminio",
+      "color": "Blanco",
+      "URL_Imagen": [
+		  null,
+		  null,
+		  null,
+		  null,
+		  null,
+		  null
+	  ],
+      "URL_Video": [
+		  null,
+		  null,
+		  null,
+		  null,
+		  null
+	  ],
+      "especificaciones": {
+        "material": "Aluminio",
+        "tamaño": "19*7,3*3,5 cm",
+        "tipo": "Tapa de rosca",
+        "descripcion": "Tomatodo Llano Blanco",
+		"categoria": "Tomatodo"
+      },
+      "precios_base": {
+        "imagen_ar": 10.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "reglas_adicionales": {
+        "marcador_extra": { "aplica_desde": 3, "precio_unitario": 1.00 },
+        "simultaneo_extra": { "aplica_desde": 2, "precio_unitario": 2.00 },
+        "rangos_multimedia_por_marcador": [
+          { "min": 2, "max": 4, "precio": 0.25 },
+          { "min": 5, "max": 8, "precio": 0.20 },
+          { "min": 9, "max": 15, "precio": 0.15 }
+        ]
+      },
+      "precios_oferta": {
+        "imagen_ar": 8.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "fechas_oferta_nombre": [
+        "Año Nuevo",
+		"Carnaval",
+		"Viernes Santo",
+		"Día del Trabajo",
+		"Batalla del Pichincha",
+		"Primer Grito de Independencia",
+		"Independencia de Guayaquil",
+		"Día de Difuntos",
+		"Independencia de Cuenca",
+		"Navidad",
+		"San Valentín"
+      ],
+      "fechas_oferta_inicial": [
+        "1/1/2026",
+		"3/3/2026",
+		"18/4/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+	  "fechas_oferta_final": [
+        "1/1/2026",
+		"4/3/2026",
+		"18/04/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+      "precios_docena": {
+        "imagen_ar": 7.00,
+        "audio_ar": 1.50,
+        "video_ar": 3.25,
+        "3d_ar": 5.00,
+        "3d+audio_ar": 6.25
+      }
+    },
+    {
+      "id": "TO-LL-SI",
+      "nombre": "Tomatodo de aluminio",
+      "color": "Plateado",
+      "URL_Imagen": [
+		  "https://cdn.store.link/products/store10333/ql8qlp-s004.jpg",
+		  "https://cdn.store.link/products/store10333/j5f42n-s004-02.jpg",
+		  "https://cdn.store.link/products/store10333/7hi44j-s004-03.jpg",
+		  "https://cdn.store.link/products/store10333/2ju4lh-s004-04.jpg",
+		  null,
+		  null
+	  ],
+      "URL_Video": [
+		  null,
+		  null,
+		  null,
+		  null,
+		  null
+	  ],
+      "especificaciones": {
+        "material": "Aluminio",
+        "tamaño": "19*7,3*3,5 cm",
+        "tipo": "Tapa de rosca",
+        "descripcion": "Tomatodo Llano Plateado",
+		"categoria": "Tomatodo"
+      },
+      "precios_base": {
+        "imagen_ar": 10.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "reglas_adicionales": {
+        "marcador_extra": { "aplica_desde": 3, "precio_unitario": 1.00 },
+        "simultaneo_extra": { "aplica_desde": 2, "precio_unitario": 2.00 },
+        "rangos_multimedia_por_marcador": [
+          { "min": 2, "max": 4, "precio": 0.25 },
+          { "min": 5, "max": 8, "precio": 0.20 },
+          { "min": 9, "max": 15, "precio": 0.15 }
+        ]
+      },
+      "precios_oferta": {
+        "imagen_ar": 8.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "fechas_oferta_nombre": [
+        "Año Nuevo",
+		"Carnaval",
+		"Viernes Santo",
+		"Día del Trabajo",
+		"Batalla del Pichincha",
+		"Primer Grito de Independencia",
+		"Independencia de Guayaquil",
+		"Día de Difuntos",
+		"Independencia de Cuenca",
+		"Navidad",
+		"San Valentín"
+      ],
+      "fechas_oferta_inicial": [
+        "1/1/2026",
+		"3/3/2026",
+		"18/4/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+	  "fechas_oferta_final": [
+        "1/1/2026",
+		"4/3/2026",
+		"18/04/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+      "precios_docena": {
+        "imagen_ar": 7.00,
+        "audio_ar": 1.50,
+        "video_ar": 3.25,
+        "3d_ar": 5.00,
+        "3d+audio_ar": 6.25
+      }
+    },
+    {
+      "id": "LA-AL",
+      "nombre": "Lamina de aluminio",
+      "color": "",
+      "URL_Imagen": [
+		  "https://cdn.store.link/products/store10333/morzym-s006-1.jpg",
+		  "https://cdn.store.link/products/store10333/morzym-s006-1.jpg",
+		  "https://cdn.store.link/products/store10333/morzym-s006-1.jpg",
+		  "https://cdn.store.link/products/store10333/morzym-s006-1.jpg",
+		  "https://cdn.store.link/products/store10333/morzym-s006-1.jpg",
+		  "https://cdn.store.link/products/store10333/morzym-s006-1.jpg"
+	  ],
+      "URL_Video": [
+		  null,
+		  null,
+		  null,
+		  null,
+		  null
+	  ],
+      "especificaciones": {
+        "material": "Aluminio",
+        "tamaño": "10x15 cm",
+        "tipo": "",
+        "descripcion": "Portaretrato de lamina de aluminio",
+		"categoria": "Portaretrato"
+      },
+      "precios_base": {
+        "imagen_ar": 6.50,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "reglas_adicionales": {
+        "marcador_extra": { "aplica_desde": 3, "precio_unitario": 1.00 },
+        "simultaneo_extra": { "aplica_desde": 2, "precio_unitario": 2.00 },
+        "rangos_multimedia_por_marcador": [
+          { "min": 2, "max": 4, "precio": 0.25 },
+          { "min": 5, "max": 8, "precio": 0.20 },
+          { "min": 9, "max": 15, "precio": 0.15 }
+        ]
+      },
+      "precios_oferta": {
+        "imagen_ar": 5.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "fechas_oferta_nombre": [
+        "Año Nuevo",
+		"Carnaval",
+		"Viernes Santo",
+		"Día del Trabajo",
+		"Batalla del Pichincha",
+		"Primer Grito de Independencia",
+		"Independencia de Guayaquil",
+		"Día de Difuntos",
+		"Independencia de Cuenca",
+		"Navidad",
+		"San Valentín"
+      ],
+      "fechas_oferta_inicial": [
+        "1/1/2026",
+		"3/3/2026",
+		"18/4/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+	  "fechas_oferta_final": [
+        "1/1/2026",
+		"4/3/2026",
+		"18/04/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+      "precios_docena": {
+        "imagen_ar": 5.00,
+        "audio_ar": 1.50,
+        "video_ar": 3.25,
+        "3d_ar": 5.00,
+        "3d+audio_ar": 6.25
+      }
+    },
+    {
+      "id": "TA-BL-PA-FO",
+      "nombre": "Jarro con Parche Fosforescente",
+      "color": "Blanco",
+      "URL_Imagen": [
+		  "https://cdn.store.link/products/store10333/4e0zvl-s007-01.jpeg",
+		  "https://cdn.store.link/products/store10333/48rs-b-s007-03.jpg",
+		  "https://cdn.store.link/products/store10333/kc-cx3-s007-06.jpg",
+		  "https://cdn.store.link/products/store10333/ugyztl-s007-07.jpg",
+		  null,
+		  null
+	  ],
+      "URL_Video": [
+		  null,
+		  null,
+		  null,
+		  null,
+		  null
+	  ],
+      "especificaciones": {
+        "material": "Cerámica",
+        "tamaño": "8,2 cm * 9,5 cm",
+        "tipo": "Fosforescente",
+        "descripcion": "Jarro Blanco con Parche Fosforescente",
+		"categoria": "Jarro"
+      },
+      "precios_base": {
+        "imagen_ar": 8.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "reglas_adicionales": {
+        "marcador_extra": { 
+			"aplica_desde": 3, 
+			"precio_unitario": 1.00 
+		},
+        "simultaneo_extra": { 
+			"aplica_desde": 2, 
+			"precio_unitario": 2.00 
+		},
+        "rangos_multimedia_por_marcador": [
+          { "min": 2, "max": 4, "precio": 0.25 },
+          { "min": 5, "max": 8, "precio": 0.20 },
+          { "min": 9, "max": 15, "precio": 0.15 }
+        ]
+      },
+      "precios_oferta": {
+        "imagen_ar": 7.50,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "fechas_oferta_nombre": [
+        "Año Nuevo",
+		"Carnaval",
+		"Viernes Santo",
+		"Día del Trabajo",
+		"Batalla del Pichincha",
+		"Primer Grito de Independencia",
+		"Independencia de Guayaquil",
+		"Día de Difuntos",
+		"Independencia de Cuenca",
+		"Navidad",
+		"San Valentín"
+      ],
+      "fechas_oferta_inicial": [
+        "1/1/2026",
+		"3/3/2026",
+		"18/4/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+	  "fechas_oferta_final": [
+        "1/1/2026",
+		"4/3/2026",
+		"18/04/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+      "precios_docena": {
+        "imagen_ar": 6.50,
+        "audio_ar": 1.50,
+        "video_ar": 3.25,
+        "3d_ar": 5.00,
+        "3d+audio_ar": 6.25
+      }
+    },
+    {
+      "id": "TA-NE-PA-FO",
+      "nombre": "Jarro con Parche Fosforescente",
+      "color": "Negro",
+      "URL_Imagen": [
+		  "https://cdn.store.link/products/store10333/2y-dhg-s008-01.jpg",
+		  "https://cdn.store.link/products/store10333/xwlxzo-s008-03.jpg",
+		  "https://cdn.store.link/products/store10333/x8o0wg-s008-06.jpg",
+		  "https://cdn.store.link/products/store10333/4ydzpt-s008-07.jpg",
+		  null,
+		  null
+	  ],
+      "URL_Video": [
+		  null,
+		  null,
+		  null,
+		  null,
+		  null
+	  ],
+      "especificaciones": {
+        "material": "Cerámica",
+        "tamaño": "8,2 cm * 9,5 cm",
+        "tipo": "Fosforescente",
+        "descripcion": "Jarro Negro con Parche Fosforescente",
+		"categoria": "Jarro"
+      },
+      "precios_base": {
+        "imagen_ar": 8.00,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "reglas_adicionales": {
+        "marcador_extra": { 
+			"aplica_desde": 3, 
+			"precio_unitario": 1.00 
+		},
+        "simultaneo_extra": { 
+			"aplica_desde": 2, 
+			"precio_unitario": 2.00 
+		},
+        "rangos_multimedia_por_marcador": [
+          { "min": 2, "max": 4, "precio": 0.25 },
+          { "min": 5, "max": 8, "precio": 0.20 },
+          { "min": 9, "max": 15, "precio": 0.15 }
+        ]
+      },
+      "precios_oferta": {
+        "imagen_ar": 7.50,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "fechas_oferta_nombre": [
+        "Año Nuevo",
+		"Carnaval",
+		"Viernes Santo",
+		"Día del Trabajo",
+		"Batalla del Pichincha",
+		"Primer Grito de Independencia",
+		"Independencia de Guayaquil",
+		"Día de Difuntos",
+		"Independencia de Cuenca",
+		"Navidad",
+		"San Valentín"
+      ],
+      "fechas_oferta_inicial": [
+        "1/1/2026",
+		"3/3/2026",
+		"18/4/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+	  "fechas_oferta_final": [
+        "1/1/2026",
+		"4/3/2026",
+		"18/04/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+      "precios_docena": {
+        "imagen_ar": 6.50,
+        "audio_ar": 1.50,
+        "video_ar": 3.25,
+        "3d_ar": 5.00,
+        "3d+audio_ar": 6.25
+      }
+    },
+    {
+      "id": "LA-AL-A4",
+      "nombre": "Lamina de aluminio",
+      "color": "",
+      "URL_Imagen": [
+		  "https://cdn.store.link/products/store10333/2-p90e-s009-1.jpeg",
+		  "https://cdn.store.link/products/store10333/2-p90e-s009-1.jpeg",
+		  "https://cdn.store.link/products/store10333/2-p90e-s009-1.jpeg",
+		  "https://cdn.store.link/products/store10333/2-p90e-s009-1.jpeg",
+		  "https://cdn.store.link/products/store10333/2-p90e-s009-1.jpeg",
+		  "https://cdn.store.link/products/store10333/2-p90e-s009-1.jpeg"
+	  ],
+      "URL_Video": [
+		  null,
+		  null,
+		  null,
+		  null,
+		  null
+	  ],
+      "especificaciones": {
+        "material": "Aluminio",
+        "tamaño": "21x29,7 cm",
+        "tipo": "",
+        "descripcion": "Portaretrato de lamina de aluminio",
+		"categoria": "Portaretrato"
+      },
+      "precios_base": {
+        "imagen_ar": 9.50,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "reglas_adicionales": {
+        "marcador_extra": { "aplica_desde": 3, "precio_unitario": 1.00 },
+        "simultaneo_extra": { "aplica_desde": 2, "precio_unitario": 2.00 },
+        "rangos_multimedia_por_marcador": [
+          { "min": 2, "max": 4, "precio": 0.25 },
+          { "min": 5, "max": 8, "precio": 0.20 },
+          { "min": 9, "max": 15, "precio": 0.15 }
+        ]
+      },
+      "precios_oferta": {
+        "imagen_ar": 9.50,
+        "audio_ar": 2.00,
+        "video_ar": 4.00,
+        "3d_ar": 6.00,
+        "3d+audio_ar": 7.50
+      },
+      "fechas_oferta_nombre": [
+        "Año Nuevo",
+		"Carnaval",
+		"Viernes Santo",
+		"Día del Trabajo",
+		"Batalla del Pichincha",
+		"Primer Grito de Independencia",
+		"Independencia de Guayaquil",
+		"Día de Difuntos",
+		"Independencia de Cuenca",
+		"Navidad",
+		"San Valentín"
+      ],
+      "fechas_oferta_inicial": [
+        "1/1/2026",
+		"3/3/2026",
+		"18/4/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+	  "fechas_oferta_final": [
+        "1/1/2026",
+		"4/3/2026",
+		"18/04/2026",
+		"2/5/2026",
+		"23/5/2026",
+		"11/8/2026",
+		"10/10/2026",
+		"4/11/2026",
+		"3/11/2026",
+		"25/12/2026",
+		"14/2/2026"
+      ],
+      "precios_docena": {
+        "imagen_ar": 8.50,
+        "audio_ar": 1.50,
+        "video_ar": 3.25,
+        "3d_ar": 5.00,
+        "3d+audio_ar": 6.25
+      }
+    }
+  ]
+}

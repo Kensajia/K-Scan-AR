@@ -1,0 +1,391 @@
+:root {
+    --primary: #323232;
+    --accent: #0066ff;
+    --danger: #dc3545;
+    --bg: #f5f5f5;
+}
+
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+.container { max-width: 1200px; margin: 0 auto; }
+/*.disclaimer { background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; font-weight: bold; text-align: center; }*/
+.hidden { display: none !important; }
+
+/* Filtros */
+.category-list { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; }
+.cat-btn { 
+    white-space: nowrap; padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd;
+    background: white; cursor: pointer; transition: 0.3s;
+}
+.cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+/* Contenedor de Tarjetas */
+/* Contenedor de Tarjetas: Scroll Vertical */
+.cards-scroll-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columnas en móvil */
+    gap: 12px;
+    max-height: 355px; /* Altura máxima para ver ~2 filas */
+    overflow-y: auto;  /* Scroll vertical */
+    padding: 10px 5px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+@media (min-width: 1024px) {
+    .cards-scroll-container {
+        grid-template-columns: repeat(5, 1fr); /* 5 columnas en PC */
+		max-height: 460px; /* Altura máxima para ver ~2 filas */
+		overflow-y: auto;
+    }
+}
+
+/* Forzar visualización de flechas en inputs numéricos */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    opacity: 1 !important;
+    display: block !important;
+}
+input[type=number] {
+    -moz-appearance: textfield; /* Para Firefox */
+    appearance: auto;
+    padding-right: 2px;
+}
+
+/* Iconos de ayuda con tooltip táctil */
+.help-icon {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+}
+
+/* Para que el precio dinámico se vea bien */
+.dynamic-price-tag {
+    margin-top: 15px;
+    padding: 10px;
+    background: #e7f1ff;
+    color: var(--accent);
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: right;
+    font-size: 1.1em;
+    border: 1px dashed var(--accent);
+	margin-bottom: 10px;
+    display: block; /* Asegura que se vea siempre */
+    transition: all 0.3s ease;
+}
+
+/* Estilo del Tooltip */
+.help-icon::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: normal;
+    width: 150px;
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.2s;
+}
+
+/* Mostrar en PC (hover) y en Móvil (click/active) */
+.help-icon:hover::after,
+.help-icon:active::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Botón WhatsApp */
+.svgIcon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.btn-whatsapp {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #25d366;
+    color: #FFFFFF;
+    border: none;
+    padding: 12px 20px;
+	margin-top: 20px; /* Espacio respecto al total estimado */
+    border-radius: 8px;
+    cursor: pointer;
+	box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.199);
+	font-size: 1em;
+}
+
+.btn-whatsapp svg { 
+    width: 24px; 
+    height: 24px; 
+    fill: #FFFFFF; 
+    flex-shrink: 0;
+}
+
+.btn-whatsapp:hover {
+  border-radius: 40px;
+  transition-duration: 0.5s;
+  background: #FFFFFF;
+  color: #25d366;
+}
+
+.btn-whatsapp:hover svg{
+  fill: #25d366;
+  width: 26px; 
+  height: 26px; 
+}
+
+.Btn-whatsapp:active {
+  transform: translate(2px, 2px);
+}
+
+@media (max-width: 480px) {
+    .btn-whatsapp {
+        display: flex;       /* Asegura que el contenido interno siga centrado */
+        margin-left: auto;   /* Margen izquierdo automático */
+        margin-right: auto;  /* Margen derecho automático */
+        width: 90%;          /* Opcional: que el botón sea más ancho en móvil */
+        max-width: 300px;    /* Limita el ancho para que no se vea gigante */
+    }
+    
+    .total-text {
+        text-align: center;  /* También centramos el texto del total en móvil */
+        margin-bottom: 15px;
+    }
+}
+
+/* Controles +/- para Móvil */
+.inputs-row-main .number-control{
+	width: fit-content; /* Para que no ocupe todo el ancho */
+}
+.number-control {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    overflow: hidden;
+    background: white;
+}
+.number-control button {
+    background: #eee;
+    border: none;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+}
+.number-control input {
+    width: 50px;
+    border: none;
+    text-align: center;
+    font-size: 16px;
+    -moz-appearance: textfield;
+}
+
+/* Evita que la tarjeta se encoja en móvil */
+.card {
+    flex: 0 0 140px; scroll-snap-align: start;
+    background: white; border: 2px solid white; border-radius: 8px;
+    overflow: hidden; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    /* Añadido para posicionar el video correctamente */
+    position: relative; 
+}
+.card.active { border-color: var(--accent); transform: scale(1.02); }
+.card.inactive { filter: grayscale(0.8); opacity: 0.6; }
+.card-info { padding: 8px; font-size: 12px; text-align: center; }
+/* La imagen y el video compartirán estas propiedades */
+.card img, 
+.card video { 
+    width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block;
+}
+/* Estilo específico para el video cuando esté activo */
+.card video {
+    position: absolute; top: 0; left: 0; z-index: 2;
+    background: black; /* Fondo negro por si el video tiene proporciones distintas */
+}
+
+/* Botones AR Estilizados */
+.ar-button-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; padding: 10px 0 0 0;}
+.ar-btn-label { cursor: pointer; }
+.ar-btn-label input { display: none; }
+.ar-btn-content { 
+    background: white; padding: 10px; border: 1px solid #ddd; border-radius: 6px;
+    text-align: center; font-size: 12px; font-weight: bold;
+}
+.ar-btn-label input:checked + .ar-btn-content { background: #e7f1ff; border-color: var(--accent); color: var(--accent); }
+
+/* Iconos y Ayuda */
+.help-icon { display: inline-flex; width: 16px; height: 16px; color: #888; cursor: help; }
+.help-icon svg { width: 100%; height: 100%; }
+
+/* Layout Configuración */
+.calculator-grid { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; }
+.inputs-row-main { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+.multimedia-inputs-grid { 
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+    gap: 10px; width: 100%; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 10px;
+}
+.m-item input { width: 100%; box-sizing: border-box; padding: 5px; }
+
+/* Tabla y Total */
+.table-wrapper { overflow-x: auto; background: white; border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; min-width: 500px; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+.btn-del { background: none; border: none; cursor: pointer; color: var(--danger); padding: 5px; }
+.btn-del svg { width: 20px; height: 20px; stroke: currentColor; }
+
+.total-bar { 
+    margin-top: 20px; display: flex; justify-content: space-between; 
+    align-items: center; flex-wrap: wrap; gap: 15px; 
+}
+.btn-primary { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 6px; width: 100%; cursor: pointer; }
+.btn-whatsapp { background: #25d366; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+.oferta-badge {
+    background-color: #ebf5ff; /* Azul claro */
+    color: #0066ff; /* Tu color accent */
+    border: 1px solid #0066ff;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 8px;
+    animation: pulse-oferta 2s infinite;
+}
+
+@keyframes pulse-oferta {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+/* Enlace a la otra pagina*/
+/* Contenedor principal del encabezado */
+.header-center-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: -1rem 0;
+  padding: 0 1rem; /* Margen de seguridad para que no toque los bordes del celu */
+  box-sizing: border-box;
+}
+
+.header-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+  cursor: pointer;
+  /* Animación de entrada de todo el bloque */
+  animation: revealUp 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.header-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center; /* Asegura que el texto largo se centre si salta de línea */
+  width: 100%;
+}
+
+}
+
+.main-title {
+  font-size: 3rem; /* Ajustado ligeramente */
+  font-weight: 800;
+  color: #333333; /* El color de tu marca (Texto) */
+  margin: 0;
+  line-height: 1;
+  word-wrap: break-word; /* Evita que el título largo rompa el layout */
+}
+
+.sub-title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #78768d; /* Color base grisáceo */
+  margin-top: -1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+  overflow: hidden; /* Evita que las flechas creen scroll al salir */
+  padding: 0 1rem;
+}
+
+/* Estilo para las flechas animadas */
+.anim-pulse-left, .anim-pulse-right {
+  display: inline-block;
+  font-weight: 800;
+  color: #f6b51d; /* El color de tu marca (Adornos) */
+}
+
+/* Animación para la flecha izquierda */
+.anim-pulse-left {
+  margin-right: 1rem;
+  animation: flyOutLeft 3s infinite ease-in-out;
+}
+
+/* Animación para la flecha derecha */
+.anim-pulse-right {
+  margin-left: 1rem;
+  animation: flyOutRight 3s infinite ease-in-out;
+}
+
+/* Hover y Active del bloque: Cambia el texto central a azul */
+.header-link:hover .sub-title {
+  color: #269fe5; /* El texto gris pasa a azul */
+}
+
+.header-link:active .sub-title {
+  color: #1a7fbc; /* Azul un poco más oscuro al dar clic */
+  transform: scale(0.98); /* Pequeña pulsación al hacer clic */
+}
+
+/* Animación constante de las flechas (Fly Out) */
+@keyframes flyOutLeft {
+  0% { transform: translateX(0); color: #269fe5; opacity: 1; }
+  30% { transform: translateX(-25px); color: #ffb500; opacity: 0; } /* Sale y cambia a amarillo */
+  60% { transform: translateX(25px); color: #ffb500; opacity: 0; }  /* Vuelve por el otro lado */
+  100% { transform: translateX(0); color: #269fe5; opacity: 1; }    /* Regresa al azul original */
+}
+
+@keyframes flyOutRight {
+  0% { transform: translateX(0); color: #269fe5; opacity: 1; }
+  30% { transform: translateX(25px); color: #ffb500; opacity: 0; }
+  60% { transform: translateX(-25px); color: #ffb500; opacity: 0; }
+  100% { transform: translateX(0); color: #269fe5; opacity: 1; }
+}
+
+/* Animación de entrada inicial del bloque */
+@keyframes revealUp {
+  0% { opacity: 0; transform: translateY(15px); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+/* Responsivo */
+@media (max-width: 480px) {
+  .main-title {
+    font-size: 1.9rem; /* Reducimos el tamaño para que quepa centrado */
+    width: 100%;
+    max-width: 90vw; /* Limita el ancho al 90% de la pantalla */
+  }
+
+  .sub-title {
+    font-size: 1.1rem;
+    width: 100%;
+  }
+
+  .anim-pulse-left, .anim-pulse-right {
+    font-size: 1rem;
+    margin: 0 0.9rem; /* Menos separación en móvil para ganar espacio */
+  }
+}
