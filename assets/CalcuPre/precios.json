@@ -102,9 +102,9 @@
       "precios_docena": {
         "imagen_ar": 5.00,
         "audio_ar": 1.50,
-        "video_ar": 3.25,
-        "3d_ar": 5.00,
-        "3d+audio_ar": 6.25
+        "video_ar": 3.50,
+        "3d_ar": 5.50,
+        "3d+audio_ar": 6.50
       }
     },
     {
@@ -205,9 +205,9 @@
       "precios_docena": {
         "imagen_ar": 7.50,
         "audio_ar": 1.50,
-        "video_ar": 3.25,
-        "3d_ar": 5.00,
-        "3d+audio_ar": 6.25
+        "video_ar": 3.50,
+        "3d_ar": 5.50,
+        "3d+audio_ar": 6.50
       }
     },
     {
@@ -302,9 +302,9 @@
       "precios_docena": {
         "imagen_ar": 9.00,
         "audio_ar": 1.50,
-        "video_ar": 3.25,
-        "3d_ar": 5.00,
-        "3d+audio_ar": 6.25
+        "video_ar": 3.50,
+        "3d_ar": 5.50,
+        "3d+audio_ar": 6.50
       }
     },
     {
@@ -399,9 +399,9 @@
       "precios_docena": {
         "imagen_ar": 7.00,
         "audio_ar": 1.50,
-        "video_ar": 3.25,
-        "3d_ar": 5.00,
-        "3d+audio_ar": 6.25
+        "video_ar": 3.50,
+        "3d_ar": 5.50,
+        "3d+audio_ar": 6.50
       }
     },
     {
@@ -496,9 +496,9 @@
       "precios_docena": {
         "imagen_ar": 7.00,
         "audio_ar": 1.50,
-        "video_ar": 3.25,
-        "3d_ar": 5.00,
-        "3d+audio_ar": 6.25
+        "video_ar": 3.50,
+        "3d_ar": 5.50,
+        "3d+audio_ar": 6.50
       }
     },
     {
@@ -593,9 +593,9 @@
       "precios_docena": {
         "imagen_ar": 5.00,
         "audio_ar": 1.50,
-        "video_ar": 3.25,
-        "3d_ar": 5.00,
-        "3d+audio_ar": 6.25
+        "video_ar": 3.50,
+        "3d_ar": 5.50,
+        "3d+audio_ar": 6.50
       }
     },
     {
@@ -696,9 +696,9 @@
       "precios_docena": {
         "imagen_ar": 6.50,
         "audio_ar": 1.50,
-        "video_ar": 3.25,
-        "3d_ar": 5.00,
-        "3d+audio_ar": 6.25
+        "video_ar": 3.50,
+        "3d_ar": 5.50,
+        "3d+audio_ar": 6.50
       }
     },
     {
@@ -799,9 +799,9 @@
       "precios_docena": {
         "imagen_ar": 6.50,
         "audio_ar": 1.50,
-        "video_ar": 3.25,
-        "3d_ar": 5.00,
-        "3d+audio_ar": 6.25
+        "video_ar": 3.50,
+        "3d_ar": 5.50,
+        "3d+audio_ar": 6.50
       }
     },
     {
@@ -894,11 +894,11 @@
 		"14/2/2026"
       ],
       "precios_docena": {
-        "imagen_ar": 8.50,
+        "imagen_ar": 6.50,
         "audio_ar": 1.50,
-        "video_ar": 3.25,
-        "3d_ar": 5.00,
-        "3d+audio_ar": 6.25
+        "video_ar": 3.50,
+        "3d_ar": 5.50,
+        "3d+audio_ar": 6.50
       }
     }
   ]
