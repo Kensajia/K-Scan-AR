@@ -350,6 +350,19 @@ th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
   transform: scale(0.98); /* Pequeña pulsación al hacer clic */
 }
 
+/*******************/
+/* Desabilitar link*/
+/*******************/
+.disabled-link {			/*Desabilita el enlace*/
+    pointer-events: none;	/* Evita que el clic funcione */
+    cursor: default;		/* Mantiene el cursor normal */
+    text-decoration: none;	/* Por si las dudas */
+    opacity: 0.7;			/* Opcional: para que se vea visualmente "apagado" */
+}
+/*******************/
+/*******************/
+/*******************/
+
 /* Animación constante de las flechas (Fly Out) */
 @keyframes flyOutLeft {
   0% { transform: translateX(0); color: #269fe5; opacity: 1; }
@@ -388,4 +401,5 @@ th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
     font-size: 1rem;
     margin: 0 0.9rem; /* Menos separación en móvil para ganar espacio */
   }
+
 }
