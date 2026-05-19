@@ -1,0 +1,23 @@
+{
+    "meta": {
+        "description": "0fdd6ce"
+    },
+    "Targets": [
+        {
+            "targetIndex": 0,
+            "elementos": [
+                {
+                    "id": "Elem-0-0",
+                    "src": "aHR0cHM6Ly9maWxlcy5jYXRib3gubW9lLzBwa3plci5tcDQ=",
+                    "type": "video",
+                    "position": "0 0 0", 
+                    "width": 1,
+                    "height": 1.5,
+                    "chromakey": false,
+                    "chromaColor": "",
+                    "chromaSimilarity": 0.3
+                } 
+            ]
+        } 
+    ]
+}
