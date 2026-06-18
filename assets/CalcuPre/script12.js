@@ -3,7 +3,7 @@ let productosData = [];
 let cart = [];
 let selectedProdIndex = null;
 let currentCategory = 'todos';
-let lastArType = 'ninguno_ar'; 
+let lastArType = 'imagen_ar'; 
 const LIMITES = {
     'num-marcadores': 6,
     'num-simultaneos': 6,
@@ -95,7 +95,7 @@ function actualizarMultimediaCard(tipo) {
     const card = document.getElementById(`card-${selectedProdIndex}`);
     if (!card || !prod) return;
 
-    const mapaIndices = { 'ninguno_ar':1, 'imagen_ar': 2, 'audio_ar': 3, 'video_ar': 4, '3d_ar': 5, '3d+audio_ar': 6 };
+    const mapaIndices = { 'imagen_ar': 1, 'audio_ar': 2, 'video_ar': 3, '3d_ar': 4, '3d+audio_ar': 5 };
     const idx = mapaIndices[tipo] || 0;
 
     const videoExistente = card.querySelector('video');
@@ -116,8 +116,8 @@ function toggleVideoCard(index) {
         return;
     }
 
-    const mapaIndices = { 'ninguno_ar':1, 'imagen_ar': 2, 'audio_ar': 3, 'video_ar': 4, '3d_ar': 45 '3d+audio_ar': 5 };
-    const currentType = document.querySelector('input[name="ar_type"]:checked')?.value || 'ninguno_ar';
+    const mapaIndices = { 'imagen_ar': 1, 'audio_ar': 2, 'video_ar': 3, '3d_ar': 4, '3d+audio_ar': 5 };
+    const currentType = document.querySelector('input[name="ar_type"]:checked')?.value || 'imagen_ar';
     const idx = mapaIndices[currentType];
     const videoUrl = prod.URL_Video && prod.URL_Video[idx];
 
@@ -175,26 +175,26 @@ function selectProduct(index) {
     arDiv.innerHTML = Object.keys(prod.precios_docena).map(key => `
         <label class="ar-btn-label">
             <input type="radio" name="ar_type" value="${key}" 
-                   ${key === 'ninguno_ar' ? 'checked' : ''} 
+                   ${key === 'imagen_ar' ? 'checked' : ''} 
                    onchange="handleArChange('${key}')">
             <div class="ar-btn-content">${key.replace('_ar','').toUpperCase()}</div>
         </label>
     `).join('');
 
-    lastArType = 'ninguno_ar';
-    handleArChange('ninguno_ar');
+    lastArType = 'imagen_ar';
+    handleArChange('imagen_ar');
 }
 
 function handleArChange(newType) {
     const inputMarcadores = document.getElementById('num-marcadores');
     const inputSimultaneos = document.getElementById('num-simultaneos');
 
-    if (newType === 'ninguno_ar') {
+    if (newType === 'imagen_ar') {
         inputMarcadores.value = 0;
         inputSimultaneos.value = 0;
         generarMultimediaInputs(0);
     } 
-    else if (lastArType === 'ninguno_ar' && newType !== 'ninguno_ar') {
+    else if (lastArType === 'imagen_ar' && newType !== 'imagen_ar') {
         inputMarcadores.value = 1;
         inputSimultaneos.value = 1;
         generarMultimediaInputs(1);
@@ -231,16 +231,16 @@ function actualizarPrecioDinamico() {
     
     // USAR PRECIOS DE DOCENA DIRECTAMENTE
     const preciosDocena = prod.precios_docena; 
-    const arType = document.querySelector('input[name="ar_type"]:checked')?.value || 'ninguno_ar';
+    const arType = document.querySelector('input[name="ar_type"]:checked')?.value || 'imagen_ar';
     const nMarc = parseInt(document.getElementById('num-marcadores').value) || 0;
     const nSimul = parseInt(document.getElementById('num-simultaneos').value) || 0;
     
     let totalCalculado = 0;
 
-    if (arType === 'ninguno_ar') {
-        totalCalculado = preciosDocena.ninguno_ar;
+    if (arType === 'imagen_ar') {
+        totalCalculado = preciosDocena.imagen_ar;
     } else {
-        totalCalculado = preciosDocena.ninguno_ar + (preciosDocena[arType] || 0);
+        totalCalculado = preciosDocena.imagen_ar + (preciosDocena[arType] || 0);
 
         const mInputs = document.querySelectorAll('.m-val');
         mInputs.forEach(input => {
@@ -285,11 +285,11 @@ document.getElementById('add-calculation').addEventListener('click', () => {
     let mValues = [];
     let totalFinal = 0;
 
-    if (arType === 'ninguno_ar') {
-        totalFinal = preciosDocena.ninguno_ar;
+    if (arType === 'imagen_ar') {
+        totalFinal = preciosDocena.imagen_ar;
         mValues = [0];
     } else {
-        totalFinal = preciosDocena.ninguno_ar + (preciosDocena[arType] || 0);
+        totalFinal = preciosDocena.imagen_ar + (preciosDocena[arType] || 0);
 
         document.querySelectorAll('.m-val').forEach(input => {
             const val = parseInt(input.value) || 1;
@@ -381,7 +381,7 @@ function cambiarValor(boton, cantidad) {
 function toggleARVisibility(type) {
     const settings = document.getElementById('ar-settings-container');
     const multimedia = document.getElementById('multimedia-section-container');
-    if (type === 'ninguno_ar') {
+    if (type === 'imagen_ar') {
         settings.classList.add('hidden');
         multimedia.classList.add('hidden');
     } else {
