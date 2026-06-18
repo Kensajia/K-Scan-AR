@@ -3,7 +3,7 @@ let productosData = [];
 let cart = [];
 let selectedProdIndex = null;
 let currentCategory = 'todos';
-let lastArType = 'imagen_ar'; // Para rastrear el cambio de estado
+let lastArType = 'ninguno_ar'; // Para rastrear el cambio de estado
 let Nomb_Fech_Ofer = ""; // Variable global para almacenar el nombre de la oferta actual
 const LIMITES = {
     'num-marcadores': 6,
@@ -111,8 +111,8 @@ function actualizarVistaPreviaAR() {
     if (!selectedRadio || !prod) return;
 
     // Obtenemos el índice basado en la posición de la opción
-    // imagen_ar=1, audio_ar=2, video_ar=3...
-    const opciones = ['imagen_ar', 'audio_ar', 'video_ar', '3d_ar', '3d+audio_ar'];
+    // ninguno_ar=1, imagen_ar=2, audio_ar=3, video_ar=4...
+    const opciones = ['ninguno_ar', 'imagen_ar', 'audio_ar', 'video_ar', '3d_ar', '3d+audio_ar'];
     const indiceURL = opciones.indexOf(selectedRadio.value) + 1;
 
     // 1. Cambiar la imagen de la tarjeta activa (la grande)
@@ -128,7 +128,7 @@ function mostrarVideoExperiencia() {
     const selectedRadio = document.querySelector('input[name="ar-type"]:checked');
     if (!prod || !selectedRadio) return;
 
-    const opciones = ['imagen_ar', 'audio_ar', 'video_ar', '3d_ar', '3d+audio_ar'];
+    const opciones = ['ninguno_ar', 'imagen_ar', 'audio_ar', 'video_ar', '3d_ar', '3d+audio_ar'];
     const indiceURL = opciones.indexOf(selectedRadio.value) + 1;
 
     const videoUrl = prod.URL_Video[indiceURL];
@@ -152,7 +152,7 @@ function actualizarMultimediaCard(tipo) {
     if (!card || !prod) return;
 
     // Mapeo de índices según tu JSON
-    const mapaIndices = { 'imagen_ar': 1, 'audio_ar': 2, 'video_ar': 3, '3d_ar': 4, '3d+audio_ar': 5 };
+    const mapaIndices = { 'ninguno_ar':1, 'imagen_ar': 2, 'audio_ar': 3, 'video_ar': 4, '3d_ar': 5, '3d+audio_ar': 6 };
     const idx = mapaIndices[tipo] || 0;
 
     // Eliminar video si existe para volver a mostrar la imagen
@@ -179,15 +179,16 @@ function toggleVideoCard(index) {
 
     // SI NO HAY VIDEO: Buscamos la URL según la experiencia AR seleccionada
     const mapaIndices = { 
-        'imagen_ar': 1, 
-        'audio_ar': 2, 
-        'video_ar': 3, 
-        '3d_ar': 4, 
-        '3d+audio_ar': 5 
+		'ninguno_ar': 1,
+        'imagen_ar': 2, 
+        'audio_ar': 3, 
+        'video_ar': 4, 
+        '3d_ar': 5, 
+        '3d+audio_ar': 6 
     };
     
     // Obtenemos el tipo actual del radio marcado
-    const currentType = document.querySelector('input[name="ar_type"]:checked')?.value || 'imagen_ar';
+    const currentType = document.querySelector('input[name="ar_type"]:checked')?.value || 'ninguno_ar';
     const idx = mapaIndices[currentType];
     const videoUrl = prod.URL_Video && prod.URL_Video[idx];
 
@@ -291,15 +292,15 @@ function selectProduct(index) {
     arDiv.innerHTML = Object.keys(prod.precios_base).map(key => `
         <label class="ar-btn-label">
             <input type="radio" name="ar_type" value="${key}" 
-                   ${key === 'imagen_ar' ? 'checked' : ''} 
+                   ${key === 'ninguno_ar' ? 'checked' : ''} 
                    onchange="handleArChange('${key}')">
             <div class="ar-btn-content">${key.replace('_ar','').toUpperCase()}</div>
         </label>
     `).join('');
 
 	// Estado inicial: Imagen
-    lastArType = 'imagen_ar';
-    handleArChange('imagen_ar');
+    lastArType = 'ninguno_ar';
+    handleArChange('ninguno_ar');
 }
 
 // Controla el cambio de tipo y el reseteo selectivo
@@ -308,13 +309,13 @@ function handleArChange(newType) {
     const inputMarcadores = document.getElementById('num-marcadores');
     const inputSimultaneos = document.getElementById('num-simultaneos');
 
-    if (newType === 'imagen_ar') {
+    if (newType === 'ninguno_ar') {
         // Si seleccionamos IMAGEN: Valores a 0
         inputMarcadores.value = 0;
         inputSimultaneos.value = 0;
         generarMultimediaInputs(0);
     } 
-    else if (lastArType === 'imagen_ar' && newType !== 'imagen_ar') {
+    else if (lastArType === 'ninguno_ar' && newType !== 'ninguno_ar') {
         // Si veníamos de IMAGEN (que estaba en 0) y vamos a otro: Todo a 1
         inputMarcadores.value = 1;
         inputSimultaneos.value = 1;
@@ -382,14 +383,14 @@ document.getElementById('add-calculation').addEventListener('click', () => {
     let mValues = [];
     let totalFinal = 0;
 
-    if (arType === 'imagen_ar') {
+    if (arType === 'ninguno_ar') {
         // --- CÁLCULO SOLO IMAGEN ---
-        totalFinal = preciosActuales.imagen_ar;
+        totalFinal = preciosActuales.ninguno_ar;
         mValues = [0]; // posiblemente se elimine con la adicion del precio oferta segun el codigo dado
     } else {
         // --- CÁLCULO COMPLETO ---
         // 1. Base (Producto + Tipo AR) cobrado una sola vez
-        totalFinal = preciosActuales.imagen_ar + (preciosActuales[arType] || 0);
+        totalFinal = preciosActuales.ninguno_ar + (preciosActuales[arType] || 0);
 
         // 2. Multimedia (Bloque dinámico por rangos)
         document.querySelectorAll('.m-val').forEach(input => {
@@ -504,7 +505,7 @@ function toggleARVisibility(type) {
     const settings = document.getElementById('ar-settings-container');// Marcadores y Simultáneos
     const multimedia = document.getElementById('multimedia-section-container');
     
-    if (type === 'imagen_ar') {
+    if (type === 'ninguno_ar') {
         settings.classList.add('hidden');
         multimedia.classList.add('hidden');
     } else {
@@ -522,21 +523,21 @@ function actualizarPrecioDinamico() {
     
     // 2. Capturar valores e identificar precios (Base u Oferta)
     const preciosActuales = obtenerDatosPrecioActual(prod); 
-    const arType = document.querySelector('input[name="ar_type"]:checked')?.value || 'imagen_ar';
+    const arType = document.querySelector('input[name="ar_type"]:checked')?.value || 'ninguno_ar';
     const nMarc = parseInt(document.getElementById('num-marcadores').value) || 0;
     const nSimul = parseInt(document.getElementById('num-simultaneos').value) || 0;
     
     let totalCalculado = 0;
 
     // 3. Lógica de Cálculo por tipo de Experiencia
-    if (arType === 'imagen_ar') {
+    if (arType === 'ninguno_ar') {
         // --- BLOQUE: SOLO IMAGEN ---
         // Usamos preciosActuales en lugar de precios_base
-        totalCalculado = preciosActuales.imagen_ar;
+        totalCalculado = preciosActuales.ninguno_ar;
     } else {
         // --- BLOQUE A: PRECIO BASE ---
         // Se suma el base de imagen + el base del tipo de AR desde la lista activa
-        totalCalculado = preciosActuales.imagen_ar + (preciosActuales[arType] || 0);
+        totalCalculado = preciosActuales.ninguno_ar + (preciosActuales[arType] || 0);
 
         // --- BLOQUE B: MULTIMEDIA EXTRA ---
         const mInputs = document.querySelectorAll('.m-val');
