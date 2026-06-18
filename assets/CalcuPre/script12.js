@@ -95,7 +95,7 @@ function actualizarMultimediaCard(tipo) {
     const card = document.getElementById(`card-${selectedProdIndex}`);
     if (!card || !prod) return;
 
-    const mapaIndices = { 'ninguno_ar':1, 'imagen_ar': 2, 'audio_ar': 3, 'video_ar': 4, '3d_ar': 5, '3d+audio_ar': 6 };
+    const mapaIndices = { 'ninguno_ar': 1, 'imagen_ar': 2, 'audio_ar': 3, 'video_ar': 4, '3d_ar': 5, '3d+audio_ar': 6 };
     const idx = mapaIndices[tipo] || 0;
 
     const videoExistente = card.querySelector('video');
@@ -116,7 +116,7 @@ function toggleVideoCard(index) {
         return;
     }
 
-    const mapaIndices = { 'ninguno_ar':1, 'imagen_ar': 2, 'audio_ar': 3, 'video_ar': 4, '3d_ar': 45 '3d+audio_ar': 5 };
+    const mapaIndices = { 'ninguno_ar': 1, 'imagen_ar': 2, 'audio_ar': 3, 'video_ar': 4, '3d_ar': 5, '3d+audio_ar': 6 };
     const currentType = document.querySelector('input[name="ar_type"]:checked')?.value || 'ninguno_ar';
     const idx = mapaIndices[currentType];
     const videoUrl = prod.URL_Video && prod.URL_Video[idx];
