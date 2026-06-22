@@ -3,7 +3,7 @@
 ================================================================ */
 // 🚨 VARIABLE DE CONTROL DE MANTENIMIENTO 🚨
 // Si es 'true', la web mostrará el aviso de actualización y detendrá la ejecución del resto del script.
-const IS_MAINTENANCE_MODE = false; // <-- ¡CAMBIA ESTO a 'false' para desactivar el modo y a 'true' para activar el modo!
+const IS_MAINTENANCE_MODE = true; // <-- ¡CAMBIA ESTO a 'false' para desactivar el modo y a 'true' para activar el modo!
 
 let ProyectosAR = {};
 const KEY_STORAGE = "arUserCodes";
