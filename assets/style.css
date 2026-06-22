@@ -36,11 +36,17 @@
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
-#maintenance-box .logo { 
-    background: white; 
-    padding: 0; 
-    border-radius: 0; 
-    filter: none; 
+#maintenance-box .logo {
+  background-color: #ffffff; /* Fondo blanco para contrastar el logo oscuro */
+  padding: 12px;             /* Espaciado interno en los cuatro lados */
+  border-radius: 8px;        /* Bordes suavemente redondeados (opcional, pero queda muy bien) */
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2), /* Brillo claro hacia afuera */
+              0 2px 5px rgba(0, 0, 0, 0.1);       /* Pequeña sombra para dar profundidad */
+  
+  /* Asegura que el logo mantenga una buena proporción */
+  display: inline-block;
+  max-width: 100%;
+  height: auto; 
 }
 
 .maintenance-hide {
