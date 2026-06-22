@@ -393,7 +393,8 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
 
 /* Botón para cancelar el escaneo */
 #qr-close-btn {
-    background: #6c757d;
+    background: var(--danger);
+    
     color: white;
     font-size: 14px;
     padding: 8px 15px;
