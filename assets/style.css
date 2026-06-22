@@ -287,3 +287,103 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
 .circle.show-tooltip::after {
     opacity: 1;
 }
+
+
+/* ===============================================================
+    INTEGRACIÓN DEL LECTOR QR INTERFAZ PERSONALIZADA
+================================================================ */
+
+/* Alineación horizontal del input con su botón QR */
+.input-qr-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 5px 0 15px;
+}
+
+/* Ajuste del input para convivir con el botón al lado */
+.input-qr-group input {
+    margin: 0;
+    width: 100%;
+}
+
+/* Botón del icono QR */
+#qr-open-btn {
+    margin: 0;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #3c3c3c;
+    color: white;
+    border: 1px solid #555;
+    height: 42px;
+    width: 42px;
+    border-radius: 5px;
+    transition: transform 0.2s;
+}
+#qr-open-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Contenedor principal del bloque del escáner */
+#qr-scanner-container {
+    margin: 15px auto;
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+}
+
+/* Ventana de enfoque del QR */
+.qr-window {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    margin: 0 auto 10px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px solid var(--accent, #007bff);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    background: #000;
+}
+
+/* Elemento de video interno de Html5Qrcode */
+#qr-video-target {
+    width: 100% !important;
+    height: 100% !important;
+}
+#qr-video-target video {
+    object-fit: cover; /* Fuerza a la cámara a llenar el recuadro sin deformarse */
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Animación de la Línea Láser de Escaneo */
+.qr-laser-line {
+    position: absolute;
+    top: 0;
+    left: 5%;
+    width: 90%;
+    height: 3px;
+    background: var(--accent, #007bff);
+    box-shadow: 0 0 8px var(--accent, #007bff);
+    z-index: 10;
+    animation: scanAnimation 2s linear infinite;
+    pointer-events: none; /* No interfiere con clics */
+}
+
+@keyframes scanAnimation {
+    0% { top: 0%; }
+    50% { top: 100%; }
+    100% { top: 0%; }
+}
+
+/* Botón para cancelar el escaneo */
+#qr-close-btn {
+    background: #6c757d;
+    color: white;
+    font-size: 14px;
+    padding: 8px 15px;
+    border: none;
+    width: 100%;
+}
