@@ -301,20 +301,17 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
     opacity: 1;
 }
 
-
 /* ===============================================================
-    INTEGRACIÓN DEL LECTOR QR INTERFAZ PERSONALIZADA
+    INTEGRACIÓN DEL LECTOR QR INTERFAZ FLOTANTE (OVERLAY)
 ================================================================ */
 
-/* Alineación horizontal del input con su botón QR */
+/* Contenedor flex para alinear input y botón QR */
 .input-qr-group {
     display: flex;
     gap: 8px;
     align-items: center;
     margin: 5px 0 15px;
 }
-
-/* Ajuste del input para convivir con el botón al lado */
 .input-qr-group input {
     margin: 0;
     width: 100%;
@@ -335,43 +332,72 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
     border-radius: 5px;
     transition: transform 0.2s;
 }
-#qr-open-btn:hover {
-    transform: scale(1.05);
+#qr-open-btn:hover { transform: scale(1.05); }
+
+/* 🔵 Capa Superpuesta: Cubre todo el .container de forma exacta */
+#qr-scanner-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px; /* Clona el radio de tu tarjeta */
+    z-index: 100;        /* Se posiciona por encima de los inputs y botones */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px); /* Efecto moderno de desenfoque de fondo */
 }
 
-/* Contenedor principal del bloque del escáner */
-#qr-scanner-container {
-    margin: 15px auto;
-    width: 100%;
-    max-width: 280px;
+/* Adaptación automática del fondo según el tema activo */
+.light-theme #qr-scanner-container { background-color: rgba(255, 255, 255, 0.95); }
+.dark-theme #qr-scanner-container { background-color: rgba(44, 44, 44, 0.95); }
+.palette1-theme #qr-scanner-container { background-color: rgba(255, 255, 255, 0.95); }
+.palette2-theme #qr-scanner-container { background-color: rgba(51, 51, 51, 0.95); }
+.palette3-theme #qr-scanner-container { background-color: rgba(51, 51, 51, 0.95); }
+.palette4-theme #qr-scanner-container { background-color: rgba(78, 59, 46, 0.95); }
+.palette5-theme #qr-scanner-container { background-color: rgba(255, 255, 255, 0.95); }
+
+/* Caja de contenido interno del escáner */
+.qr-overlay-content {
+    width: 90%;
+    max-width: 300px;
     text-align: center;
+}
+.qr-overlay-content h3 {
+    margin: 0 0 5px 0;
+}
+.qr-overlay-content p {
+    font-size: 13px;
+    margin: 0 0 15px 0;
+    opacity: 0.8;
 }
 
 /* Ventana de enfoque del QR */
 .qr-window {
     position: relative;
-    width: 260px;
-    height: 260px;
-    margin: 0 auto 10px;
+    width: 240px;
+    height: 240px;
+    margin: 0 auto 20px;
     border-radius: 12px;
     overflow: hidden;
     border: 3px solid var(--accent, #007bff);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
     background: #000;
 }
 
-/* Elemento de video interno de Html5Qrcode */
+/* Renderizado del video */
 #qr-video-target {
     width: 100% !important;
     height: 100% !important;
 }
 #qr-video-target video {
-    object-fit: cover; /* Fuerza a la cámara a llenar el recuadro sin deformarse */
+    object-fit: cover;
     width: 100% !important;
     height: 100% !important;
 }
 
-/* Animación de la Línea Láser de Escaneo */
+/* Animación Láser */
 .qr-laser-line {
     position: absolute;
     top: 0;
@@ -382,22 +408,67 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
     box-shadow: 0 0 8px var(--accent, #007bff);
     z-index: 10;
     animation: scanAnimation 2s linear infinite;
-    pointer-events: none; /* No interfiere con clics */
+    pointer-events: none;
 }
-
 @keyframes scanAnimation {
     0% { top: 0%; }
     50% { top: 100%; }
     100% { top: 0%; }
 }
 
-/* Botón para cancelar el escaneo */
+/* Botón de regreso */
 #qr-close-btn {
     background: var(--danger);
-    
     color: white;
     font-size: 14px;
-    padding: 8px 15px;
+    padding: 10px 20px;
     border: none;
+    border-radius: 5px;
+    cursor: pointer;
     width: 100%;
+}
+
+/* Estilo base para las 4 esquinas decorativas */
+.qr-corner {
+    position: absolute;
+    width: 20px;   /* Largo de la línea de la esquina */
+    height: 20px;  /* Alto de la línea de la esquina */
+    border-color: var(--accent, #007bff); /* Color dinámico de tus paletas */
+    border-style: solid;
+    border-width: 0; /* Inicializamos en 0 para activar solo los lados necesarios */
+    z-index: 20;     /* Por encima del video y del láser */
+    pointer-events: none; /* Evita interferencias con el video */
+}
+
+/* Posicionamiento y activación de bordes específicos para cada esquina */
+.qr-corner.top-left {
+    top: 15px;
+    left: 15px;
+    border-top-width: 4px;
+    border-left-width: 4px;
+    border-top-left-radius: 6px;
+}
+
+.qr-corner.top-right {
+    top: 15px;
+    right: 15px;
+    border-top-width: 4px;
+    border-right-width: 4px;
+    border-top-right-radius: 6px;
+}
+
+.qr-corner.bottom-left {
+    bottom: 15px;
+    left: 15px;
+    border-bottom-width: 4px;
+    border-left-width: 4px;
+    border-bottom-left-radius: 6px;
+}
+
+.qr-corner.bottom-right {
+    bottom: 15px;
+    right: 15px;
+    border-bottom-width: 4px;
+    border-right-width: 4px;
+    border-bottom-right-radius: 6px;
 }
