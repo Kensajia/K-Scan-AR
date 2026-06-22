@@ -45,7 +45,7 @@
   
   /* Asegura que el logo mantenga una buena proporción */
   display: inline-block;
-  max-width: 100%;
+  max-width: 90%;
   height: auto; 
 }
 
