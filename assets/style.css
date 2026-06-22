@@ -76,6 +76,7 @@ body {
 
 /* Aplicar la restricción de centrado vertical solo al .container */
 .container {
+    position: relative; /* 🛠️ ¡ESTA ES LA LÍNEA CLAVE! Convierte a la tarjeta en el límite estricto de la capa flotante */
     padding: 40px; border-radius: 10px; text-align: center;
     width: 90%; max-width: 400px; transition: 0.3s;
     /* Añadir margin-top y margin-bottom automáticos para el centrado */
