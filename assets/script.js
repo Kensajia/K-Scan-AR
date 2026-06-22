@@ -214,48 +214,43 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-
 /* ===============================================================
-    CONTROL DEL LECTOR QR (OPCIÓN 2: LÓGICA PERSONALIZADA)
+    CONTROL DEL LECTOR QR (OPCIÓN 1: INTERFAZ DE CAPA FLOTANTE)
 ================================================================ */
-let html5QrcodeInstance = null; // Guarda la instancia activa del esc¨¢ner
+let html5QrcodeInstance = null;
 
-async function openQRScanner() {
-    // Si ya hay una instancia corriendo, no duplicar
+ async function openQRScanner() {
     if (html5QrcodeInstance) return;
 
     const scannerContainer = document.getElementById("qr-scanner-container");
     const errorMsg = document.getElementById("error-message");
     
     errorMsg.style.display = "none";
-    scannerContainer.style.display = "block"; // Mostrar contenedor visual
+    // Activamos como 'flex' para respetar el centrado absoluto del overlay
+    scannerContainer.style.display = "flex"; 
 
-    // Inicializar la instancia apuntando al div objetivo sin interfaz construida
     html5QrcodeInstance = new Html5Qrcode("qr-video-target");
 
     try {
-        // Iniciar c¨¢mara trasera ('environment')
         await html5QrcodeInstance.start(
             { facingMode: "environment" },
             {
-                fps: 10,             // Cuadros por segundo optimizados para legibilidad m¨®vil
-                qrbox: { width: 250, height: 250 } // Dimensi¨®n de escaneo efectivo
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
             },
             (decodedText) => {
-                // ?? CASO DE ¨¦XITO: C¨®digo QR detectado de forma efectiva
+                // Insertar el texto recuperado en el input de código
                 document.getElementById("user-code").value = decodedText;
-                
-                // Apagar la c¨¢mara de inmediato para conservar recursos y cerrar visor
+                // Apagar el overlay y la cámara de inmediato
                 closeQRScanner();
             },
             (errorMessage) => {
-                // Modo silencioso: la librer¨ªa escanea constantemente y arroja fallos anal¨ªticos por milisegundo
-                // No los imprimimos para evitar saturar la consola de desarrollo
+                // Flujo analítico silencioso de la librería
             }
         );
     } catch (err) {
-        console.error("Error al iniciar la c¨¢mara:", err);
-        errorMsg.textContent = "No se pudo acceder a la c¨¢mara o no tienes permisos.";
+        console.error("Error al iniciar la cámara:", err);
+        errorMsg.textContent = "No se pudo acceder a la cámara o faltan permisos.";
         errorMsg.style.display = "block";
         closeQRScanner();
     }
@@ -264,18 +259,16 @@ async function openQRScanner() {
 async function closeQRScanner() {
     const scannerContainer = document.getElementById("qr-scanner-container");
     
-    // Si el esc¨¢ner est¨¢ activo y transmitiendo, se detiene de forma as¨ªncrona
     if (html5QrcodeInstance && html5QrcodeInstance.isScanning) {
         try {
             await html5QrcodeInstance.stop();
         } catch (err) {
-            console.error("Error al detener el esc¨¢ner:", err);
+            console.error("Error al detener el escáner:", err);
         }
     }
     
-    // Resetear variables e interfaz limpia
     html5QrcodeInstance = null;
     if (scannerContainer) {
-        scannerContainer.style.display = "none";
+        scannerContainer.style.display = "none"; // Ocultar capa completa
     }
 }
