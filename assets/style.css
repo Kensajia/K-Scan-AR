@@ -117,8 +117,8 @@ body {
 .light-theme .logo { 
     /* Consistencia: Valores neutros */
     background: transparent; 
-    padding: 0; 
-    border-radius: 0; 
+    padding: 15px;
+	border-radius: 15px;
     filter: none; 
 }
 .light-theme .usuarioG { background: #6c757d; color: white; border: none; }
@@ -156,7 +156,7 @@ body {
 .palette1-theme .access-btn { background: #333333; color: #f6b51d; border: none; }
 .palette1-theme .delete-btn { background: var(--danger); color: white; border: none; }
 .palette1-theme input { background: white; color: #333333; border: 1px solid #9c6644; }
-.palette1-theme .logo { background: transparent; padding: 0; border-radius: 0; filter: none; }
+.palette1-theme .logo { background: transparent; padding: 15px; border-radius: 15px; filter: none; }
 .palette1-theme .usuarioG { background: #9c6644; color: white; border: none; }
 .palette1-theme .usuarioN { background: #7a7a7a; color: white; border: none; }
 .palette1-theme #qr-open-btn { background: #e6e6e6; border: 1px solid #9c6644; color: #333333; }
@@ -214,7 +214,7 @@ body {
 .palette5-theme .access-btn { background: #ff9999; border: none; }
 .palette5-theme .delete-btn { background: var(--danger); color: white; border: none; }
 .palette5-theme input { background: white; color: #663333; border: 1px solid #ccc; }
-.palette5-theme .logo { background: transparent; padding: 0; border-radius: 0; filter: none; }
+.palette5-theme .logo { background: transparent; padding: 15px; border-radius: 15px; filter: none; }
 .palette5-theme .usuarioG { background: #6c757d; color: white; border: none; }
 .palette5-theme .usuarioN { background: #ff7777; color: white; border: none; } /* Color independiente adaptado */
 .palette5-theme #qr-open-btn { background: white; border: 1px solid #ccc; color: #663333; }
