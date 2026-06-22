@@ -6,13 +6,14 @@
     <link rel="icon" type="image/png" href="favicon.png" sizes="64x64">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="assets/style.css?v=3.0.02">
+    <link rel="stylesheet" href="assets/style.css?v=3.0.01">
 
     <meta property="og:title" content="K-Scan AR">
     <meta property="og:description" content="K-Scan AR: Realidad Aumentada web para sublimados de Kensajia. Introduce tu código y visualiza al instante el contenido personalizado de tu producto.">
     <meta property="og:image" content="https://raw.githubusercontent.com/Kensajia/K-Scan-AR/refs/heads/main/assets/img/META-LOGO.png">
     <meta property="og:url" content="https://kensajia.github.io/K-Scan-AR/">
     <meta property="og:type" content="website">
+	<script src="assets/html5-qrcode.min.js"></script>
 </head>
 <body>
 
@@ -30,14 +31,36 @@
 
     <div id="loading-view">Cargando datos...</div>
 
-    <div id="input-view" style="display:none;">
+<div id="input-view" style="display:none;">
         <h2>Registrar Nuevo Acceso</h2>
 
         <label for="user-name">Tu Nombre (Opcional):</label>
         <input type="text" id="user-name" placeholder="IDENTIFICADOR">
 
         <label for="user-code">Código de Usuario:</label>
-        <input type="text" id="user-code" placeholder="CÓDIGO ÚNICO">
+        <div class="input-qr-group">
+            <input type="text" id="user-code" placeholder="CÓDIGO ÚNICO">
+            <button type="button" id="qr-open-btn" onclick="openQRScanner()" title="Escanear código QR">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                    <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                    <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                    <path d="M3 17v2a2 2 0 0 1 2 2h2" />
+                    <rect x="7" y="7" width="3" height="3" />
+                    <rect x="14" y="7" width="3" height="3" />
+                    <rect x="7" y="14" width="3" height="3" />
+                    <rect x="14" y="14" width="3" height="3" />
+                </svg>
+            </button>
+        </div>
+
+        <div id="qr-scanner-container" style="display: none;">
+            <div class="qr-window">
+                <div id="qr-video-target"></div>
+                <div class="qr-laser-line"></div>
+            </div>
+            <button type="button" id="qr-close-btn" onclick="closeQRScanner()">Cancelar Escaneo</button>
+        </div>
 
         <button onclick="handleAccess()" id="access-button">Acceder</button>
         <button onclick="toggleViews('selection')" id="back-button" class="usuarioG" style="display:none;">Usuarios Guardados</button>
