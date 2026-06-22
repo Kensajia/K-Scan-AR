@@ -123,6 +123,8 @@ body {
 .light-theme .usuarioG { background: #6c757d; color: white; border: none; }
 .light-theme .usuarioN { background: #5a7b7a; color: white; border: none; }
 
+.light-theme #qr-open-btn { background: transparent; border: 1px solid #ccc; color: #333;}
+.light-theme #qr-open-btn:hover { background: #e6e6e6; }
 
 /* ===============================================================
     TEMA OSCURO (Se mantiene como estaba)
@@ -137,6 +139,8 @@ body {
 .dark-theme .logo { background: white; padding: 15px; border-radius: 15px; filter: drop-shadow(0 0 5px white); }
 .dark-theme .usuarioG { background: #6c757d; border: none; }
 .dark-theme .usuarioN { background: #5a7b7a; border: none; }
+.dark-theme #qr-open-btn { background: #3c3c3c; border: 1px solid #4a4a4a; color: white; }
+.dark-theme #qr-open-btn:hover { background: #4a4a4a; }
 
 
 /* ===============================================================
@@ -154,6 +158,8 @@ body {
 .palette1-theme .logo { background: transparent; padding: 0; border-radius: 0; filter: none; }
 .palette1-theme .usuarioG { background: #9c6644; color: white; border: none; }
 .palette1-theme .usuarioN { background: #7a7a7a; color: white; border: none; }
+.palette1-theme #qr-open-btn { background: #e6e6e6; border: 1px solid #9c6644; color: #333333; }
+.palette1-theme #qr-open-btn:hover { background: #d4d4d4; }
 
 
 /* ---------- PALETA 2 ---------- */
@@ -167,6 +173,8 @@ body {
 .palette2-theme .logo { background: white; padding: 15px; border-radius: 15px; filter: drop-shadow(0 0 5px white); }
 .palette2-theme .usuarioG { background: #4a4a4a; border: none; }
 .palette2-theme .usuarioN { background: #594c34; border: none; }
+.palette2-theme #qr-open-btn { background: #3c3c3c; border: 1px solid #4a4a4a; color: #f0f0f0; }
+.palette2-theme #qr-open-btn:hover { background: #4a4a4a; }
 
 
 /* ---------- PALETA 3 ---------- */
@@ -179,6 +187,8 @@ body {
 .palette3-theme .logo { background: white; padding: 15px; border-radius: 15px; filter: drop-shadow(0 0 5px #e71d36); }
 .palette3-theme .usuarioG { background: #007f5f; color: white; border: none; }
 .palette3-theme .usuarioN { background: #f6b51d; color: #000000; border: none; }
+.palette3-theme #qr-open-btn { background: #4a4a4a; border: 1px solid #e71d36; color: #f0f0f0; }
+.palette3-theme #qr-open-btn:hover { background: #5a5a5a; }
 
 
 /* ---------- PALETA 4 ---------- */
@@ -191,6 +201,8 @@ body {
 .palette4-theme .logo { background: white; padding: 15px; border-radius: 15px; filter: drop-shadow(0 0 8px #48cae4); }
 .palette4-theme .usuarioG { background: #604e42; color: #f8f4e3; border: none; }
 .palette4-theme .usuarioN { background: #48cae4; color: #1a1a1a; border: none; }
+.palette4-theme #qr-open-btn { background: #604e42; border: 1px solid #48cae4; color: #f8f4e3; }
+.palette4-theme #qr-open-btn:hover { background: #735f51; }
 
 
 /* ---------- PALETA 5 ---------- */
@@ -204,6 +216,8 @@ body {
 .palette5-theme .logo { background: transparent; padding: 0; border-radius: 0; filter: none; }
 .palette5-theme .usuarioG { background: #6c757d; color: white; border: none; }
 .palette5-theme .usuarioN { background: #ff7777; color: white; border: none; } /* Color independiente adaptado */
+.palette5-theme #qr-open-btn { background: white; border: 1px solid #ccc; color: #663333; }
+.palette5-theme #qr-open-btn:hover { background: #ffe6e6; }
 
 
 /* ===============================================================
@@ -324,15 +338,15 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #3c3c3c;
-    color: white;
-    border: 1px solid #555;
     height: 42px;
     width: 42px;
     border-radius: 5px;
-    transition: transform 0.2s;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.3s, color 0.3s, border-color 0.3s;
 }
-#qr-open-btn:hover { transform: scale(1.05); }
+#qr-open-btn:hover {
+    transform: scale(1.05);
+}
 
 /* 🔵 Capa Superpuesta: Cubre todo el .container de forma exacta */
 #qr-scanner-container {
