@@ -23,7 +23,7 @@ function checkMaintenanceMode() {
         // 2. Ocultar la vista de carga (si existe)
         if (loadingView) loadingView.style.display = 'none'; 
         
-        console.log("Modo Mantenimiento Activado. Deteniendo carga del índice.");
+        console.log("Modo Mantenimiento Activado. Deteniendo carga del ¨ªndice.");
         return true; 
     }
     return false; 
@@ -50,7 +50,7 @@ function setupThemeTooltips() {
             // activar tooltip en el seleccionado
             circle.classList.add("show-tooltip");
 
-            // eliminar después de 1 segundo
+            // eliminar despuÃ©s de 1 segundo
             setTimeout(() => {
                 circle.classList.remove("show-tooltip");
             }, 1000);
@@ -65,7 +65,7 @@ function setupThemeTooltips() {
 async function loadData() {
     try {
         // Asegúrate de que esta ruta sea correcta
-        const r = await fetch("./index-vault/IndexSet.json"); 
+        const r = await fetch("./index-vault/IndexSet.json");
         if (!r.ok) throw new Error("Network error or file not found");
         ProyectosAR = await r.json();
         // Ocultar la vista de carga SOLO si no estamos en modo mantenimiento
@@ -89,7 +89,7 @@ function applyTheme(theme) {
         : theme;
 
     // Quita cualquier tema anterior y aplica el nuevo
-    body.className = finalTheme + "-theme"; 
+    body.className = finalTheme + "-theme";
     localStorage.setItem(KEY_THEME, theme);
 
     document.querySelectorAll(".circle").forEach(c =>
@@ -109,7 +109,7 @@ function handleAccess() {
 
     if (ProyectosAR[code]) {
         saveCode(code, name, ProyectosAR[code].ruta);
-        // Asegúrate de que esta ruta sea correcta
+        // AsegÃºrate de que esta ruta sea correcta
         window.location.href = `./module/${ProyectosAR[code].ruta}/?code=${code}`;
     } else {
         err.textContent = "Código no válido";
@@ -133,8 +133,12 @@ function toggleViews(view) {
     document.getElementById("input-view").style.display = (view === "input" ? "block" : "none");
     document.getElementById("selection-view").style.display = (view === "selection" ? "block" : "none");
 
+    // Cerrar esc¨¢ner si se cambia de vista para evitar dejar la c¨¢mara encendida
+    closeQRScanner();
+
     if (view === "selection") renderList();
 }
+
 
 /* ===============================================================
     LISTA DE USUARIOS GUARDADOS
@@ -209,3 +213,69 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") handleAccess();
     });
 });
+
+
+/* ===============================================================
+    CONTROL DEL LECTOR QR (OPCIÓN 2: LÓGICA PERSONALIZADA)
+================================================================ */
+let html5QrcodeInstance = null; // Guarda la instancia activa del esc¨¢ner
+
+async function openQRScanner() {
+    // Si ya hay una instancia corriendo, no duplicar
+    if (html5QrcodeInstance) return;
+
+    const scannerContainer = document.getElementById("qr-scanner-container");
+    const errorMsg = document.getElementById("error-message");
+    
+    errorMsg.style.display = "none";
+    scannerContainer.style.display = "block"; // Mostrar contenedor visual
+
+    // Inicializar la instancia apuntando al div objetivo sin interfaz construida
+    html5QrcodeInstance = new Html5Qrcode("qr-video-target");
+
+    try {
+        // Iniciar c¨¢mara trasera ('environment')
+        await html5QrcodeInstance.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,             // Cuadros por segundo optimizados para legibilidad m¨®vil
+                qrbox: { width: 250, height: 250 } // Dimensi¨®n de escaneo efectivo
+            },
+            (decodedText) => {
+                // ?? CASO DE ¨¦XITO: C¨®digo QR detectado de forma efectiva
+                document.getElementById("user-code").value = decodedText;
+                
+                // Apagar la c¨¢mara de inmediato para conservar recursos y cerrar visor
+                closeQRScanner();
+            },
+            (errorMessage) => {
+                // Modo silencioso: la librer¨ªa escanea constantemente y arroja fallos anal¨ªticos por milisegundo
+                // No los imprimimos para evitar saturar la consola de desarrollo
+            }
+        );
+    } catch (err) {
+        console.error("Error al iniciar la c¨¢mara:", err);
+        errorMsg.textContent = "No se pudo acceder a la c¨¢mara o no tienes permisos.";
+        errorMsg.style.display = "block";
+        closeQRScanner();
+    }
+}
+
+async function closeQRScanner() {
+    const scannerContainer = document.getElementById("qr-scanner-container");
+    
+    // Si el esc¨¢ner est¨¢ activo y transmitiendo, se detiene de forma as¨ªncrona
+    if (html5QrcodeInstance && html5QrcodeInstance.isScanning) {
+        try {
+            await html5QrcodeInstance.stop();
+        } catch (err) {
+            console.error("Error al detener el esc¨¢ner:", err);
+        }
+    }
+    
+    // Resetear variables e interfaz limpia
+    html5QrcodeInstance = null;
+    if (scannerContainer) {
+        scannerContainer.style.display = "none";
+    }
+}
