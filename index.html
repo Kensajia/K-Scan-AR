@@ -41,7 +41,8 @@
         <div class="input-qr-group">
             <input type="text" id="user-code" placeholder="CÓDIGO ÚNICO">
             <button type="button" id="qr-open-btn" onclick="openQRScanner()" title="Escanear código QR">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                
+ 				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 7V5a2 2 0 0 1 2-2h2" />
                     <path d="M17 3h2a2 2 0 0 1 2 2v2" />
                     <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
@@ -54,13 +55,7 @@
             </button>
         </div>
 
-        <div id="qr-scanner-container" style="display: none;">
-            <div class="qr-window">
-                <div id="qr-video-target"></div>
-                <div class="qr-laser-line"></div>
-            </div>
-            <button type="button" id="qr-close-btn" onclick="closeQRScanner()">Cancelar Escaneo</button>
-        </div>
+
 
         <button onclick="handleAccess()" id="access-button">Acceder</button>
         <button onclick="toggleViews('selection')" id="back-button" class="usuarioG" style="display:none;">Usuarios Guardados</button>
@@ -73,6 +68,24 @@
         <div id="selection-list"></div>
         <button onclick="toggleViews('input')" class="usuarioN">Nuevo Usuario</button>
     </div>
+	
+	<div id="qr-scanner-container" style="display: none;">
+        <div class="qr-overlay-content">
+            <h3>Escaneando Código QR</h3>
+            <p>Apunta la cámara de tu dispositivo hacia el código impreso.</p>
+            <div class="qr-window">
+                <div id="qr-video-target"></div>
+                <div class="qr-laser-line"></div>
+				
+                <span class="qr-corner top-left"></span>
+                <span class="qr-corner top-right"></span>
+                <span class="qr-corner bottom-left"></span>
+                <span class="qr-corner bottom-right"></span>
+            </div>
+            <button type="button" id="qr-close-btn" onclick="closeQRScanner()">Cancelar escaner</button>
+        </div>
+    </div>
+
 </div>
 
 <div class="theme-selector">
