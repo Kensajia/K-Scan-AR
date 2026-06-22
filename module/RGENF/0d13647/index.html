@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="../../../favicon.png" sizes="64x64">
+    <title>Kensajia · Visualizador AR</title>
+
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.2.0/dist/aframe-extras.min.js"></script>
+    <script src="https://unpkg.com/aframe-chromakey-material@1.1.4/dist/aframe-chromakey-material.min.js"></script>
+    
+
+    <link rel="stylesheet" href="../../../assets/Codigos/styles.css?v=3.0.01">
+    
+</head>
+<body>
+	<script>
+        // 2. DEFINICIÓN DE LA RUTA DEL JSON ESPECÍFICO DEL USUARIO Y EL SPRITE USADO
+        // La ruta es relativa a este archivo index.html del módulo:
+        window.USER_JSON_PATH = './assets/IndexSet2.json';
+		window.USER_SVG_SPRITE_PATH = '../../../assets/img/sprite.svg';
+    </script>
+	<div id="ui-controls">
+		<button id="btn-audio" class="btn" style=" background: var(--accent);"><svg class="icon"><use xlink:href="#SONIDO ON"></use></svg> SONIDO</button>
+        <button id="btn-flash" class="btn hidden"><svg class="icon"><use xlink:href="#FLASH OFF"></use></svg> FLASH OFF</button>
+        <button id="btn-next-video" class="btn hidden"><svg class="icon"><use xlink:href="#SIGUIENTE 1"></use></svg> SIGUIENTE</button>
+        <button id="btn-hd" class="btn"><svg class="icon"><use xlink:href="#HD"></use></svg> CALIDAD: HD</button>
+    </div>
+	
+	<div id="status-bar" class="hidden pos-initial">
+        <p id="status-text">Mensaje de estado aquí</p>
+    </div>
+	
+    <div id="btn-3d-controls-container" style="display: none;">
+        
+        <button id="btn-reset-3d" class="btn"><svg class="icon"><use xlink:href="#REINICIAR"></use></svg> RESTAURAR</button>
+		<button id="btn-rotate-3d" class="btn"><svg class="icon"><use xlink:href="#GIRAR"></use></svg> GIRAR</button>
+		
+    </div>
+    <button id="btn-toggle-ui" class="btn"><svg class="icon icon_visible_off"><use xlink:href="#VISIBLE OFF"></use></svg></button>
+
+    <a-scene
+	
+	
+        id="scene-ar"
+        keep-alive
+        mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; filterMinCF: 0.0001; filterBeta: 10000" 
+        renderer="preserveDrawingBuffer: true; antialias: true; colorManagement: true" 
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false">
+        
+        <a-assets id="assets-container"></a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity id="target-container"></a-entity>
+    </a-scene>
+
+    <!-- filterMinCF
+    Control de Latencia y Sensibilidad.
+    Determina qué tan rápido el objeto reacciona a los movimientos de la cámara. Controla el equilibrio entre la precisión y la fluidez.
+    Mínimo: 0.0001 (Más sensible/rápido).
+    Máximo: 0.01 (Más lento/estable).
+    Recomendado: 0.0001 (Para un seguimiento rápido y de baja latencia).
+    -->
+
+    <!-- filterBeta
+    Control de Estabilidad y Suavizado.
+    Determina qué tan agresivamente se suavizan los temblores rápidos ("jitter") y las variaciones inesperadas de posición.
+    Mínimo: 0 (Sin suavizado).
+    Máximo: 10000 (Suavizado muy fuerte).
+    Recomendado: 10000 (Para máxima estabilidad y evitar temblores).
+    -->
+    
+    <script src="../../../assets/Codigos/main.js?v=3.0.01"></script>
+
+</body>
+</html>

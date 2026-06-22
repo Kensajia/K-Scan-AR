@@ -1,0 +1,71 @@
+{
+    "meta": {
+        "description": "a9b62d4"
+    },
+    "Targets": [
+        {
+            "targetIndex": 0,
+            "elementos": [
+                {
+                    "id": "Elem-0-0",
+                    "src": "https://files.catbox.moe/2ysumf.mp4",
+                    "type": "video",
+                    "position": "0 0 0", 
+                    "width": 1,
+                    "height": 1.5,
+                    "chromakey": false,
+                    "chromaColor": "",
+                    "chromaSimilarity": 0.3
+                } 
+            ]
+        },
+        {
+            "targetIndex": 1,
+            "elementos": [
+                {
+                    "id": "Elem-1-0",
+                    "src": "https://files.catbox.moe/0zm4jf.mp4",
+                    "type": "video",
+                    "position": "0 0 0", 
+                    "width": 1,
+                    "height": 1.5,
+                    "chromakey": false,
+                    "chromaColor": "",
+                    "chromaSimilarity": 0.3
+                },
+                {
+                    "id": "Elem-1-1",
+                    "src": "https://files.catbox.moe/k45ond.glb",
+                    "type": "3d",
+                    "position": "0 0 0", 
+                    "scale": "1.8 1.8 1.8",
+                    "rotation": "0 -90 0",
+                    "animated": false,
+                    "animationMixer": "clip: *; timeScale: 1.0",
+                    "rotationEnableX": true,
+                    "rotationEnableY": true,
+                    "rotationEnableZ": false,
+                    "rotationSensibility": 0.3,
+                    "giraEje": "Y",
+                    "giraDuracion": 2000
+                } 
+            ]
+        },
+        {
+            "targetIndex": 2,
+            "elementos": [
+                {
+                    "id": "Elem-2-0",
+                    "src": "https://files.catbox.moe/bucqj6.mp4",
+                    "type": "video",
+                    "position": "0 0 0", 
+                    "width": 1.5,
+                    "height": 1.01,
+                    "chromakey": false,
+                    "chromaColor": "",
+                    "chromaSimilarity": 0.3
+                } 
+            ]
+        } 
+    ]
+}
