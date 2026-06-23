@@ -17,6 +17,17 @@
 </head>
 <body>
 
+<script>
+    fetch('./assets/img/sprite.svg')
+        .then(response => response.text())
+        .then(html => {
+            const container = document.createElement('div');
+            container.style.display = 'none';
+            container.innerHTML = html;
+            document.body.insertBefore(container, document.body.firstChild);
+        }).catch(err => console.error("Error cargando el sprite de iconos:", err));
+</script>`
+
 <div id="maintenance-overlay" class="maintenance-hide">
     <div id="maintenance-box">
 		<img src="https://cdn.store.link/uploads/store10333/store-logo.svg" alt="Logo" class="logo">
@@ -41,18 +52,8 @@
         <div class="input-qr-group">
             <input type="text" id="user-code" placeholder="CÓDIGO ÚNICO">
             <button type="button" id="qr-open-btn" onclick="openQRScanner()" title="Escanear código QR">
-                
- 				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-                    <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-                    <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-                    <path d="M3 17v2a2 2 0 0 1 2 2h2" />
-                    <rect x="7" y="7" width="3" height="3" />
-                    <rect x="14" y="7" width="3" height="3" />
-                    <rect x="7" y="14" width="3" height="3" />
-                    <rect x="14" y="14" width="3" height="3" />
-                </svg>
-            </button>
+				<svg class="qr-svg-icon"><use href="#icon-qr-scan"></use></svg>
+			</button>
         </div>
 
 
