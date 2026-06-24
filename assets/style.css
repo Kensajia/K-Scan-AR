@@ -126,6 +126,7 @@ body {
 
 .light-theme #qr-open-btn { background: transparent; border: 1px solid #ccc; color: #333;}
 .light-theme #qr-open-btn:hover { background: #e6e6e6; }
+.light-theme #qr-scanner-container { background-color: rgba(255, 255, 255, 0.95); }
 
 /* ===============================================================
     TEMA OSCURO (Se mantiene como estaba)
@@ -142,6 +143,7 @@ body {
 .dark-theme .usuarioN { background: #5a7b7a; border: none; }
 .dark-theme #qr-open-btn { background: #3c3c3c; border: 1px solid #4a4a4a; color: white; }
 .dark-theme #qr-open-btn:hover { background: #4a4a4a; }
+.dark-theme #qr-scanner-container { background-color: rgba(44, 44, 44, 0.95); }
 
 
 /* ===============================================================
@@ -161,6 +163,7 @@ body {
 .palette1-theme .usuarioN { background: #7a7a7a; color: white; border: none; }
 .palette1-theme #qr-open-btn { background: #e6e6e6; border: 1px solid #9c6644; color: #333333; }
 .palette1-theme #qr-open-btn:hover { background: #d4d4d4; }
+.palette1-theme #qr-scanner-container { background-color: rgba(255, 255, 255, 0.95); }
 
 
 /* ---------- PALETA 2 ---------- */
@@ -176,6 +179,7 @@ body {
 .palette2-theme .usuarioN { background: #594c34; border: none; }
 .palette2-theme #qr-open-btn { background: #3c3c3c; border: 1px solid #4a4a4a; color: #f0f0f0; }
 .palette2-theme #qr-open-btn:hover { background: #4a4a4a; }
+.palette2-theme #qr-scanner-container { background-color: rgba(51, 51, 51, 0.95); }
 
 
 /* ---------- PALETA 3 ---------- */
@@ -190,6 +194,7 @@ body {
 .palette3-theme .usuarioN { background: #f6b51d; color: #000000; border: none; }
 .palette3-theme #qr-open-btn { background: #4a4a4a; border: 1px solid #e71d36; color: #f0f0f0; }
 .palette3-theme #qr-open-btn:hover { background: #5a5a5a; }
+.palette3-theme #qr-scanner-container { background-color: rgba(51, 51, 51, 0.95); }
 
 
 /* ---------- PALETA 4 ---------- */
@@ -204,6 +209,7 @@ body {
 .palette4-theme .usuarioN { background: #48cae4; color: #1a1a1a; border: none; }
 .palette4-theme #qr-open-btn { background: #604e42; border: 1px solid #48cae4; color: #f8f4e3; }
 .palette4-theme #qr-open-btn:hover { background: #735f51; }
+.palette4-theme #qr-scanner-container { background-color: rgba(78, 59, 46, 0.95); }
 
 
 /* ---------- PALETA 5 ---------- */
@@ -219,6 +225,8 @@ body {
 .palette5-theme .usuarioN { background: #ff7777; color: white; border: none; } /* Color independiente adaptado */
 .palette5-theme #qr-open-btn { background: white; border: 1px solid #ccc; color: #663333; }
 .palette5-theme #qr-open-btn:hover { background: #ffe6e6; }
+.palette5-theme #qr-scanner-container { background-color: rgba(255, 255, 255, 0.95); }
+
 
 
 /* ===============================================================
@@ -335,12 +343,12 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
 /* Botón del icono QR */
 #qr-open-btn {
     margin: 0;
-    padding: 0;
+    padding: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
     height: 40px;
-    width: 48px;
+    width: 45px;
     border-radius: 5px;
     cursor: pointer;
     transition: transform 0.2s, background-color 0.3s, color 0.3s, border-color 0.3s;
@@ -349,13 +357,9 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
 }
 #qr-open-btn:hover {
     transform: scale(1.05);
+	padding: 5px;
 }
-/* Tamaño del icono SVG animado */
-.qr-svg-icon {
-    width: 25px; 
-    height: 25px;
-    display: block;
-}
+
 
 /* 🔵 Capa Superpuesta: Cubre todo el .container de forma exacta */
 #qr-scanner-container {
@@ -372,15 +376,6 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
     justify-content: center;
     backdrop-filter: blur(8px); /* Efecto moderno de desenfoque de fondo */
 }
-
-/* Adaptación automática del fondo según el tema activo */
-.light-theme #qr-scanner-container { background-color: rgba(255, 255, 255, 0.95); }
-.dark-theme #qr-scanner-container { background-color: rgba(44, 44, 44, 0.95); }
-.palette1-theme #qr-scanner-container { background-color: rgba(255, 255, 255, 0.95); }
-.palette2-theme #qr-scanner-container { background-color: rgba(51, 51, 51, 0.95); }
-.palette3-theme #qr-scanner-container { background-color: rgba(51, 51, 51, 0.95); }
-.palette4-theme #qr-scanner-container { background-color: rgba(78, 59, 46, 0.95); }
-.palette5-theme #qr-scanner-container { background-color: rgba(255, 255, 255, 0.95); }
 
 /* Caja de contenido interno del escáner */
 .qr-overlay-content {
