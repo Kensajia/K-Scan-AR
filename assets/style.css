@@ -333,20 +333,50 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
 }
 
 /* Botón del icono QR */
+/* ============================================================
+   CORRECCIÓN DEFINITIVA ÁREA TÁCTIL FANTASMA EN MÓVILES
+============================================================ */
+
 #qr-open-btn {
-    margin: 0;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 42px;
-    width: 42px;
-    border-radius: 5px;
+    /* 1. Mantenemos tu estilo visual base */
+    background: transparent;
+    border: none;
     cursor: pointer;
-    transition: transform 0.2s, background-color 0.3s, color 0.3s, border-color 0.3s;
+    color: var(--accent); /* Heredado de tus 5 paletas */
+    padding: 0; /* Eliminamos paddings que puedan expandir el área táctil */
+
+    /* 2. 🛡️ LA SOLUCIÓN TÉCNICA: Control de desbordamiento */
+    display: inline-flex;  /* Centrado perfecto del SVG */
+    align-items: center;   /* Centrado vertical */
+    justify-content: center;/* Centrado horizontal */
+    
+    /* 🚨 ESTA ES LA PROPIEDAD CLAVE: */
+    overflow: hidden; /* Recorta CUALQUIER elemento animado o área táctil que intente salir del botón */
+
+    /* 3. Definimos límites físicos claros para el botón (Caja táctil lógica) */
+    width: 44px;  /* Tamaño recomendado para accesibilidad táctil */
+    height: 44px; /* Caja cuadrada perfecta */
+    
+    /* 4. Opcional: Centrado absoluto en la pantalla (como en tu index.html original) */
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* 5. Eliminamos el resaltado de selección predeterminado de móviles */
+    -webkit-tap-highlight-color: transparent;
 }
+
 #qr-open-btn:hover {
     transform: scale(1.05);
+}
+
+/* Aseguramos que el SVG ocupe el espacio correcto dentro del botón corregido */
+.qr-svg-icon {
+    width: 28px; /* Un poco más grande para mejor visibilidad */
+    height: 28px;
+    display: block;
+    /* La animación interna del sprite sigue funcionando 100% */
 }
 
 /* 🔵 Capa Superpuesta: Cubre todo el .container de forma exacta */
