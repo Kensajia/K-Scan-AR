@@ -334,45 +334,42 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
 
 /* Botón del icono QR */
 /* ============================================================
-   CORRECCIÓN DEFINITIVA ÁREA TÁCTIL FANTASMA EN MÓVILES
+   CORRECCIÓN: UBICACIÓN CORRECTA DEL BOTÓN QR EN EL FORMULARIO
 ============================================================ */
 
 #qr-open-btn {
-    /* 1. Mantenemos tu estilo visual base */
+    /* 1. Mantenemos la solución contra el clic fantasma en móviles */
     background: transparent;
     border: none;
     cursor: pointer;
-    color: var(--accent); /* Heredado de tus 5 paletas */
-    padding: 0; /* Eliminamos paddings que puedan expandir el área táctil */
-
-    /* 2. 🛡️ LA SOLUCIÓN TÉCNICA: Control de desbordamiento */
-    display: inline-flex;  /* Centrado perfecto del SVG */
-    align-items: center;   /* Centrado vertical */
-    justify-content: center;/* Centrado horizontal */
-    
-    /* 🚨 ESTA ES LA PROPIEDAD CLAVE: */
-    overflow: hidden; /* Recorta CUALQUIER elemento animado o área táctil que intente salir del botón */
-
-    /* 3. Definimos límites físicos claros para el botón (Caja táctil lógica) */
-    width: 44px;  /* Tamaño recomendado para accesibilidad táctil */
-    height: 44px; /* Caja cuadrada perfecta */
-    
-    /* 4. Opcional: Centrado absoluto en la pantalla (como en tu index.html original) */
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    
-    /* 5. Eliminamos el resaltado de selección predeterminado de móviles */
+    color: var(--accent);
+    padding: 0;
+    display: inline-flex;  
+    align-items: center;   
+    justify-content: center;
+    overflow: hidden; /* Evita que el área táctil se estire verticalmente */
     -webkit-tap-highlight-color: transparent;
+
+    /* 2. Tamaño de la caja táctil (ajusta si necesitas que sea más pequeño) */
+    width: 38px;  
+    height: 38px; 
+
+    /* 🚨 3. RESTAURACIÓN DE LA POSICIÓN EN EL INPUT (Alineación derecha) */
+    /* Eliminamos el centrado inferior anterior y usamos posicionamiento flotante */
+    position: absolute;
+    right: 8px;          /* Lo pega al borde derecho del contenedor */
+    top: 50%;            /* Lo centra verticalmente respecto al input */
+    transform: translateY(-50%); /* Ajuste fino de centrado vertical */
+    
+    /* Asegura que quede por encima del fondo del input para que sea cliquiable */
+    z-index: 2; 
 }
 
-/* Aseguramos que el SVG ocupe el espacio correcto dentro del botón corregido */
+/* Ajuste del tamaño del icono para que guarde perfecta armonía con el texto */
 .qr-svg-icon {
-    width: 28px; /* Un poco más grande para mejor visibilidad */
-    height: 28px;
+    width: 22px; 
+    height: 22px;
     display: block;
-    /* La animación interna del sprite sigue funcionando 100% */
 }
 
 /* 🔵 Capa Superpuesta: Cubre todo el .container de forma exacta */
