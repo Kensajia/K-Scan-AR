@@ -367,10 +367,6 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
     -webkit-tap-highlight-color: transparent;
 }
 
-#qr-open-btn:hover {
-    transform: scale(1.05);
-}
-
 /* Aseguramos que el SVG ocupe el espacio correcto dentro del botón corregido */
 .qr-svg-icon {
     width: 28px; /* Un poco más grande para mejor visibilidad */
