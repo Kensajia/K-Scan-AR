@@ -228,6 +228,22 @@ body {
 .palette5-theme #qr-scanner-container { background-color: rgba(255, 255, 255, 0.95); }
 
 
+/* ---------- PALETA 5 ---------- */
+.palette6-theme { background: #e8f5e9; color: #1b5e20; } /* Tonos menta y verde hoja */
+.palette6-theme .container { background: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.palette6-theme button { background: #c8e6c9; color: #1b5e20; border: none; }
+.palette6-theme #access-button, 
+.palette6-theme .access-btn { background: #4caf50; color: white; border: none; }
+.palette6-theme .delete-btn { background: #e53935; color: white; border: none; }
+.palette6-theme input { background: #ffffff; color: #1b5e20; border: 1px solid #a5d6a7; }
+.palette6-theme .logo { background: transparent; padding: 15px; filter: none; }
+.palette6-theme .usuarioG { background: #81c784; color: white; border: none; }
+.palette6-theme .usuarioN { background: #a5d6a7; color: #1b5e20; border: none; }
+.palette6-theme #qr-open-btn { background: white; border: 1px solid #a5d6a7; color: #1b5e20; }
+.palette6-theme #qr-open-btn:hover { background: #c8e6c9; }
+.palette6-theme #qr-scanner-container { background-color: rgba(232, 245, 233, 0.95); }
+.palette6-theme #qr-close-btn { background: #e53935; color: white; border: none; }
+
 
 /* ===============================================================
     ELEMENTOS COMUNES
@@ -259,6 +275,7 @@ button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; 
 .circle[data-value="palette3"] { background: linear-gradient(135deg, #286820 50%, #e71d36 50%); }
 .circle[data-value="palette4"] { background: #3e3025; }
 .circle[data-value="palette5"] { background: #ff9999; }
+.circle[data-value="palette6"] { background: linear-gradient(135deg, #e8f5e9 50%, #1b5e20 50%); }
 
 
 
